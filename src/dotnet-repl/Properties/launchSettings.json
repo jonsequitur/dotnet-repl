@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "dotnet-repl": {
+      "commandName": "Project",
+      "commandLineArgs": "--log-path c:\\temp"
+    }
+  }
+}
