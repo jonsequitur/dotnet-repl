@@ -5,7 +5,7 @@ using System;
 using RadLine;
 using Spectre.Console;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace Microsoft.DotNet.Interactive.Repl.LineEditorCommands
 {
     public class Quit : LineEditorCommand
     {
@@ -23,32 +23,5 @@ namespace Microsoft.DotNet.Interactive.Repl
 
             _triggerQuit();
         }
-    }
-
-    public class Clear : LineEditorCommand
-    {
-        public override void Execute(LineEditorContext context)
-        {
-            context.Buffer.Clear(0, context.Buffer.Content.Length);
-            context.Buffer.Move(0);
-        }
-    }
-
-    public class ShowPreviousHistorySubmission : LineEditorCommand
-    {
-        public override void Execute(LineEditorContext context)
-        {
-        }
-    }
-
-    public class ShowNextHistorySubmission : LineEditorCommand
-    {
-        public override void Execute(LineEditorContext context)
-        {
-        }
-    }
-
-    internal static class LineEditorContextExtensions
-    {
     }
 }

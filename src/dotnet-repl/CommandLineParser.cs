@@ -1,23 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.IO;
-using System.Reactive.Linq;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Pocket;
-using RadLine;
 using Spectre.Console;
 using static Pocket.Logger;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
@@ -146,38 +142,6 @@ namespace Microsoft.DotNet.Interactive.Repl
             }
 
             return kernel;
-        }
-    }
-
-    internal class KernelCompletion : ITextCompletion
-    {
-        private readonly Kernel _kernel;
-
-        public KernelCompletion(Kernel kernel)
-        {
-            _kernel = kernel;
-        }
-
-        public IEnumerable<string>? GetCompletions(string prefix, string word, string suffix)
-        {
-            return GetCompletionsAsync(prefix).Result;
-        }
-
-        private async Task<IEnumerable<string>> GetCompletionsAsync(string prefix)
-        {
-            var result = await _kernel.SendAsync(
-                             new RequestCompletions(prefix, new LinePosition(0, prefix.Length)));
-
-            var results = await result
-                                .KernelEvents
-                                .OfType<CompletionsProduced>()
-                                .FirstOrDefaultAsync();
-
-            return results switch
-            {
-                { } => results.Completions.Select(c => c.InsertText),
-                _ => Array.Empty<string>()
-            };
         }
     }
 }

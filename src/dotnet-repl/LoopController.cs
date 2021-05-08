@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Repl.LineEditorCommands;
 using Pocket;
 using RadLine;
 using Spectre.Console;
+using Quit = Microsoft.DotNet.Interactive.Repl.LineEditorCommands.Quit;
 
 namespace Microsoft.DotNet.Interactive.Repl
 {
@@ -16,50 +19,91 @@ namespace Microsoft.DotNet.Interactive.Repl
         private readonly Action _quit;
         private readonly CompositeDisposable _disposables = new();
         private readonly ManualResetEvent _commandCompleted = new(false);
+
         private readonly CancellationTokenSource _disposalTokenSource = new();
+
         private readonly SillyExecutionStatusMessageGenerator _executionStatusMessageGenerator = new();
 
-        public LoopController(Kernel kernel, Action quit)
+        private readonly List<SubmitCode> _history = new();
+
+        private readonly LineEditorPrompt _prompt = new(
+            "[bold aqua slowblink]  >[/]",
+            "[bold aqua slowblink]...[/]");
+
+        public LoopController(
+            Kernel kernel,
+            Action quit,
+            IAnsiConsole? terminal = null,
+            IInputSource? inputSource = null)
         {
             _kernel = kernel;
             _quit = quit;
 
             _disposables.Add(() => _disposalTokenSource.Cancel());
-        }
 
-        public LineEditorPrompt Prompt { get; set; } = new(
-            "[bold aqua slowblink]  >[/]",
-            "[bold aqua slowblink]...[/]");
+            _kernel.AddMiddleware(async (command, context, next) =>
+            {
+                await next(command, context);
 
-        private LineEditor CreateLineEditor(Kernel kernel, IAnsiConsole? terminal = null, IInputSource? inputSource = null)
-        {
-            var editor = new LineEditor(terminal, inputSource)
+                if (command is SubmitCode current)
+                {
+                    TryAddToHistory(current);
+                }
+            });
+
+            LineEditor = new LineEditor(terminal, inputSource)
             {
                 MultiLine = true,
-                Prompt = Prompt,
+                Prompt = _prompt,
                 Completion = new KernelCompletion(kernel),
-                Highlighter = CreateWordHighlighter()
+                Highlighter = ReplWordHighlighter.Create()
             };
 
-            AddKeyBindings(editor);
-
-            return editor;
+            AddKeyBindings(LineEditor);
         }
 
-        public void Start()
+        public IReadOnlyList<SubmitCode> History => _history;
+
+        public int HistoryIndex { get; internal set; } = -1;
+
+        public LineEditor LineEditor { get; }
+
+        internal string? StashedBufferContent { get; set; }
+
+        public void Start() => Task.Run(RunAsync);
+
+        public bool TryAddToHistory(SubmitCode submitCode)
         {
-            Task.Run(RunAsync);
+            if (string.IsNullOrEmpty(submitCode.Code))
+            {
+                return false;
+            }
+
+            if (HistoryIndex < History.Count - 1)
+            {
+                return false;
+            }
+
+            if (History.LastOrDefault() is { } previous)
+            {
+                if (previous.Code.Equals(submitCode.Code))
+                {
+                    return false;
+                }
+            }
+
+            _history.Add(submitCode);
+            HistoryIndex = History.Count;
+            return true;
         }
 
         public async Task RunAsync()
         {
-            var editor = CreateLineEditor(_kernel);
-
             while (!_disposalTokenSource.IsCancellationRequested)
             {
                 _commandCompleted.Reset();
 
-                var input = await editor.ReadLine(_disposalTokenSource.Token);
+                var input = await LineEditor.ReadLine(_disposalTokenSource.Token);
 
                 if (_disposalTokenSource.IsCancellationRequested)
                 {
@@ -92,7 +136,6 @@ namespace Microsoft.DotNet.Interactive.Repl
         {
             var events = result.KernelEvents;
 
-            var isIncomplete = false;
 
             using var _ = events.Subscribe(@event =>
             {
@@ -101,7 +144,6 @@ namespace Microsoft.DotNet.Interactive.Repl
                     // events that tell us whether the submission was valid
 
                     case IncompleteCodeSubmissionReceived incomplete when incomplete.Command == command:
-                        isIncomplete = true;
                         break;
 
                     case CompleteCodeSubmissionReceived complete when complete.Command == command:
@@ -113,45 +155,39 @@ namespace Microsoft.DotNet.Interactive.Repl
                     // output / display events
 
                     case ErrorProduced errorProduced:
-                        if (!isIncomplete)
-                        {
-                            RenderErrorOutput(GetDisplayText(errorProduced));
-                        }
+                        RenderErrorEvent((errorProduced));
 
                         break;
 
                     case StandardOutputValueProduced standardOutputValueProduced:
-                        RenderSuccessfulOutput(GetDisplayText(standardOutputValueProduced));
+                        RenderSuccessfulEvent((standardOutputValueProduced));
                         break;
 
                     case DisplayedValueProduced displayedValueProduced:
-                        RenderSuccessfulOutput(GetDisplayText(displayedValueProduced));
+                        RenderSuccessfulEvent((displayedValueProduced));
                         break;
 
                     case DisplayedValueUpdated displayedValueUpdated:
-                        RenderSuccessfulOutput(GetDisplayText(displayedValueUpdated));
+                        RenderSuccessfulEvent((displayedValueUpdated));
                         break;
 
                     case ReturnValueProduced returnValueProduced:
-                        RenderSuccessfulOutput(GetDisplayText(returnValueProduced));
+                        RenderSuccessfulEvent((returnValueProduced));
                         break;
 
                     case StandardErrorValueProduced standardErrorValueProduced:
-                        RenderErrorOutput(GetDisplayText(standardErrorValueProduced));
+                        RenderErrorEvent((standardErrorValueProduced));
                         break;
 
                     // command completion events
 
                     case CommandFailed failed when failed.Command == command:
-                        if (!isIncomplete)
-                        {
-                            RenderErrorOutput(failed.Message);
+                        RenderErrorMessage(failed.Message);
 
-                            // if (failed.Exception is { })
-                            // {
-                            //     AnsiConsole.WriteException(failed.Exception);
-                            // }
-                        }
+                        // if (failed.Exception is { })
+                        // {
+                        //     AnsiConsole.WriteException(failed.Exception);
+                        // }
 
                         _commandCompleted.Set();
 
@@ -164,19 +200,27 @@ namespace Microsoft.DotNet.Interactive.Repl
                 }
             });
 
-            string GetDisplayText(DisplayEvent e) => e.FormattedValues.SingleOrDefault()?.Value ?? "";
-
-            void RenderSuccessfulOutput(string message)
+            void RenderSuccessfulEvent(DisplayEvent @event)
             {
                 AnsiConsole.Render(
-                    new Panel(Markup.Escape(message))
+                    new Panel(GetMarkup(@event))
                         .Header("[green]✔[/]")
                         .Expand()
                         .RoundedBorder()
                         .BorderColor(Color.Green));
             }
 
-            void RenderErrorOutput(string message)
+            void RenderErrorEvent(DisplayEvent @event)
+            {
+                AnsiConsole.Render(
+                    new Panel(GetMarkup(@event))
+                        .Header("[red]❌[/]")
+                        .Expand()
+                        .RoundedBorder()
+                        .BorderColor(Color.Red));
+            }
+
+            void RenderErrorMessage(string message)
             {
                 AnsiConsole.Render(
                     new Panel(Markup.Escape(message))
@@ -185,6 +229,18 @@ namespace Microsoft.DotNet.Interactive.Repl
                         .RoundedBorder()
                         .BorderColor(Color.Red));
             }
+        }
+
+        private static Markup GetMarkup(DisplayEvent @event)
+        {
+            var formattedValue = @event.FormattedValues.First();
+
+            var markup = formattedValue.MimeType switch
+            {
+                "text/plain+spectre" => new Markup(formattedValue.Value),
+                _ => new Markup(Markup.Escape(formattedValue.Value))
+            };
+            return markup;
         }
 
         public void Dispose()
@@ -202,104 +258,16 @@ namespace Microsoft.DotNet.Interactive.Repl
             editor.KeyBindings.Add<Clear>(
                 ConsoleKey.C,
                 ConsoleModifiers.Control | ConsoleModifiers.Alt);
-        }
 
-        private static WordHighlighter CreateWordHighlighter()
-        {
-            var wordHighlighter = new WordHighlighter();
+            editor.KeyBindings.Add(
+                ConsoleKey.UpArrow,
+                ConsoleModifiers.Control,
+                () => new PreviousHistory(this));
 
-            var keywordStyle = new Style(foreground: Color.LightSlateBlue);
-            var operatorStyle = new Style(foreground: Color.SteelBlue1_1);
-
-            var keywords = new[]
-            {
-                "async",
-                "await",
-                "bool",
-                "break",
-                "case",
-                "catch",
-                "class",
-                "else",
-                "finally",
-                "for",
-                "foreach",
-                "if",
-                "in",
-                "int",
-                "interface",
-                "internal",
-                "let",
-                "match",
-                "member",
-                "mutable",
-                "new",
-                "not",
-                "null",
-                "open",
-                "override",
-                "private",
-                "protected",
-                "public",
-                "record",
-                "typeof",
-                "return",
-                "string",
-                "struct",
-                "switch",
-                "then",
-                "try",
-                "type",
-                "use",
-                "using",
-                "var",
-                "void",
-                "when",
-                "while",
-                "with",
-            };
-
-            var operatorsAndPunctuation = new[]
-            {
-                "_",
-                "-",
-                "->",
-                ";",
-                ":",
-                "!",
-                "?",
-                ".",
-                "'",
-                "(",
-                ")",
-                "{",
-                "}",
-                "@",
-                "*",
-                "\"",
-                "#",
-                "%",
-                "+",
-                "<",
-                "=",
-                "=>",
-                ">",
-                "|",
-                "|>",
-                "$",
-            };
-
-            foreach (var keyword in keywords)
-            {
-                wordHighlighter.AddWord(keyword, keywordStyle);
-            }
-
-            foreach (var op in operatorsAndPunctuation)
-            {
-                wordHighlighter.AddWord(op, operatorStyle);
-            }
-
-            return wordHighlighter;
+            editor.KeyBindings.Add(
+                ConsoleKey.DownArrow,
+                ConsoleModifiers.Control,
+                () => new NextHistory(this));
         }
     }
 }
