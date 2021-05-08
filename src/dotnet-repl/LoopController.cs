@@ -1,37 +1,50 @@
 ﻿using System;
-using System.CommandLine.IO;
-using System.Reactive.Linq;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Pocket;
+using RadLine;
 using Spectre.Console;
 
 namespace Microsoft.DotNet.Interactive.Repl
 {
     public class LoopController : IDisposable
     {
-        private readonly TerminalHandler _terminalHandler;
         private readonly Kernel _kernel;
+        private readonly Action _quit;
         private readonly CompositeDisposable _disposables = new();
         private readonly ManualResetEvent _commandCompleted = new(false);
         private readonly CancellationTokenSource _disposalTokenSource = new();
-        private readonly StringBuilder _submissionInProgress = new();
+        private readonly SillyExecutionStatusMessageGenerator _executionStatusMessageGenerator = new();
 
-        public LoopController(
-            TerminalHandler terminalHandler,
-            Kernel kernel)
+        public LoopController(Kernel kernel, Action quit)
         {
-            _terminalHandler = terminalHandler;
             _kernel = kernel;
+            _quit = quit;
 
             _disposables.Add(() => _disposalTokenSource.Cancel());
         }
 
-        public Markup Prompt { get; private set; } = PromptMarkup.Ready;
+        public LineEditorPrompt Prompt { get; set; } = new(
+            "[bold aqua slowblink]  >[/]",
+            "[bold aqua slowblink]...[/]");
+
+        private LineEditor CreateLineEditor(Kernel kernel, IAnsiConsole? terminal = null, IInputSource? inputSource = null)
+        {
+            var editor = new LineEditor(terminal, inputSource)
+            {
+                MultiLine = true,
+                Prompt = Prompt,
+                Completion = new KernelCompletion(kernel),
+                Highlighter = CreateWordHighlighter()
+            };
+
+            AddKeyBindings(editor);
+
+            return editor;
+        }
 
         public void Start()
         {
@@ -40,59 +53,48 @@ namespace Microsoft.DotNet.Interactive.Repl
 
         public async Task RunAsync()
         {
+            var editor = CreateLineEditor(_kernel);
+
             while (!_disposalTokenSource.IsCancellationRequested)
             {
                 _commandCompleted.Reset();
 
-                _terminalHandler.Terminal.Render(Prompt);
-
-                var input = await _terminalHandler.GetInputAsync(_disposalTokenSource.Token);
+                var input = await editor.ReadLine(_disposalTokenSource.Token);
 
                 if (_disposalTokenSource.IsCancellationRequested)
                 {
                     return;
                 }
 
-                _submissionInProgress.AppendLine(input);
-
-                var command = new SubmitCode(_submissionInProgress.ToString());
+                var command = new SubmitCode(input);
 
                 KernelCommandResult? result = default;
 
-                await _terminalHandler
-                      .Terminal
-                      .Status()
-                      .StartAsync("⏳", async ctx =>
-                      {
-                          ctx.Spinner(Spinner.Known.Aesthetic);
-                          ctx.SpinnerStyle(Style.Parse("purple"));
-
-                          result = await _kernel.SendAsync(command);
-                      });
-
-                if (result is { })
+                await AnsiConsole.Status().StartAsync(_executionStatusMessageGenerator.GetStatusMessage(), async ctx =>
                 {
-                    HandleKernelEvents(command, result);
-                }
+                    ctx.Spinner(new ClockSpinner());
+                    ctx.SpinnerStyle(Style.Parse("green"));
+
+                    result = await _kernel.SendAsync(command);
+
+                    if (result is { })
+                    {
+                        HandleKernelEvents(command, result, ctx);
+                    }
+                });
             }
-        }
-
-        public async Task CommandCompleted()
-        {
-            await Task.Yield();
-
-            _commandCompleted.WaitOne();
         }
 
         private void HandleKernelEvents(
             KernelCommand command,
-            KernelCommandResult result)
+            KernelCommandResult result,
+            StatusContext context)
         {
-            var events = result.KernelEvents.ToEnumerable().ToList();
+            var events = result.KernelEvents;
 
             var isIncomplete = false;
 
-            foreach (var @event in events)
+            using var _ = events.Subscribe(@event =>
             {
                 switch (@event)
                 {
@@ -100,94 +102,204 @@ namespace Microsoft.DotNet.Interactive.Repl
 
                     case IncompleteCodeSubmissionReceived incomplete when incomplete.Command == command:
                         isIncomplete = true;
-                        SetPrompt(PromptMarkup.More);
                         break;
 
                     case CompleteCodeSubmissionReceived complete when complete.Command == command:
-                        _submissionInProgress.Clear();
-                        SetPrompt(PromptMarkup.Ready);
                         break;
 
                     case CodeSubmissionReceived codeSubmissionReceived:
                         break;
 
+                    // output / display events
+
+                    case ErrorProduced errorProduced:
+                        if (!isIncomplete)
+                        {
+                            RenderErrorOutput(GetDisplayText(errorProduced));
+                        }
+
+                        break;
+
+                    case StandardOutputValueProduced standardOutputValueProduced:
+                        RenderSuccessfulOutput(GetDisplayText(standardOutputValueProduced));
+                        break;
+
+                    case DisplayedValueProduced displayedValueProduced:
+                        RenderSuccessfulOutput(GetDisplayText(displayedValueProduced));
+                        break;
+
+                    case DisplayedValueUpdated displayedValueUpdated:
+                        RenderSuccessfulOutput(GetDisplayText(displayedValueUpdated));
+                        break;
+
+                    case ReturnValueProduced returnValueProduced:
+                        RenderSuccessfulOutput(GetDisplayText(returnValueProduced));
+                        break;
+
+                    case StandardErrorValueProduced standardErrorValueProduced:
+                        RenderErrorOutput(GetDisplayText(standardErrorValueProduced));
+                        break;
 
                     // command completion events
 
                     case CommandFailed failed when failed.Command == command:
                         if (!isIncomplete)
                         {
-                            RenderErrorResult(failed.Message);
+                            RenderErrorOutput(failed.Message);
+
+                            // if (failed.Exception is { })
+                            // {
+                            //     AnsiConsole.WriteException(failed.Exception);
+                            // }
                         }
+
                         _commandCompleted.Set();
 
                         break;
 
                     case CommandSucceeded succeeded when succeeded.Command == command:
+                        // RenderSuccessfulOutput(displayText);
                         _commandCompleted.Set();
                         break;
-
-
-                    // output / display events
-
-                    case DisplayedValueProduced displayedValueProduced:
-                        RenderSuccessfulResult(displayedValueProduced);
-                        break;
-
-                    case DisplayedValueUpdated displayedValueUpdated:
-                        RenderSuccessfulResult(displayedValueUpdated);
-                        break;
-
-                    case ErrorProduced errorProduced:
-                        if (!isIncomplete)
-                        {
-                            RenderErrorResult(errorProduced);
-                        }
-
-                        break;
-
-                    case ReturnValueProduced returnValueProduced:
-                        RenderSuccessfulResult(returnValueProduced);
-                        break;
-
-                    case StandardErrorValueProduced standardErrorValueProduced:
-                        RenderErrorResult(standardErrorValueProduced);
-                        break;
-
-                    case StandardOutputValueProduced standardOutputValueProduced:
-                        RenderSuccessfulResult(standardOutputValueProduced);
-                        break;
                 }
+            });
+
+            string GetDisplayText(DisplayEvent e) => e.FormattedValues.SingleOrDefault()?.Value ?? "";
+
+            void RenderSuccessfulOutput(string message)
+            {
+                AnsiConsole.Render(
+                    new Panel(Markup.Escape(message))
+                        .Header("[green]✔[/]")
+                        .Expand()
+                        .RoundedBorder()
+                        .BorderColor(Color.Green));
             }
-        }
 
-        private void SetPrompt(Markup prompt)
-        {
-            Prompt = prompt;
-        }
-
-        private void RenderSuccessfulResult(DisplayEvent errorProduced)
-        {
-            var displayText = errorProduced.FormattedValues.SingleOrDefault()?.Value ?? "";
-            _terminalHandler.Terminal.Out.WriteLine(displayText);
-            _terminalHandler.Terminal.Out.WriteLine();
-        }
-
-        private void RenderErrorResult(DisplayEvent errorProduced)
-        {
-            var displayText = errorProduced.FormattedValues.SingleOrDefault()?.Value ?? "";
-            RenderErrorResult(displayText);
-        }
-
-        private void RenderErrorResult(string displayText)
-        {
-            _terminalHandler.Terminal.Render(new Markup($"[red]{displayText}[/]"));
-            _terminalHandler.Terminal.Out.WriteLine();
+            void RenderErrorOutput(string message)
+            {
+                AnsiConsole.Render(
+                    new Panel(Markup.Escape(message))
+                        .Header("[red]❌[/]")
+                        .Expand()
+                        .RoundedBorder()
+                        .BorderColor(Color.Red));
+            }
         }
 
         public void Dispose()
         {
             _disposables.Dispose();
+        }
+
+        private void AddKeyBindings(LineEditor editor)
+        {
+            editor.KeyBindings.Add(
+                ConsoleKey.C,
+                ConsoleModifiers.Control,
+                () => new Quit(_quit));
+
+            editor.KeyBindings.Add<Clear>(
+                ConsoleKey.C,
+                ConsoleModifiers.Control | ConsoleModifiers.Alt);
+        }
+
+        private static WordHighlighter CreateWordHighlighter()
+        {
+            var wordHighlighter = new WordHighlighter();
+
+            var keywordStyle = new Style(foreground: Color.LightSlateBlue);
+            var operatorStyle = new Style(foreground: Color.SteelBlue1_1);
+
+            var keywords = new[]
+            {
+                "async",
+                "await",
+                "bool",
+                "break",
+                "case",
+                "catch",
+                "class",
+                "else",
+                "finally",
+                "for",
+                "foreach",
+                "if",
+                "in",
+                "int",
+                "interface",
+                "internal",
+                "let",
+                "match",
+                "member",
+                "mutable",
+                "new",
+                "not",
+                "null",
+                "open",
+                "override",
+                "private",
+                "protected",
+                "public",
+                "record",
+                "typeof",
+                "return",
+                "string",
+                "struct",
+                "switch",
+                "then",
+                "try",
+                "type",
+                "use",
+                "using",
+                "var",
+                "void",
+                "when",
+                "while",
+                "with",
+            };
+
+            var operatorsAndPunctuation = new[]
+            {
+                "_",
+                "-",
+                "->",
+                ";",
+                ":",
+                "!",
+                "?",
+                ".",
+                "'",
+                "(",
+                ")",
+                "{",
+                "}",
+                "@",
+                "*",
+                "\"",
+                "#",
+                "%",
+                "+",
+                "<",
+                "=",
+                "=>",
+                ">",
+                "|",
+                "|>",
+                "$",
+            };
+
+            foreach (var keyword in keywords)
+            {
+                wordHighlighter.AddWord(keyword, keywordStyle);
+            }
+
+            foreach (var op in operatorsAndPunctuation)
+            {
+                wordHighlighter.AddWord(op, operatorStyle);
+            }
+
+            return wordHighlighter;
         }
     }
 }
