@@ -79,22 +79,17 @@ namespace Microsoft.DotNet.Interactive.Repl
                 return false;
             }
 
-            if (HistoryIndex < History.Count - 1)
+            var added = false;
+
+            if (History.LastOrDefault() is not { } previous || !previous.Code.Equals(submitCode.Code))
             {
-                return false;
+                _history.Add(submitCode);
+                added = true;
             }
 
-            if (History.LastOrDefault() is { } previous)
-            {
-                if (previous.Code.Equals(submitCode.Code))
-                {
-                    return false;
-                }
-            }
-
-            _history.Add(submitCode);
             HistoryIndex = History.Count;
-            return true;
+
+            return added;
         }
 
         public async Task RunAsync()
@@ -135,7 +130,6 @@ namespace Microsoft.DotNet.Interactive.Repl
             StatusContext context)
         {
             var events = result.KernelEvents;
-
 
             using var _ = events.Subscribe(@event =>
             {

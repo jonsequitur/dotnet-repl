@@ -140,5 +140,21 @@ namespace dotnet_repl.Tests
             // FIX: (Submitting_an_entry_resets_history_index) write test
             throw new NotImplementedException();
         }
+
+        [Fact]
+        public void Repeating_a_submission_resets_history_index()
+        {   
+            var buffer = new LineBuffer();
+            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+
+            buffer.Insert("1");
+            context.Execute(new SubmitCommand());
+            context.Execute(new PreviousHistory(LoopController));
+
+
+
+            // FIX: (Repeating_a_submission_resets_history_index) write test
+            throw new NotImplementedException();
+        }
     }
 }
