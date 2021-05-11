@@ -52,6 +52,8 @@ namespace Microsoft.DotNet.Interactive.Repl
             TextReader standardIn,
             CancellationToken cancellationToken)
         {
+            new DefaultSpectreFormatterSet().Register();
+
             RenderSplash(options);
 
             var kernel = CreateKernel(options);
@@ -79,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.Repl
             };
 
             AnsiConsole.Render(
-                new FigletText($".NET / {language}")
+                new FigletText($".NET REPL: {language}")
                     .Centered()
                     .Color(Color.Aqua));
 
@@ -92,7 +94,8 @@ namespace Microsoft.DotNet.Interactive.Repl
             using var _ = Log.OnEnterAndExit("Creating Kernels");
 
             var compositeKernel = new CompositeKernel()
-                .UseDebugDirective();
+                .UseDebugDirective()
+                .UseAboutMagicCommand();
 
             compositeKernel.Add(
                 new CSharpKernel()

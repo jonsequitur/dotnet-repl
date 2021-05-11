@@ -5,12 +5,42 @@ using System.CommandLine.IO;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Process = System.Diagnostics.Process;
+using Microsoft.DotNet.Interactive.Formatting;
+using Recipes;
+using Spectre.Console;
 
 namespace Microsoft.DotNet.Interactive.Repl
 {
-    public static class KernelExtensions
+    internal static class KernelExtensions
     {
+        public static T UseAboutMagicCommand<T>(this T kernel)
+            where T : Kernel
+        {
+            var about = new Command("#!about", "Show version and build information")
+            {
+                Handler = CommandHandler.Create<KernelInvocationContext>(
+                    context => context.Display(VersionSensor.Version()))
+            };
+
+            kernel.AddDirective(about);
+
+            Formatter.Register<VersionSensor.BuildInfo>((info, context) =>
+            {
+                var table = new Grid();
+                table.AddColumn(new GridColumn());
+                table.AddColumn(new GridColumn());
+                table.AddRow("Version", info.AssemblyInformationalVersion);
+                table.AddRow("Built", info.BuildDate);
+                table.AddRow("Home", "https://github.com/jonsequitur/dotnet-repl");
+
+                table.FormatTo(context, PlainTextFormatter.MimeType);
+
+                return true;
+            }, PlainTextFormatter.MimeType);
+
+            return kernel;
+        }
+
         public static TKernel UseDebugDirective<TKernel>(this TKernel kernel)
             where TKernel : Kernel
         {

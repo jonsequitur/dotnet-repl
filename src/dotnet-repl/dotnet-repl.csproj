@@ -15,14 +15,14 @@
     <IsPackable>true</IsPackable>
     <PackageTags>dotnet interactive REPL csharp fsharp</PackageTags>
     <PackAsTool>true</PackAsTool>
-    <PackageVersion>0.0.1</PackageVersion>
+    <PackageVersion>0.0.2</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21176.4" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21176.4" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21176.4" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21176.4" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21260.2" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21260.2" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21260.2" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21260.2" />
     <PackageReference Include="pocket.disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -37,9 +37,13 @@
     </PackageReference>
     <PackageReference Include="radline" Version="0.0.1-local" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
-    <PackageReference Include="spectre.console" Version="0.39.1-preview.0.13" />
-    <PackageReference Include="system.commandline" Version="2.0.0-beta1.21174.1" />
+    <PackageReference Include="spectre.console" Version="0.39.1-preview.0.19" />
+    <PackageReference Include="system.commandline" Version="2.0.0-beta1.21257.1" />
     <PackageReference Include="system.reactive" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="%28Recipes%29\" />
   </ItemGroup>
 
 </Project>
