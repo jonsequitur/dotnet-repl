@@ -149,20 +149,21 @@ namespace Microsoft.DotNet.Interactive.Repl
                     // output / display events
 
                     case ErrorProduced errorProduced:
-                        RenderErrorEvent((errorProduced));
+                        RenderErrorEvent(errorProduced);
 
                         break;
 
                     case StandardOutputValueProduced standardOutputValueProduced:
-                        RenderSuccessfulEvent((standardOutputValueProduced));
+                        RenderSuccessfulEvent(standardOutputValueProduced);
                         break;
 
                     case DisplayedValueProduced displayedValueProduced:
-                        RenderSuccessfulEvent((displayedValueProduced));
+                        RenderSuccessfulEvent(displayedValueProduced);
                         break;
 
                     case DisplayedValueUpdated displayedValueUpdated:
-                        RenderSuccessfulEvent((displayedValueUpdated));
+                        context.Status(displayedValueUpdated.FormattedValues.Single(v => v.MimeType == "text/plain").Value);
+                        RenderSuccessfulEvent(displayedValueUpdated);
                         break;
 
                     case ReturnValueProduced returnValueProduced:
@@ -234,6 +235,7 @@ namespace Microsoft.DotNet.Interactive.Repl
                 "text/plain+spectre" => new Markup(formattedValue.Value),
                 _ => new Markup(Markup.Escape(formattedValue.Value))
             };
+
             return markup;
         }
 

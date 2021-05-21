@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Repl
                 ansiConsole.Write(value);
 
                 return true;
-            })
+            }),
         };
 
         public void Register()
