@@ -4,12 +4,13 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive;
 using Pocket;
 using Serilog.Sinks.RollingFileAlternate;
 using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
-using static Pocket.Logger<Microsoft.DotNet.Interactive.Repl.Program>;
+using static Pocket.Logger<dotnet_repl.Program>;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace dotnet_repl
 {
     public class Program
     {

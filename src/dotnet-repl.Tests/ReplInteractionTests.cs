@@ -4,7 +4,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Repl;
+using dotnet_repl;
+using Microsoft.Extensions.DependencyInjection;
 using Pocket;
 using RadLine;
 using Spectre.Console;
@@ -17,10 +18,15 @@ namespace dotnet_repl.Tests
     {
         private readonly CompositeDisposable _disposables;
         protected readonly LoopController LoopController;
+        protected readonly ServiceProvider ServiceProvider;
 
         protected ReplInteractionTests(ITestOutputHelper output)
         {
             Kernel = CommandLineParser.CreateKernel(new StartupOptions("csharp"));
+
+            ServiceProvider = new ServiceCollection()
+                              .AddSingleton(Kernel)
+                              .BuildServiceProvider();
 
             LoopController = new(
                 Kernel,

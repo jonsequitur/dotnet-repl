@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Repl;
+using dotnet_repl;
 using Xunit.Abstractions;
 
 namespace Pocket

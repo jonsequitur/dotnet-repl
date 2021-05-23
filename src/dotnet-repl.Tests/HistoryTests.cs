@@ -4,8 +4,7 @@
 using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Repl;
-using Microsoft.DotNet.Interactive.Repl.LineEditorCommands;
+using dotnet_repl.LineEditorCommands;
 using RadLine;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,7 +21,7 @@ namespace dotnet_repl.Tests
         public void previous_does_not_clear_buffer_when_there_is_no_history()
         {
             var buffer = new LineBuffer("hi");
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer, ServiceProvider);
 
             context.Execute(new PreviousHistory(LoopController));
 
@@ -35,7 +34,7 @@ namespace dotnet_repl.Tests
             LoopController.TryAddToHistory(new SubmitCode("1"));
 
             var buffer = new LineBuffer("hi");
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer, ServiceProvider);
 
             context.Execute(new PreviousHistory(LoopController));
 
@@ -50,7 +49,7 @@ namespace dotnet_repl.Tests
             LoopController.TryAddToHistory(new SubmitCode("2"));
 
             var buffer = new LineBuffer("hi");
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer, ServiceProvider);
 
             context.Execute(new PreviousHistory(LoopController));
             context.Execute(new PreviousHistory(LoopController));
@@ -65,7 +64,7 @@ namespace dotnet_repl.Tests
             LoopController.TryAddToHistory(new SubmitCode("1"));
 
             var buffer = new LineBuffer("hi");
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer, ServiceProvider);
 
             context.Execute(new PreviousHistory(LoopController));
             context.Execute(new PreviousHistory(LoopController));
@@ -78,7 +77,7 @@ namespace dotnet_repl.Tests
         public void next_does_not_clear_buffer_when_there_is_no_history()
         {
             var buffer = new LineBuffer("hi");
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer, ServiceProvider);
 
             context.Execute(new NextHistory(LoopController));
 
@@ -92,7 +91,7 @@ namespace dotnet_repl.Tests
             LoopController.TryAddToHistory(new SubmitCode("1"));
 
             var buffer = new LineBuffer("hi");
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer, ServiceProvider);
 
             context.Execute(new PreviousHistory(LoopController));
             context.Execute(new NextHistory(LoopController));
@@ -108,7 +107,7 @@ namespace dotnet_repl.Tests
             LoopController.TryAddToHistory(new SubmitCode("2"));
 
             var buffer = new LineBuffer("hi");
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer, ServiceProvider);
 
             context.Execute(new PreviousHistory(LoopController));
             context.Execute(new PreviousHistory(LoopController));
@@ -126,7 +125,7 @@ namespace dotnet_repl.Tests
             LoopController.TryAddToHistory(new SubmitCode("3"));
 
             var buffer = new LineBuffer("hi");
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer, ServiceProvider);
 
             context.Execute(new PreviousHistory(LoopController));
             context.Execute(new PreviousHistory(LoopController));
@@ -143,15 +142,13 @@ namespace dotnet_repl.Tests
 
         [Fact]
         public void Repeating_a_submission_resets_history_index()
-        {   
+        {
             var buffer = new LineBuffer();
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer, ServiceProvider);
 
             buffer.Insert("1");
             context.Execute(new SubmitCommand());
             context.Execute(new PreviousHistory(LoopController));
-
-
 
             // FIX: (Repeating_a_submission_resets_history_index) write test
             throw new NotImplementedException();

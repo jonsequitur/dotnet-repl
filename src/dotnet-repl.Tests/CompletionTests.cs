@@ -1,9 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Repl;
 using RadLine;
 using Xunit;
 using Xunit.Abstractions;
@@ -23,7 +21,7 @@ namespace dotnet_repl.Tests
             buffer.Insert("Console.");
             buffer.MoveEnd();
 
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer);
             context.Execute(new AutoCompleteCommand(AutoComplete.Next));
 
             buffer.Content.Should().Be("Console.BackgroundColor");
@@ -36,7 +34,7 @@ namespace dotnet_repl.Tests
             buffer.Insert("Console.");
             buffer.MoveEnd();
 
-            var context = new LineEditorContext(buffer, new KernelCompletion(Kernel));
+            var context = new LineEditorContext(buffer, ServiceProvider);
             context.Execute(new AutoCompleteCommand(AutoComplete.Next));
             context.Execute(new AutoCompleteCommand(AutoComplete.Next));
 

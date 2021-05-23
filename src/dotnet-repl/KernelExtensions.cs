@@ -4,11 +4,12 @@ using System.CommandLine.IO;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
 using Recipes;
 using Spectre.Console;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace dotnet_repl
 {
     internal static class KernelExtensions
     {

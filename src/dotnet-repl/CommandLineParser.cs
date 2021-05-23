@@ -6,6 +6,7 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -17,7 +18,7 @@ using Spectre.Console;
 using static Pocket.Logger;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace dotnet_repl
 {
     public static class CommandLineParser
     {

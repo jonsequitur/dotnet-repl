@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using Spectre.Console;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace dotnet_repl
 {
     internal class ClockSpinner : Spinner
     {

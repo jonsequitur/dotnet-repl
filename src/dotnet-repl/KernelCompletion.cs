@@ -6,11 +6,14 @@ using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Pocket;
 using RadLine;
+using static Pocket.Logger<dotnet_repl.KernelCompletion>;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace dotnet_repl
 {
     public class KernelCompletion : ITextCompletion
     {
@@ -21,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Repl
             _kernel = kernel;
         }
 
-        public IEnumerable<string>? GetCompletions(string prefix, string word, string suffix)
+        public IEnumerable<string> GetCompletions(string prefix, string word, string suffix)
         {
             return GetCompletionsAsync(prefix, word, suffix).Result;
         }
@@ -30,19 +33,29 @@ namespace Microsoft.DotNet.Interactive.Repl
         {
             var code = prefix + word;
 
-            var result = await _kernel.SendAsync(
-                             new RequestCompletions(code, new LinePosition(0, prefix.Length + word.Length)));
+            var command = new RequestCompletions(
+                code,
+                new LinePosition(0, prefix.Length + word.Length));
+
+            var result = await _kernel.SendAsync(command);
 
             var results = await result
                                 .KernelEvents
                                 .OfType<CompletionsProduced>()
                                 .FirstOrDefaultAsync();
 
-            return results switch
-            {
-                { } => results.Completions.Select(c => prefix + word + c.InsertText),
-                _ => Array.Empty<string>()
-            };
+            var matches = results.Completions
+                                 .Where(c => c.InsertText.Contains(code.Split('.', ' ').LastOrDefault() ?? code))
+                                 .Select(c => c.InsertText);
+
+            Log.Info(
+                "prefix: {prefix}, code: {code}, suffix: {suffix}, matches: {matches}",
+                prefix,
+                code,
+                suffix,
+                string.Join(",", matches));
+
+            return matches;
         }
     }
 }

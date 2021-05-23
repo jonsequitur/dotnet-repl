@@ -1,7 +1,7 @@
 using RadLine;
 using Spectre.Console;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace dotnet_repl
 {
     internal static class ReplWordHighlighter
     {

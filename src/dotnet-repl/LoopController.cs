@@ -3,20 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Repl.LineEditorCommands;
 using Pocket;
 using RadLine;
 using Spectre.Console;
-using Quit = Microsoft.DotNet.Interactive.Repl.LineEditorCommands.Quit;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace dotnet_repl
 {
     public class LoopController : IDisposable
     {
         private readonly Kernel _kernel;
-        private readonly Action _quit;
         private readonly CompositeDisposable _disposables = new();
         private readonly ManualResetEvent _commandCompleted = new(false);
 
@@ -37,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Repl
             IInputSource? inputSource = null)
         {
             _kernel = kernel;
-            _quit = quit;
+            QuitAction = quit;
 
             _disposables.Add(() => _disposalTokenSource.Cancel());
 
@@ -59,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.Repl
                 Highlighter = ReplWordHighlighter.Create()
             };
 
-            AddKeyBindings(LineEditor);
+            this.AddKeyBindings();
         }
 
         public IReadOnlyList<SubmitCode> History => _history;
@@ -67,6 +65,8 @@ namespace Microsoft.DotNet.Interactive.Repl
         public int HistoryIndex { get; internal set; } = -1;
 
         public LineEditor LineEditor { get; }
+        
+        internal Action QuitAction{ get; }
 
         internal string? StashedBufferContent { get; set; }
 
@@ -242,28 +242,6 @@ namespace Microsoft.DotNet.Interactive.Repl
         public void Dispose()
         {
             _disposables.Dispose();
-        }
-
-        private void AddKeyBindings(LineEditor editor)
-        {
-            editor.KeyBindings.Add(
-                ConsoleKey.C,
-                ConsoleModifiers.Control,
-                () => new Quit(_quit));
-
-            editor.KeyBindings.Add<Clear>(
-                ConsoleKey.C,
-                ConsoleModifiers.Control | ConsoleModifiers.Alt);
-
-            editor.KeyBindings.Add(
-                ConsoleKey.UpArrow,
-                ConsoleModifiers.Control,
-                () => new PreviousHistory(this));
-
-            editor.KeyBindings.Add(
-                ConsoleKey.DownArrow,
-                ConsoleModifiers.Control,
-                () => new NextHistory(this));
         }
     }
 }

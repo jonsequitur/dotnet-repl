@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Repl;
 using Xunit;
 
 namespace dotnet_repl.Tests

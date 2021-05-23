@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace dotnet_repl
 {
     public static class ConsoleKeyExtensions
     {

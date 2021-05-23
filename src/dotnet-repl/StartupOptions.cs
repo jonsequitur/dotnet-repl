@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace dotnet_repl
 {
     public class StartupOptions
     {

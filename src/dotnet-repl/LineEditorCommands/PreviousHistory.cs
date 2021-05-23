@@ -4,7 +4,7 @@
 using System.Linq;
 using RadLine;
 
-namespace Microsoft.DotNet.Interactive.Repl.LineEditorCommands
+namespace dotnet_repl.LineEditorCommands
 {
     public class PreviousHistory : LineEditorCommand
     {

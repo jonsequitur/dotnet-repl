@@ -5,7 +5,7 @@ using System;
 using RadLine;
 using Spectre.Console;
 
-namespace Microsoft.DotNet.Interactive.Repl.LineEditorCommands
+namespace dotnet_repl.LineEditorCommands
 {
     public class Quit : LineEditorCommand
     {

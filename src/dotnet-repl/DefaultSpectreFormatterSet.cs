@@ -5,7 +5,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
-namespace Microsoft.DotNet.Interactive.Repl
+namespace dotnet_repl
 {
     public class DefaultSpectreFormatterSet
     {
