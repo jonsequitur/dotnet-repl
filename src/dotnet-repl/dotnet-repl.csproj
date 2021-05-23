@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,13 +8,14 @@
 
   <PropertyGroup>
     <PackageId>dotnet-repl</PackageId>
-    <PackageDescription>A polyglot command line REPL for C#, F#, and other languages</PackageDescription>
     <ToolCommandName>dotnet-repl</ToolCommandName>
     <IsPackable>true</IsPackable>
     <PackageTags>dotnet interactive REPL csharp fsharp</PackageTags>
     <PackAsTool>true</PackAsTool>
-    <PackageVersion>0.0.2</PackageVersion>
     <Authors>jonsequitur</Authors>
+    <Version>0.1.0</Version>
+    <Description>A polyglot command line REPL for C#, F#, and other languages</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
