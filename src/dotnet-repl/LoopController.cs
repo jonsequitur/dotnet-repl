@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Notebook;
 using Pocket;
 using RadLine;
 using Spectre.Console;
@@ -31,11 +32,12 @@ namespace dotnet_repl
         public LoopController(
             Kernel kernel,
             Action quit,
-            IAnsiConsole? terminal = null,
+            IAnsiConsole ansiConsole,
             IInputSource? inputSource = null)
         {
             _kernel = kernel;
             QuitAction = quit;
+            AnsiConsole = ansiConsole;
 
             _disposables.Add(() => _disposalTokenSource.Cancel());
 
@@ -56,7 +58,7 @@ namespace dotnet_repl
                 }
             });
 
-            LineEditor = new LineEditor(terminal, inputSource)
+            LineEditor = new LineEditor(ansiConsole, inputSource)
             {
                 MultiLine = true,
                 Prompt = _prompt,
@@ -72,12 +74,13 @@ namespace dotnet_repl
         public int HistoryIndex { get; internal set; } = -1;
 
         public LineEditor LineEditor { get; }
-        
-        internal Action QuitAction{ get; }
+
+        internal Action QuitAction { get; }
+        public IAnsiConsole AnsiConsole { get; }
 
         internal string? StashedBufferContent { get; set; }
 
-        public void Start() => Task.Run(RunAsync);
+        public void Start() => Task.Run(() => RunAsync());
 
         public bool TryAddToHistory(SubmitCode submitCode)
         {
@@ -99,14 +102,24 @@ namespace dotnet_repl
             return added;
         }
 
-        public async Task RunAsync()
+        public async Task RunAsync(
+            NotebookDocument? notebook = null,
+            bool exitAfterRun = false)
         {
+            var queuedSubmissions = new Queue<string>(notebook?.Cells.Select(c => $"#!{c.Language}\n{c.Contents}") ?? Array.Empty<string>());
+
             while (!_disposalTokenSource.IsCancellationRequested)
             {
                 _commandCompleted.Reset();
 
-                var input = await LineEditor.ReadLine(_disposalTokenSource.Token);
-
+                if (!queuedSubmissions.TryDequeue(out var input))
+                {
+                    if (!exitAfterRun)
+                    {
+                        input = await LineEditor.ReadLine(_disposalTokenSource.Token);
+                    }
+                }
+               
                 if (_disposalTokenSource.IsCancellationRequested)
                 {
                     return;
@@ -120,7 +133,7 @@ namespace dotnet_repl
                 {
                     ctx.Spinner(new ClockSpinner());
                     ctx.SpinnerStyle(Style.Parse("green"));
-
+                    
                     result = await _kernel.SendAsync(command);
 
                     if (result is { })
@@ -128,6 +141,11 @@ namespace dotnet_repl
                         HandleKernelEvents(command, result, ctx);
                     }
                 });
+
+                if (exitAfterRun && queuedSubmissions.Count == 0)
+                {
+                    break;
+                }
             }
         }
 
@@ -156,94 +174,46 @@ namespace dotnet_repl
                     // output / display events
 
                     case ErrorProduced errorProduced:
-                        RenderErrorEvent(errorProduced);
+                        AnsiConsole.RenderErrorEvent(errorProduced);
 
                         break;
 
                     case StandardOutputValueProduced standardOutputValueProduced:
-                        RenderSuccessfulEvent(standardOutputValueProduced);
+                        AnsiConsole.RenderSuccessfulEvent(standardOutputValueProduced);
                         break;
 
                     case DisplayedValueProduced displayedValueProduced:
-                        RenderSuccessfulEvent(displayedValueProduced);
+                        AnsiConsole.RenderSuccessfulEvent(displayedValueProduced);
                         break;
 
                     case DisplayedValueUpdated displayedValueUpdated:
                         context.Status(displayedValueUpdated.FormattedValues.Single(v => v.MimeType == "text/plain").Value);
-                        RenderSuccessfulEvent(displayedValueUpdated);
+                        AnsiConsole.RenderSuccessfulEvent(displayedValueUpdated);
                         break;
 
                     case ReturnValueProduced returnValueProduced:
-                        RenderSuccessfulEvent((returnValueProduced));
+                        AnsiConsole.RenderSuccessfulEvent(returnValueProduced);
                         break;
 
                     case StandardErrorValueProduced standardErrorValueProduced:
-                        RenderErrorEvent((standardErrorValueProduced));
+                        AnsiConsole.RenderErrorEvent(standardErrorValueProduced);
                         break;
 
                     // command completion events
 
                     case CommandFailed failed when failed.Command == command:
-                        RenderErrorMessage(failed.Message);
-
-                        // if (failed.Exception is { })
-                        // {
-                        //     AnsiConsole.WriteException(failed.Exception);
-                        // }
+                        AnsiConsole.RenderErrorMessage(failed.Message);
 
                         _commandCompleted.Set();
 
                         break;
 
                     case CommandSucceeded succeeded when succeeded.Command == command:
-                        // RenderSuccessfulOutput(displayText);
                         _commandCompleted.Set();
                         break;
                 }
             });
 
-            void RenderSuccessfulEvent(DisplayEvent @event)
-            {
-                AnsiConsole.Render(
-                    new Panel(GetMarkup(@event))
-                        .Header("[green]✔[/]")
-                        .Expand()
-                        .RoundedBorder()
-                        .BorderColor(Color.Green));
-            }
-
-            void RenderErrorEvent(DisplayEvent @event)
-            {
-                AnsiConsole.Render(
-                    new Panel(GetMarkup(@event))
-                        .Header("[red]❌[/]")
-                        .Expand()
-                        .RoundedBorder()
-                        .BorderColor(Color.Red));
-            }
-
-            void RenderErrorMessage(string message)
-            {
-                AnsiConsole.Render(
-                    new Panel(Markup.Escape(message))
-                        .Header("[red]❌[/]")
-                        .Expand()
-                        .RoundedBorder()
-                        .BorderColor(Color.Red));
-            }
-        }
-
-        private static Markup GetMarkup(DisplayEvent @event)
-        {
-            var formattedValue = @event.FormattedValues.First();
-
-            var markup = formattedValue.MimeType switch
-            {
-                "text/plain+spectre" => new Markup(formattedValue.Value),
-                _ => new Markup(Markup.Escape(formattedValue.Value))
-            };
-
-            return markup;
         }
 
         public void Dispose()

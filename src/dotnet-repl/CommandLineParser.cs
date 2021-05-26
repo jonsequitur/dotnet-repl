@@ -4,6 +4,8 @@ using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
@@ -12,6 +14,7 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Pocket;
 using Spectre.Console;
@@ -26,41 +29,74 @@ namespace dotnet_repl
             "--log-path",
             "Enable file logging to the specified directory");
 
-        public static Option<string> DefaultKernel = new Option<string>(
+        public static Option<string> DefaultKernelOption = new Option<string>(
             "--default-kernel",
             description: "The default language for the kernel",
             getDefaultValue: () => "csharp").AddSuggestions("csharp", "fsharp");
 
-        public static Parser Create()
+        public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
+                "--notebook",
+                description: "After starting the REPL, run all of the cells in the specified notebook file.")
+            .ExistingOnly();
+
+        public static Option<bool> ExitAfterRun = new(
+            "--exit-after-run",
+            "Exit the REPL when the specified notebook or script has run.");
+
+        public static Option<DirectoryInfo> WorkingDirOption = new Option<DirectoryInfo>(
+                "--working-dir",
+                () => new DirectoryInfo(Environment.CurrentDirectory),
+                "Working directory to which to change after launching the kernel.")
+            .ExistingOnly();
+
+        public static Parser Create(IAnsiConsole? ansiConsole = null)
         {
             var rootCommand = new RootCommand("dotnet-repl")
             {
                 LogPathOption,
-                DefaultKernel
+                DefaultKernelOption,
+                NotebookOption,
+                WorkingDirOption,
+                ExitAfterRun
             };
 
-            rootCommand.Handler = CommandHandler.Create<StartupOptions, IConsole, TextReader, CancellationToken>(StartRepl);
+            rootCommand.Handler = CommandHandler.Create<StartupOptions, CancellationToken>(
+                (options, token) => StartRepl(options, token, ansiConsole ?? new AnsiConsoleFactory().Create(new AnsiConsoleSettings())));
 
             return new CommandLineBuilder(rootCommand)
-                   .UseDefaults()
-                   .Build();
+                .UseDefaults()
+                .UseHelpBuilder(context => new SpectreHelpBuilder(context.Console))
+                .Build();
         }
 
         private static async Task StartRepl(
             StartupOptions options,
-            IConsole console,
-            TextReader standardIn,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            IAnsiConsole ansiConsole)
         {
             new DefaultSpectreFormatterSet().Register();
 
-            RenderSplash(options);
+            ansiConsole.RenderSplash(options);
 
             var kernel = CreateKernel(options);
 
+            NotebookDocument? notebook = default;
+
+            if (options.Notebook is { })
+            {
+                var content = await File.ReadAllTextAsync(options.Notebook.FullName, cancellationToken);
+                var rawData = Encoding.UTF8.GetBytes(content);
+                notebook = kernel.ParseNotebook(options.Notebook.FullName, rawData);
+
+                if (notebook.Cells.Any())
+                {
+                    ansiConsole.Announce($"📓 Running notebook: {options.Notebook}");
+                }
+            }
+
             using var disposable = new CompositeDisposable();
 
-            using var loop = new LoopController(kernel, disposable.Dispose);
+            using var loop = new LoopController(kernel, disposable.Dispose, ansiConsole);
 
             disposable.Add(loop);
 
@@ -68,28 +104,10 @@ namespace dotnet_repl
 
             Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
 
-            await loop.RunAsync();
+            await loop.RunAsync(notebook, options.ExitAfterRun);
         }
 
-        private static void RenderSplash(StartupOptions startupOptions)
-        {
-            var language = startupOptions.DefaultKernelName switch
-            {
-                "csharp" => "C#",
-                "fsharp" => "F#",
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            AnsiConsole.Render(
-                new FigletText($".NET REPL: {language}")
-                    .Centered()
-                    .Color(Color.Aqua));
-
-            AnsiConsole.Render(
-                new Markup("[aqua]Built with .NET Interactive + Spectre.Console[/]\n\n").Centered());
-        }
-
-        public static Kernel CreateKernel(StartupOptions options)
+        public static CompositeKernel CreateKernel(StartupOptions options)
         {
             using var _ = Log.OnEnterAndExit("Creating Kernels");
 
@@ -126,8 +144,8 @@ namespace dotnet_repl
                     .UseWho());
 
             var kernel = compositeKernel
-                         .UseKernelClientConnection(new ConnectNamedPipe())
-                         .UseKernelClientConnection(new ConnectSignalR());
+                .UseKernelClientConnection(new ConnectNamedPipe())
+                .UseKernelClientConnection(new ConnectSignalR());
 
             compositeKernel.Add(new SQLKernel());
             compositeKernel.UseQuitCommand();
