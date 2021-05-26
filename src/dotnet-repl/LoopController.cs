@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
@@ -124,7 +125,7 @@ namespace dotnet_repl
                         input = await LineEditor.ReadLine(_disposalTokenSource.Token);
                     }
                 }
-               
+
                 if (_disposalTokenSource.IsCancellationRequested)
                 {
                     return;
@@ -138,7 +139,7 @@ namespace dotnet_repl
                 {
                     ctx.Spinner(new ClockSpinner());
                     ctx.SpinnerStyle(Style.Parse("green"));
-                    
+
                     result = await _kernel.SendAsync(command);
 
                     if (result is { })
@@ -160,6 +161,9 @@ namespace dotnet_repl
             StatusContext context)
         {
             var events = result.KernelEvents;
+
+            StringBuilder? stdOut = default;
+            StringBuilder? stdErr = default;
 
             using var _ = events.Subscribe(@event =>
             {
@@ -184,7 +188,17 @@ namespace dotnet_repl
                         break;
 
                     case StandardOutputValueProduced standardOutputValueProduced:
-                        AnsiConsole.RenderSuccessfulEvent(standardOutputValueProduced);
+
+                        stdOut ??= new StringBuilder();
+                        stdOut.Append(standardOutputValueProduced.PlainTextValue());
+
+                        break;
+
+                    case StandardErrorValueProduced standardErrorValueProduced:
+                        
+                        stdErr ??= new StringBuilder();
+                        stdErr.Append(standardErrorValueProduced.PlainTextValue());
+
                         break;
 
                     case DisplayedValueProduced displayedValueProduced:
@@ -200,13 +214,11 @@ namespace dotnet_repl
                         AnsiConsole.RenderSuccessfulEvent(returnValueProduced);
                         break;
 
-                    case StandardErrorValueProduced standardErrorValueProduced:
-                        AnsiConsole.RenderErrorEvent(standardErrorValueProduced);
-                        break;
-
                     // command completion events
 
                     case CommandFailed failed when failed.Command == command:
+                        this.AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
+                        
                         AnsiConsole.RenderErrorMessage(failed.Message);
 
                         _commandCompleted.Set();
@@ -214,12 +226,13 @@ namespace dotnet_repl
                         break;
 
                     case CommandSucceeded succeeded when succeeded.Command == command:
+                        AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
                         _commandCompleted.Set();
                         break;
                 }
             });
-
         }
+
 
         public void Dispose()
         {

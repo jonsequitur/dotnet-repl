@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using Microsoft.DotNet.Interactive.Events;
 using Spectre.Console;
 
@@ -13,7 +14,7 @@ namespace dotnet_repl
                 new Panel(
                         new Paragraph(text, Theme.AnnouncementText))
                     .BorderStyle(Theme.AnnouncementBorder)
-                    .SquareBorder()
+                    .HeavyBorder()
                     .Expand());
         }
 
@@ -46,24 +47,50 @@ namespace dotnet_repl
                     .BorderStyle(Theme.SuccessOutputBorder));
         }
 
-        public static void RenderErrorEvent(this IAnsiConsole ansiConsole, DisplayEvent @event)
+        public static void RenderErrorEvent(this IAnsiConsole ansiConsole, DisplayEvent @event, string header = "❌")
         {
             ansiConsole.Write(
                 new Panel(GetMarkup(@event))
-                    .Header("❌")
+                    .Header(header)
                     .Expand()
                     .RoundedBorder()
                     .BorderStyle(Theme.ErrorOutputBorder));
         }
 
-        public static void RenderErrorMessage(this IAnsiConsole ansiConsole, string message)
+        public static void RenderSuccessMessage(this IAnsiConsole ansiConsole, string message, string header = "✔")
         {
             ansiConsole.Write(
                 new Panel(Markup.Escape(message))
-                    .Header("❌")
+                    .Header(header)
+                    .Expand()
+                    .RoundedBorder()
+                    .BorderStyle(Theme.SuccessOutputBorder));
+        }
+
+        public static void RenderErrorMessage(this IAnsiConsole ansiConsole, string message, string header = "❌")
+        {
+            ansiConsole.Write(
+                new Panel(Markup.Escape(message))
+                    .Header(header)
                     .Expand()
                     .RoundedBorder()
                     .BorderStyle(Theme.ErrorOutputBorder));
+        }
+
+        public static void RenderBufferedStandardOutAndErr(
+            this IAnsiConsole ansiConsole,
+            StringBuilder? stdOut = null,
+            StringBuilder? stdErr = null)
+        {
+            if (stdOut is { })
+            {
+                ansiConsole.RenderSuccessMessage(stdOut.ToString(), "✒");
+            }
+
+            if (stdErr is { })
+            {
+                ansiConsole.RenderErrorMessage(stdErr.ToString(), "✒");
+            }
         }
 
         private static Markup GetMarkup(DisplayEvent @event)
@@ -77,6 +104,14 @@ namespace dotnet_repl
             };
 
             return markup;
+        }
+    }
+
+    internal static class KernelEventExtensions
+    {
+        public static string PlainTextValue(this DisplayEvent @event)
+        {
+            return @event.FormattedValues.FirstOrDefault()?.Value ?? string.Empty;
         }
     }
 }
