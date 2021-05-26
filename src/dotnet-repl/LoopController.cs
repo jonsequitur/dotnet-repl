@@ -108,6 +108,11 @@ namespace dotnet_repl
         {
             var queuedSubmissions = new Queue<string>(notebook?.Cells.Select(c => $"#!{c.Language}\n{c.Contents}") ?? Array.Empty<string>());
 
+            if (!queuedSubmissions.Any())
+            {
+                exitAfterRun = false;
+            }
+
             while (!_disposalTokenSource.IsCancellationRequested)
             {
                 _commandCompleted.Reset();

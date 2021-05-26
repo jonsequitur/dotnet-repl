@@ -10,6 +10,30 @@ using Xunit.Abstractions;
 
 namespace dotnet_repl.Tests
 {
+    public class OutputTests : ReplInteractionTests
+    {
+        public OutputTests(ITestOutputHelper output) : base(output)
+        {
+        }
+
+
+        [Fact]
+        public void Standard_out_is_batched()
+        {
+            var buffer = new LineBuffer("Console.Write(1);");
+            var context = new LineEditorContext(buffer, ServiceProvider);
+
+
+            context.Execute(new SubmitCommand());
+
+
+
+            // TODO-JOSEQU (Standard_out_is_batched) write test
+            Assert.True(false, "Test Standard_out_is_batched is not written yet.");
+        }
+
+    }
+
     public class HistoryTests : ReplInteractionTests
     {
         public HistoryTests(ITestOutputHelper output) : base(output)
