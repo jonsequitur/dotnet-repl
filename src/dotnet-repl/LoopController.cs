@@ -43,7 +43,14 @@ namespace dotnet_repl
             {
                 await next(command, context);
 
-                if (command is SubmitCode current)
+                KernelCommand root = command;
+
+                while (root.Parent is { } parent)
+                {
+                    root = parent;
+                }
+
+                if (root is SubmitCode current)
                 {
                     TryAddToHistory(current);
                 }

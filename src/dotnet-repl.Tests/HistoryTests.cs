@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using dotnet_repl.LineEditorCommands;
@@ -39,6 +41,20 @@ namespace dotnet_repl.Tests
             context.Execute(new PreviousHistory(LoopController));
 
             context.Buffer.Content.Should().Be("1");
+            LoopController.HistoryIndex.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task previous_submissions_contain_top_level_magics()
+        {
+            await Kernel.SendAsync(new SubmitCode("#!csharp\n123"), CancellationToken.None);
+
+            var buffer = new LineBuffer("hi");
+            var context = new LineEditorContext(buffer, ServiceProvider);
+
+            context.Execute(new PreviousHistory(LoopController));
+
+            context.Buffer.Content.Should().Be("#!csharp\n123");
             LoopController.HistoryIndex.Should().Be(0);
         }
 
