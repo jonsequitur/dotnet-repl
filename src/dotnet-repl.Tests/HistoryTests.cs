@@ -23,7 +23,6 @@ namespace dotnet_repl.Tests
             var buffer = new LineBuffer("Console.Write(1);");
             var context = new LineEditorContext(buffer, ServiceProvider);
 
-
             context.Execute(new SubmitCommand());
 
 
@@ -167,6 +166,7 @@ namespace dotnet_repl.Tests
             context.Execute(new PreviousHistory(LoopController));
             context.Execute(new PreviousHistory(LoopController));
 
+            // QUESTION-JOSEQU: (Submitting_an_entry_resets_history_index) how to submit the current buffer
             context.Execute(new SubmitCommand());
 
             context.Buffer.Content.Should().Be("");

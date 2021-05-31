@@ -22,8 +22,6 @@ namespace dotnet_repl
 
         private readonly CancellationTokenSource _disposalTokenSource = new();
 
-        private readonly SillyExecutionStatusMessageGenerator _executionStatusMessageGenerator = new();
-
         private readonly List<SubmitCode> _history = new();
 
         private readonly LineEditorPrompt _prompt = new(
@@ -135,7 +133,7 @@ namespace dotnet_repl
 
                 KernelCommandResult? result = default;
 
-                await AnsiConsole.Status().StartAsync(_executionStatusMessageGenerator.GetStatusMessage(), async ctx =>
+                await AnsiConsole.Status().StartAsync(Theme.StatusMessageGenerator.GetStatusMessage(), async ctx =>
                 {
                     ctx.Spinner(new ClockSpinner());
                     ctx.SpinnerStyle(Style.Parse("green"));
@@ -217,7 +215,7 @@ namespace dotnet_repl
                     // command completion events
 
                     case CommandFailed failed when failed.Command == command:
-                        this.AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
+                        AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
                         
                         AnsiConsole.RenderErrorMessage(failed.Message);
 

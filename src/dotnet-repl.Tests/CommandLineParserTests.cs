@@ -21,8 +21,5 @@ namespace dotnet_repl.Tests
             // TODO-JOSEQU (Help_is_snazzy) write test
             Assert.True(false, "Test Help_is_snazzy is not written yet.");
         }
-        
-
-
     }
 }

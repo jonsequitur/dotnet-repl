@@ -4,7 +4,7 @@ namespace dotnet_repl
 {
     internal static class Theme
     {
-        public static Color SplashColor { get; } = Color.Aqua;
+        public static Color SplashColor { get; set; } = Color.Aqua;
 
         public static Style Splash { get; } = new(Color.Aqua);
 
@@ -15,5 +15,7 @@ namespace dotnet_repl
         public static Style ErrorOutputBorder { get; set; } = new(Color.Red);
 
         public static Style SuccessOutputBorder { get; set; } = new(Color.Green);
+
+        public static IStatusMessageGenerator StatusMessageGenerator { get; set; } = new SillyExecutionStatusMessageGenerator();
     }
 }

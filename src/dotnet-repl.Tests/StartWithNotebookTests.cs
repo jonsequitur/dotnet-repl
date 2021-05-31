@@ -38,5 +38,23 @@ namespace dotnet_repl.Tests
             // TODO-JOSEQU (when_an_ipynb_is_specified_it_runs_it) write test
             Assert.True(false, "Test when_an_ipynb_is_specified_it_runs_it is not written yet.");
         }
+
+        [Fact]
+        public void When_an_ipynb_is_run_and_no_error_is_produced_then_the_exit_code_is_0()
+        {
+            
+
+            // TODO-JOSEQU (When_an_ipynb_is_run_and_an_error_is_produced_from_a_cell_then_the_exit_code_is_1) write test
+            Assert.True(false, "Test When_an_ipynb_is_run_and_an_error_is_produced_from_a_cell_then_the_exit_code_is_1 is not written yet.");
+        }
+        
+        [Fact]
+        public void When_an_ipynb_is_run_and_an_error_is_produced_from_a_cell_then_the_exit_code_is_1()
+        {
+            
+
+            // TODO-JOSEQU (When_an_ipynb_is_run_and_an_error_is_produced_from_a_cell_then_the_exit_code_is_1) write test
+            Assert.True(false, "Test When_an_ipynb_is_run_and_an_error_is_produced_from_a_cell_then_the_exit_code_is_1 is not written yet.");
+        }
     }
 }
