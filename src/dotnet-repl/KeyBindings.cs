@@ -10,13 +10,17 @@ namespace dotnet_repl
         {
             var editor = controller.LineEditor;
 
+            // Remove old keybinding for autocomplete
+            editor.KeyBindings.Remove(ConsoleKey.Tab);
+            editor.KeyBindings.Remove(ConsoleKey.Tab, ConsoleModifiers.Control);
+
             editor.KeyBindings.Add(
                 ConsoleKey.Tab,
                 () => new CompletionCommand(AutoComplete.Next));
 
             editor.KeyBindings.Add(
                 ConsoleKey.Tab,
-                ConsoleModifiers.Control,
+                ConsoleModifiers.Shift,
                 () => new CompletionCommand(AutoComplete.Previous));
 
             editor.KeyBindings.Add(
