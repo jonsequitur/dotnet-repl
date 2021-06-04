@@ -12,7 +12,7 @@ using static Pocket.Logger<dotnet_repl.KernelCompletion>;
 
 namespace dotnet_repl
 {
-    public class KernelCompletion : ITextCompletion
+    public class KernelCompletion
     {
         private readonly Kernel _kernel;
 
@@ -21,18 +21,16 @@ namespace dotnet_repl
             _kernel = kernel;
         }
 
-        public IEnumerable<string> GetCompletions(string prefix, string word, string suffix)
+        public IEnumerable<string> GetCompletions(LineBuffer buffer)
         {
-            return GetCompletionsAsync(prefix, word, suffix).Result;
+            return GetCompletionsAsync(buffer).Result;
         }
 
-        private async Task<IEnumerable<string>> GetCompletionsAsync(string prefix, string word, string suffix)
+        private async Task<IEnumerable<string>> GetCompletionsAsync(LineBuffer buffer)
         {
-            var code = prefix + word;
-
             var command = new RequestCompletions(
-                code,
-                new LinePosition(0, prefix.Length + word.Length));
+                buffer.Content,
+                new LinePosition(0, buffer.CursorPosition));
 
             var result = await _kernel.SendAsync(command);
 
@@ -41,15 +39,15 @@ namespace dotnet_repl
                                 .OfType<CompletionsProduced>()
                                 .FirstOrDefaultAsync();
 
+            var code = buffer.Content.Substring(0, buffer.CursorPosition);
             var matches = results.Completions
-                                 .Where(c => c.InsertText.Contains(code.Split('.', ' ').LastOrDefault() ?? code))
-                                 .Select(c => c.InsertText);
+                .Where(c => c.InsertText.Contains(code.Split('.', ' ').LastOrDefault() ?? code))
+                .Select(c => c.InsertText);
 
             Log.Info(
-                "prefix: {prefix}, code: {code}, suffix: {suffix}, matches: {matches}",
-                prefix,
+                "buffer: {buffer}, code: {code}, matches: {matches}",
+                buffer.Content,
                 code,
-                suffix,
                 string.Join(",", matches));
 
             return matches;

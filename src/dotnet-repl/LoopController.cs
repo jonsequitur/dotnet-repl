@@ -58,11 +58,11 @@ namespace dotnet_repl
                 }
             });
 
-            LineEditor = new LineEditor(ansiConsole, inputSource)
+            var provider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
+            LineEditor = new LineEditor(ansiConsole, inputSource, provider)
             {
                 MultiLine = true,
                 Prompt = _prompt,
-                Completion = new KernelCompletion(kernel),
                 Highlighter = ReplWordHighlighter.Create()
             };
 
