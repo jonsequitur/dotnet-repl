@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.DotNet.Interactive.Events;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace dotnet_repl
 {
@@ -33,48 +34,52 @@ namespace dotnet_repl
                     .Color(Theme.SplashColor));
 
             ansiConsole.Write(
-                new Markup("Built with .NET Interactive + Spectre.Console\n\n", Theme.Splash)
+                new Markup(".NET Interactive 💓 Spectre.Console\n\n", Theme.Splash)
                     .Centered());
         }
 
-        public static void RenderSuccessfulEvent(this IAnsiConsole ansiConsole, DisplayEvent @event)
+        public static IRenderable GetErrorDisplay(DisplayEvent @event, string header = "❌") =>
+            new Panel(GetMarkup(@event))
+                .Header(header)
+                .Expand()
+                .RoundedBorder()
+                .BorderStyle(Theme.ErrorOutputBorder);
+
+        public static Panel GetErrorDisplay(string message, string header = "❌")
         {
-            ansiConsole.Write(
-                new Panel(GetMarkup(@event))
-                    .Header("✔")
-                    .Expand()
-                    .RoundedBorder()
-                    .BorderStyle(Theme.SuccessOutputBorder));
+            return new Panel(Markup.Escape(message))
+                .Header(header)
+                .Expand()
+                .RoundedBorder()
+                .BorderStyle(Theme.ErrorOutputBorder);
         }
 
-        public static void RenderErrorEvent(this IAnsiConsole ansiConsole, DisplayEvent @event, string header = "❌")
+        public static Panel GetSuccessDisplay(DisplayEvent @event, string header = "✔")
         {
-            ansiConsole.Write(
-                new Panel(GetMarkup(@event))
-                    .Header(header)
-                    .Expand()
-                    .RoundedBorder()
-                    .BorderStyle(Theme.ErrorOutputBorder));
+            return new Panel(GetMarkup(@event))
+                .Header(header)
+                .Expand()
+                .RoundedBorder()
+                .BorderStyle(Theme.SuccessOutputBorder);
         }
 
-        public static void RenderSuccessMessage(this IAnsiConsole ansiConsole, string message, string header = "✔")
+        public static Panel GetSuccessDisplay(string message, string header)
         {
-            ansiConsole.Write(
-                new Panel(Markup.Escape(message))
-                    .Header(header)
-                    .Expand()
-                    .RoundedBorder()
-                    .BorderStyle(Theme.SuccessOutputBorder));
+            return new Panel(Markup.Escape(message))
+                .Header(header)
+                .Expand()
+                .RoundedBorder()
+                .BorderStyle(Theme.SuccessOutputBorder);
         }
 
         public static void RenderErrorMessage(this IAnsiConsole ansiConsole, string message, string header = "❌")
         {
-            ansiConsole.Write(
-                new Panel(Markup.Escape(message))
-                    .Header(header)
-                    .Expand()
-                    .RoundedBorder()
-                    .BorderStyle(Theme.ErrorOutputBorder));
+            ansiConsole.Write(GetErrorDisplay(message, header));
+        }
+
+        public static void RenderSuccessMessage(this IAnsiConsole ansiConsole, string message, string header = "✔")
+        {
+            ansiConsole.Write(GetSuccessDisplay(message, header));
         }
 
         public static void RenderBufferedStandardOutAndErr(

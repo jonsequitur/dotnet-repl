@@ -144,8 +144,7 @@ namespace dotnet_repl
                     .UseWho());
 
             var kernel = compositeKernel
-                .UseKernelClientConnection(new ConnectNamedPipe())
-                .UseKernelClientConnection(new ConnectSignalR());
+                .UseKernelClientConnection(new ConnectNamedPipe());
 
             compositeKernel.Add(new SQLKernel());
             compositeKernel.UseQuitCommand();

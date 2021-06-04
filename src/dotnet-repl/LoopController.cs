@@ -11,6 +11,7 @@ using Microsoft.DotNet.Interactive.Notebook;
 using Pocket;
 using RadLine;
 using Spectre.Console;
+using static dotnet_repl.AnsiConsoleExtensions;
 
 namespace dotnet_repl
 {
@@ -131,20 +132,20 @@ namespace dotnet_repl
 
                 var command = new SubmitCode(input);
 
-                KernelCommandResult? result = default;
+                Task<KernelCommandResult>? result = default;
 
-                await AnsiConsole.Status().StartAsync(Theme.StatusMessageGenerator.GetStatusMessage(), async ctx =>
+                AnsiConsole.Status().Start(Theme.StatusMessageGenerator.GetStatusMessage(), ctx =>
                 {
                     ctx.Spinner(new ClockSpinner());
                     ctx.SpinnerStyle(Style.Parse("green"));
 
-                    result = await _kernel.SendAsync(command);
-
-                    if (result is { })
-                    {
-                        HandleKernelEvents(command, result, ctx);
-                    }
+                    result = _kernel.SendAsync(command);
                 });
+
+                if (result is { })
+                {
+                    await RenderKernelEvents(command, result);
+                }
 
                 if (exitAfterRun && queuedSubmissions.Count == 0)
                 {
@@ -153,84 +154,89 @@ namespace dotnet_repl
             }
         }
 
-        private void HandleKernelEvents(
+        private async Task RenderKernelEvents(
             KernelCommand command,
-            KernelCommandResult result,
-            StatusContext context)
+            Task<KernelCommandResult> result)
         {
-            var events = result.KernelEvents;
-
             StringBuilder? stdOut = default;
             StringBuilder? stdErr = default;
 
-            using var _ = events.Subscribe(@event =>
-            {
-                switch (@event)
+            var waiting = new Panel("").NoBorder();
+
+            await AnsiConsole
+                .Live(waiting)
+                .StartAsync(async ctx =>
                 {
-                    // events that tell us whether the submission was valid
+                    using var _ = _kernel.KernelEvents.Subscribe(@event =>
+                    {
+                        switch (@event)
+                        {
+                            // events that tell us whether the submission was valid
+                            case IncompleteCodeSubmissionReceived incomplete when incomplete.Command == command:
+                                break;
 
-                    case IncompleteCodeSubmissionReceived incomplete when incomplete.Command == command:
-                        break;
+                            case CompleteCodeSubmissionReceived complete when complete.Command == command:
+                                break;
 
-                    case CompleteCodeSubmissionReceived complete when complete.Command == command:
-                        break;
+                            case CodeSubmissionReceived codeSubmissionReceived:
+                                break;
 
-                    case CodeSubmissionReceived codeSubmissionReceived:
-                        break;
+                            // output / display events
 
-                    // output / display events
+                            case ErrorProduced errorProduced:
+                                ctx.UpdateTarget(GetErrorDisplay(errorProduced));
 
-                    case ErrorProduced errorProduced:
-                        AnsiConsole.RenderErrorEvent(errorProduced);
+                                break;
 
-                        break;
+                            case StandardOutputValueProduced standardOutputValueProduced:
 
-                    case StandardOutputValueProduced standardOutputValueProduced:
+                                stdOut ??= new StringBuilder();
+                                stdOut.Append(standardOutputValueProduced.PlainTextValue());
 
-                        stdOut ??= new StringBuilder();
-                        stdOut.Append(standardOutputValueProduced.PlainTextValue());
+                                break;
 
-                        break;
+                            case StandardErrorValueProduced standardErrorValueProduced:
 
-                    case StandardErrorValueProduced standardErrorValueProduced:
-                        
-                        stdErr ??= new StringBuilder();
-                        stdErr.Append(standardErrorValueProduced.PlainTextValue());
+                                stdErr ??= new StringBuilder();
+                                stdErr.Append(standardErrorValueProduced.PlainTextValue());
 
-                        break;
+                                break;
 
-                    case DisplayedValueProduced displayedValueProduced:
-                        AnsiConsole.RenderSuccessfulEvent(displayedValueProduced);
-                        break;
+                            case DisplayedValueProduced displayedValueProduced:
+                                ctx.UpdateTarget(GetSuccessDisplay(displayedValueProduced));
+                                ctx.Refresh();
+                                break;
 
-                    case DisplayedValueUpdated displayedValueUpdated:
-                        context.Status(displayedValueUpdated.FormattedValues.Single(v => v.MimeType == "text/plain").Value);
-                        AnsiConsole.RenderSuccessfulEvent(displayedValueUpdated);
-                        break;
+                            case DisplayedValueUpdated displayedValueUpdated:
+                                ctx.UpdateTarget(GetSuccessDisplay(displayedValueUpdated));
 
-                    case ReturnValueProduced returnValueProduced:
-                        AnsiConsole.RenderSuccessfulEvent(returnValueProduced);
-                        break;
+                                break;
 
-                    // command completion events
+                            case ReturnValueProduced returnValueProduced:
+                                ctx.UpdateTarget(GetSuccessDisplay(returnValueProduced));
+                                break;
 
-                    case CommandFailed failed when failed.Command == command:
-                        AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
-                        
-                        AnsiConsole.RenderErrorMessage(failed.Message);
+                            // command completion events
 
-                        _commandCompleted.Set();
+                            case CommandFailed failed when failed.Command == command:
+                                AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
 
-                        break;
+                                ctx.UpdateTarget(GetErrorDisplay(failed.Message));
 
-                    case CommandSucceeded succeeded when succeeded.Command == command:
-                        AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
-                        _commandCompleted.Set();
-                        break;
-                }
-            });
+                                _commandCompleted.Set();
+
+                                break;
+
+                            case CommandSucceeded succeeded when succeeded.Command == command:
+                                AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
+                                _commandCompleted.Set();
+                                break;
+                        }
+                    });
+
+                    await result;
+                });
         }
-
 
         public void Dispose()
         {

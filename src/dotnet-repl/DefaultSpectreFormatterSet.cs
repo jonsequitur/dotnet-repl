@@ -93,7 +93,7 @@ namespace dotnet_repl
                         }
                     }
 
-                    table.AddRow(values.Select(v => v is null ? "" :Markup.Escape( v.ToDisplayString())).ToArray());
+                    table.AddRow(values.Select(v => v is null ? "" : Markup.Escape(v.ToDisplayString())).ToArray());
                 }
 
                 table.FormatTo(context);

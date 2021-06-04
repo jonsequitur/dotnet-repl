@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="fluentassertions" Version="5.10.3" />
+    <PackageReference Include="microsoft.extensions.dependencyinjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
     <PackageReference Include="pocketlogger.for.xunit" Version="0.6.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
