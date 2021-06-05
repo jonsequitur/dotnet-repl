@@ -54,7 +54,7 @@ namespace dotnet_repl
             };
 
             rootCommand.Handler = CommandHandler.Create<StartupOptions, CancellationToken>(
-                (options, token) => StartRepl(options, token, ansiConsole ?? new AnsiConsoleFactory().Create(new AnsiConsoleSettings())));
+                (options, token) => StartRepl(options, token, ansiConsole ?? AnsiConsole.Console));
 
             return new CommandLineBuilder(rootCommand)
                 .UseDefaults()

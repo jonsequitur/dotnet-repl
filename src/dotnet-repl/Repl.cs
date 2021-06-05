@@ -24,7 +24,6 @@ namespace dotnet_repl
     {
         private readonly Kernel _kernel;
         private readonly CompositeDisposable _disposables = new();
-        private readonly ManualResetEvent _commandCompleted = new(false);
 
         private readonly CancellationTokenSource _disposalTokenSource = new();
 
@@ -41,6 +40,7 @@ namespace dotnet_repl
             _kernel = kernel;
             QuitAction = quit;
             AnsiConsole = ansiConsole;
+            InputSource = inputSource;
 
             _waitingForInput = new TaskCompletionSource();
 
@@ -79,6 +79,8 @@ namespace dotnet_repl
         }
 
         public IAnsiConsole AnsiConsole { get; }
+
+        public IInputSource? InputSource { get; }
 
         public IReadOnlyList<SubmitCode> History => _history;
 
@@ -127,7 +129,7 @@ namespace dotnet_repl
 
             while (!_disposalTokenSource.IsCancellationRequested)
             {
-                _commandCompleted.Reset();
+                await Task.Yield();
 
                 if (!queuedSubmissions.TryDequeue(out var input))
                 {
@@ -142,9 +144,7 @@ namespace dotnet_repl
                     return;
                 }
 
-                var command = new SubmitCode(input);
-
-                await RenderKernelEvents(command);
+                await RunKernelCommand(new SubmitCode(input));
 
                 if (exitAfterRun && queuedSubmissions.Count == 0)
                 {
@@ -166,7 +166,7 @@ namespace dotnet_repl
             previous?.TrySetResult();
         }
 
-        private async Task RenderKernelEvents(KernelCommand command)
+        private async Task RunKernelCommand(KernelCommand command)
         {
             StringBuilder? stdOut = default;
             StringBuilder? stdErr = default;
@@ -181,7 +181,8 @@ namespace dotnet_repl
             {
                 ctx.Spinner(new ClockSpinner());
 
-                var t = events.FirstOrDefaultAsync(e => e is DisplayEvent or CommandFailed or CommandSucceeded);
+                var t = events.FirstOrDefaultAsync(
+                    e => e is DisplayEvent or CommandFailed or CommandSucceeded);
 
                 result = _kernel.SendAsync(command);
 
@@ -189,6 +190,8 @@ namespace dotnet_repl
             });
 
             var waiting = new Panel("").NoBorder();
+
+            var tcs = new TaskCompletionSource();
 
             await AnsiConsole
                 .Live(waiting)
@@ -236,7 +239,6 @@ namespace dotnet_repl
 
                             case DisplayedValueUpdated displayedValueUpdated:
                                 ctx.UpdateTarget(GetSuccessDisplay(displayedValueUpdated));
-
                                 break;
 
                             case ReturnValueProduced returnValueProduced:
@@ -247,19 +249,20 @@ namespace dotnet_repl
 
                             case CommandFailed failed when failed.Command == command:
                                 AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
-
                                 ctx.UpdateTarget(GetErrorDisplay(failed.Message));
-
-                                _commandCompleted.Set();
+                                tcs.SetResult();
 
                                 break;
 
                             case CommandSucceeded succeeded when succeeded.Command == command:
                                 AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
-                                _commandCompleted.Set();
+                                tcs.SetResult();
+
                                 break;
                         }
                     });
+
+                    await tcs.Task;
                 });
 
             await result!;

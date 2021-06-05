@@ -7,7 +7,7 @@ namespace dotnet_repl.Tests
 {
     public class CommandLineParserTests
     {
-        [Fact]
+        [Fact(Skip = "Needs System.CommandLine improvements")]
         public void Help_is_snazzy()
         {
             var parser = CommandLineParser.Create();
