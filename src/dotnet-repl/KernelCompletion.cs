@@ -34,15 +34,19 @@ namespace dotnet_repl
 
             var result = await _kernel.SendAsync(command);
 
-            var results = await result
-                                .KernelEvents
-                                .OfType<CompletionsProduced>()
-                                .FirstOrDefaultAsync();
+            var completionsProduced = await result
+                                          .KernelEvents
+                                          .OfType<CompletionsProduced>()
+                                          .FirstOrDefaultAsync();
 
-            var code = buffer.Content.Substring(0, buffer.CursorPosition);
-            var matches = results.Completions
-                .Where(c => c.InsertText.Contains(code.Split('.', ' ').LastOrDefault() ?? code))
-                .Select(c => c.InsertText);
+            var code = buffer.Content[..buffer.CursorPosition];
+
+            var matches = completionsProduced
+                              ?.Completions
+                              .Where(c => c.InsertText.StartsWith(code.Split('.', ' ').LastOrDefault() ?? code))
+                              .Select(c => c.InsertText)
+                              .ToArray()
+                          ?? Array.Empty<string>();
 
             Log.Info(
                 "buffer: {buffer}, code: {code}, matches: {matches}",

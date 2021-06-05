@@ -1,3 +1,4 @@
+using dotnet_repl.LineEditorCommands;
 using FluentAssertions;
 using RadLine;
 using Xunit;
@@ -18,24 +19,23 @@ namespace dotnet_repl.Tests
             buffer.Insert("Console.");
             buffer.MoveEnd();
 
-            var context = new LineEditorContext(buffer);
-            context.Execute(new AutoCompleteCommand(AutoComplete.Next));
+            var context = new LineEditorContext(buffer, ServiceProvider);
+            context.Execute(new CompletionCommand(AutoComplete.Next));
 
             buffer.Content.Should().Be("Console.BackgroundColor");
         }
 
         [Fact]
-        public void it_cycles_through_methods_after_dot()
+        public void When_there_are_no_results_it_doesnt_change_the_buffer()
         {
             var buffer = new LineBuffer("");
-            buffer.Insert("Console.");
+            buffer.Insert("Console.Zzz");
             buffer.MoveEnd();
 
             var context = new LineEditorContext(buffer, ServiceProvider);
-            context.Execute(new AutoCompleteCommand(AutoComplete.Next));
-            context.Execute(new AutoCompleteCommand(AutoComplete.Next));
+            context.Execute(new CompletionCommand(AutoComplete.Next));
 
-            buffer.Content.Should().Be("Console.Beep");
+            buffer.Content.Should().Be("Console.Zzz");
         }
     }
 }

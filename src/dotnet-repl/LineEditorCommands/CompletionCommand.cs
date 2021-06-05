@@ -1,9 +1,7 @@
-﻿using RadLine;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RadLine;
 
 namespace dotnet_repl.LineEditorCommands
 {
@@ -23,8 +21,7 @@ namespace dotnet_repl.LineEditorCommands
 
         public override void Execute(LineEditorContext context)
         {
-            var service = context.GetService(typeof(KernelCompletion)) as KernelCompletion;
-            if (service == null)
+            if (context.GetService(typeof(KernelCompletion)) is not KernelCompletion service)
             {
                 throw new InvalidOperationException("AutoCompletion service has not been registered.");
             }
@@ -36,7 +33,7 @@ namespace dotnet_repl.LineEditorCommands
             // Get the previous query
             var previousQuery = context.GetState<string?>(QUERY_STATE, () => null);
             var query = context.Buffer.Content[..wordEnd];
-            if (previousQuery != null)
+            if (previousQuery is { })
             {
                 var previousAutoCompleteValue = context.GetState<string?>(CONTEXT_STATE, () => null);
                 if (previousAutoCompleteValue != null && context.Buffer.Content == previousAutoCompleteValue)
@@ -73,6 +70,7 @@ namespace dotnet_repl.LineEditorCommands
             {
                 index = 0;
             }
+
             if (index < 0)
             {
                 index = result.Count - 1;

@@ -29,6 +29,8 @@ namespace dotnet_repl
             "[bold aqua slowblink]  >[/]",
             "[bold aqua slowblink]...[/]");
 
+        private TaskCompletionSource _waitingForInput;
+
         public LoopController(
             Kernel kernel,
             Action quit,
@@ -39,7 +41,12 @@ namespace dotnet_repl
             QuitAction = quit;
             AnsiConsole = ansiConsole;
 
-            _disposables.Add(() => _disposalTokenSource.Cancel());
+            ResetWaitingForInput();
+            _disposables.Add(dispose: () =>
+            {
+                _disposalTokenSource.Cancel();
+                _waitingForInput.TrySetCanceled();
+            });
 
             _kernel.AddMiddleware(async (command, context, next) =>
             {
@@ -76,6 +83,7 @@ namespace dotnet_repl
         public LineEditor LineEditor { get; }
 
         internal Action QuitAction { get; }
+
         public IAnsiConsole AnsiConsole { get; }
 
         internal string? StashedBufferContent { get; set; }
@@ -151,7 +159,20 @@ namespace dotnet_repl
                 {
                     break;
                 }
+
+                ResetWaitingForInput();
             }
+        }
+
+        public Task WaitingForInputAsync() => _waitingForInput.Task;
+
+        private void ResetWaitingForInput()
+        {
+            var previous = _waitingForInput;
+
+            _waitingForInput = new TaskCompletionSource();
+
+            previous?.TrySetResult();
         }
 
         private async Task RenderKernelEvents(

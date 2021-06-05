@@ -19,18 +19,21 @@ namespace dotnet_repl.Tests
         protected ReplInteractionTests(ITestOutputHelper output)
         {
             Kernel = CommandLineParser.CreateKernel(new StartupOptions("csharp"));
+         
+            AnsiConsole = new AnsiConsoleFactory().Create(new AnsiConsoleSettings
+            {
+                Out = new AnsiConsoleOutput(Out)
+            });
 
             ServiceProvider = new ServiceCollection()
                               .AddSingleton(Kernel)
+                              .AddSingleton(new KernelCompletion(Kernel))
                               .BuildServiceProvider();
 
             LoopController = new(
                 Kernel,
                 () => QuitWasSent = true,
-                new AnsiConsoleFactory().Create(new AnsiConsoleSettings
-                {
-                    Out = new AnsiConsoleOutput(Out)
-                }),
+                AnsiConsole,
                 In);
 
             LoopController.Start();
@@ -42,6 +45,8 @@ namespace dotnet_repl.Tests
                 Kernel
             };
         }
+
+        public IAnsiConsole AnsiConsole { get; }
 
         public Kernel Kernel { get; }
 

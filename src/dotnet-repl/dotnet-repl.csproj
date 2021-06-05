@@ -13,16 +13,16 @@
     <PackageTags>dotnet interactive REPL csharp fsharp</PackageTags>
     <PackAsTool>true</PackAsTool>
     <Authors>jonsequitur</Authors>
-    <Version>0.1.4</Version>
+    <Version>0.1.6</Version>
     <Description>A polyglot command line REPL for C#, F#, and other languages.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21303.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21303.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21303.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21303.1" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21304.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21304.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21304.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21304.1" />
     <PackageReference Include="pocket.disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

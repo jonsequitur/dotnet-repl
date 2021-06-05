@@ -1,38 +1,15 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using dotnet_repl.LineEditorCommands;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using dotnet_repl.LineEditorCommands;
 using RadLine;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace dotnet_repl.Tests
 {
-    public class OutputTests : ReplInteractionTests
-    {
-        public OutputTests(ITestOutputHelper output) : base(output)
-        {
-        }
-
-
-        [Fact]
-        public void Standard_out_is_batched()
-        {
-            var buffer = new LineBuffer("Console.Write(1);");
-            var context = new LineEditorContext(buffer, ServiceProvider);
-
-            context.Execute(new SubmitCommand());
-
-
-
-            // TODO-JOSEQU (Standard_out_is_batched) write test
-            Assert.True(false, "Test Standard_out_is_batched is not written yet.");
-        }
-
-    }
-
     public class HistoryTests : ReplInteractionTests
     {
         public HistoryTests(ITestOutputHelper output) : base(output)
@@ -166,29 +143,20 @@ namespace dotnet_repl.Tests
             context.Execute(new PreviousHistory(LoopController));
             context.Execute(new PreviousHistory(LoopController));
 
-            // QUESTION-JOSEQU: (Submitting_an_entry_resets_history_index) how to submit the current buffer
-            context.Execute(new SubmitCommand());
+            context.Submit(SubmitAction.Submit);
 
-            context.Buffer.Content.Should().Be("");
+            context.Buffer.Content.Should().Be("2");
 
             LoopController.HistoryIndex.Should().Be(1);
-
-            // FIX: (Submitting_an_entry_resets_history_index) write test
-            throw new NotImplementedException();
         }
 
         [Fact]
-        public void Repeating_a_submission_resets_history_index()
+        public async Task Repeating_a_submission_resets_history_index()
         {
-            var buffer = new LineBuffer();
-            var context = new LineEditorContext(buffer, ServiceProvider);
-
-            buffer.Insert("1");
-            context.Execute(new SubmitCommand());
-            context.Execute(new PreviousHistory(LoopController));
-
-            // FIX: (Repeating_a_submission_resets_history_index) write test
-            throw new NotImplementedException();
+            await Kernel.SendAsync(new SubmitCode("1"), CancellationToken.None);
+            await Kernel.SendAsync(new SubmitCode("1"), CancellationToken.None);
+            
+            LoopController.History.Count.Should().Be(1);
         }
     }
 }

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace dotnet_repl
 {
@@ -12,12 +8,7 @@ namespace dotnet_repl
 
         public LineEditorServiceProvider(KernelCompletion completion)
         {
-            if (completion is null)
-            {
-                throw new ArgumentNullException(nameof(completion));
-            }
-
-            _completion = completion;
+            _completion = completion ?? throw new ArgumentNullException(nameof(completion));
         }
 
         public object? GetService(Type serviceType)
