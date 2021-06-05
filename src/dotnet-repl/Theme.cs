@@ -19,9 +19,9 @@ namespace dotnet_repl
 
         public Style SuccessOutputBorder { get; set; } = new(Color.Green);
 
-        public ILineEditorPrompt Prompt = new LineEditorPrompt(
-            $"[{Decoration.Bold} {Color.Aqua} {Decoration.SlowBlink}]  >[/]",
-            $"[{Decoration.Bold} {Color.Aqua} {Decoration.SlowBlink}]...[/]");
+        public ILineEditorPrompt Prompt { get; set; } = new LineEditorPrompt(
+            $"[{Color.SandyBrown}]C# [/][{Decoration.Bold} {Color.Aqua} {Decoration.SlowBlink}]>[/]",
+            $"[{Decoration.Bold} {Color.Aqua} {Decoration.SlowBlink}] ...[/]");
 
         public IStatusMessageGenerator StatusMessageGenerator { get; set; } = new SillyExecutionStatusMessageGenerator();
 
@@ -30,9 +30,8 @@ namespace dotnet_repl
             SplashColor = Color.Magenta1,
 
             Prompt = new LineEditorPrompt(
-            $"[{Color.White}]F#[/][{Decoration.Bold} {Color.Magenta1} {Decoration.SlowBlink}]>[/]",
-            $"[{Decoration.Bold} {Color.Magenta1} {Decoration.SlowBlink}]...[/]")
+                $"[{Color.SandyBrown}]F# [/][{Decoration.Bold} {Color.Magenta1} {Decoration.SlowBlink}]>[/]",
+                $"[{Decoration.Bold} {Color.Magenta1} {Decoration.SlowBlink}] ...[/]")
         };
-
     }
 }

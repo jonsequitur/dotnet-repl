@@ -26,11 +26,8 @@ namespace dotnet_repl
 
         public static void RenderSplash(
             this IAnsiConsole ansiConsole,
-            StartupOptions startupOptions,
-            Theme? theme = default)
+            StartupOptions startupOptions)
         {
-            theme ??= Theme.Default;
-
             string language;
 
             switch (startupOptions.DefaultKernelName)
@@ -49,10 +46,10 @@ namespace dotnet_repl
             ansiConsole.Write(
                 new FigletText($".NET REPL: {language}")
                     .Centered()
-                    .Color(theme.SplashColor));
+                    .Color(Theme.Default.SplashColor));
 
             ansiConsole.Write(
-                new Markup(".NET Interactive 💓 Spectre.Console\n\n", theme.Splash)
+                new Markup(".NET Interactive 💓 Spectre.Console\n\n", Theme.Default.Splash)
                     .Centered());
         }
 

@@ -39,14 +39,19 @@ namespace dotnet_repl
                                           .OfType<CompletionsProduced>()
                                           .FirstOrDefaultAsync();
 
+            if (completionsProduced is null)
+            {
+                return Enumerable.Empty<string>();
+            }
+
             var code = buffer.Content[..buffer.CursorPosition];
 
             var matches = completionsProduced
-                              ?.Completions
-                              .Where(c => c.InsertText.StartsWith(code.Split('.', ' ').LastOrDefault() ?? code))
-                              .Select(c => c.InsertText)
-                              .ToArray()
-                          ?? Array.Empty<string>();
+                .Completions
+                .Select(c => c.InsertText)
+                .Where(text => text is not null &&
+                               text.StartsWith(code.Split('.', ' ').LastOrDefault() ?? code))
+                .ToArray();
 
             Log.Info(
                 "buffer: {buffer}, code: {code}, matches: {matches}",
