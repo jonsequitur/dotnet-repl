@@ -2,6 +2,7 @@
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
@@ -65,6 +66,61 @@ namespace dotnet_repl
                     }
                 })
             });
+
+            return kernel;
+        }
+
+        public static T UseHelpMagicCommand<T>(this T kernel)
+            where T : Kernel
+        {
+            var help = new Command("#!help", "Show help for the REPL")
+            {
+                Handler = CommandHandler.Create<KernelInvocationContext>(
+                    context =>
+                    {
+                        var console = AnsiConsole.Console;
+
+                        var grid = new Grid();
+                        grid.AddColumn();
+
+                        grid.AddRow(new Paragraph("⌨ Shortcut keys:"));
+
+                        var shortcutKeys = new Table();
+                        shortcutKeys.AddColumn("Key");
+                        shortcutKeys.AddColumn("What it does");
+                        shortcutKeys.AddRow("Shift+Enter", "Inserts a newline without submitting the current code");
+                        shortcutKeys.AddRow("Tab", "Show next completion");
+                        shortcutKeys.AddRow("Shift-Tab", "Show previous completion");
+                        shortcutKeys.AddRow("Ctrl-Up", "Go back through your submission history (current session only)");
+                        shortcutKeys.AddRow("Ctrl-Down", "Go forward through your submission history (current session only)");
+                        grid.AddRow(shortcutKeys);
+
+                        grid.AddRow(new Paragraph(""));
+                        grid.AddRow(new Paragraph("🧙‍ Magic commands:"));
+
+                        var magics = new Table();
+                        magics.AddColumn("Kernel");
+                        magics.AddColumn("Command");
+                        magics.AddColumn("What it does");
+                        kernel.VisitSubkernelsAndSelf(k =>
+                        {
+                            var kernelName = k.Name == ".NET"
+                                                 ? "root"
+                                                 : k.Name;
+
+                            foreach (var magic in k.Directives.Where(d => !d.IsHidden))
+                            {
+                                magics.AddRow(kernelName, magic.Name, magic.Description ?? "");
+                            }
+                        });
+
+                        grid.AddRow(magics);
+
+                        console.Announce(grid);
+                    })
+            };
+
+            kernel.AddDirective(help);
 
             return kernel;
         }

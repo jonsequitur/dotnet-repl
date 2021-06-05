@@ -275,8 +275,10 @@ namespace dotnet_repl
             using var _ = Logger.Log.OnEnterAndExit("Creating Kernels");
 
             var compositeKernel = new CompositeKernel()
+                .UseAboutMagicCommand()
                 .UseDebugDirective()
-                .UseAboutMagicCommand();
+                .UseHelpMagicCommand()
+                .UseQuitCommand();
 
             compositeKernel.Add(
                 new CSharpKernel()
@@ -310,7 +312,6 @@ namespace dotnet_repl
                 .UseKernelClientConnection(new ConnectNamedPipe());
 
             compositeKernel.Add(new SQLKernel());
-            compositeKernel.UseQuitCommand();
 
             if (options.Verbose)
             {

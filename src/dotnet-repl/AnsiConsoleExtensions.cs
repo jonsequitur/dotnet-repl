@@ -22,6 +22,20 @@ namespace dotnet_repl
                     .BorderStyle(theme.AnnouncementBorder)
                     .HeavyBorder()
                     .Expand());
+        } 
+        
+        public static void Announce(
+            this IAnsiConsole ansiConsole,
+            IRenderable content,
+            Theme? theme = default)
+        {
+            theme ??= Theme.Default;
+
+            ansiConsole.Write(
+                new Panel(content)
+                    .BorderStyle(theme.AnnouncementBorder)
+                    .HeavyBorder()
+                    .Expand());
         }
 
         public static void RenderSplash(
