@@ -17,7 +17,7 @@ namespace dotnet_repl.Tests
             In.SendString("Console.Write(\"hello\");Console.Write(\"repl\");");
             In.SendEnter();
 
-            await LoopController.WaitingForInputAsync();
+            await Repl.WaitingForInputAsync();
 
             Out.ToString().Should().Contain("hellorepl");
         }
@@ -28,7 +28,7 @@ namespace dotnet_repl.Tests
             In.SendString("Console.Error.Write(\"hello\");Console.Error.Write(\"repl\");");
             In.SendEnter();
 
-            await LoopController.WaitingForInputAsync();
+            await Repl.WaitingForInputAsync();
 
             Out.ToString().Should().Contain("hellorepl");
         }

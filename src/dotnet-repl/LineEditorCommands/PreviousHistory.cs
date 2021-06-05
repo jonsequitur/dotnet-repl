@@ -5,9 +5,9 @@ namespace dotnet_repl.LineEditorCommands
 {
     public class PreviousHistory : LineEditorCommand
     {
-        private readonly LoopController _controller;
+        private readonly Repl _controller;
 
-        public PreviousHistory(LoopController controller)
+        public PreviousHistory(Repl controller)
         {
             _controller = controller;
         }

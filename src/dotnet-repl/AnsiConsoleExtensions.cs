@@ -9,92 +9,131 @@ namespace dotnet_repl
 {
     internal static class AnsiConsoleExtensions
     {
-        public static void Announce(this IAnsiConsole ansiConsole, string text)
+        public static void Announce(
+            this IAnsiConsole ansiConsole,
+            string text,
+            Theme? theme = default)
         {
+            theme ??= Theme.Default;
+
             ansiConsole.Write(
                 new Panel(
-                        new Paragraph(text, Theme.AnnouncementText))
-                    .BorderStyle(Theme.AnnouncementBorder)
+                        new Paragraph(text, theme.AnnouncementText))
+                    .BorderStyle(theme.AnnouncementBorder)
                     .HeavyBorder()
                     .Expand());
         }
 
-        public static void RenderSplash(this IAnsiConsole ansiConsole, StartupOptions startupOptions)
+        public static void RenderSplash(
+            this IAnsiConsole ansiConsole,
+            StartupOptions startupOptions,
+            Theme? theme = default)
         {
-            var language = startupOptions.DefaultKernelName switch
+            theme ??= Theme.Default;
+
+            string language;
+
+            switch (startupOptions.DefaultKernelName)
             {
-                "csharp" => "C#",
-                "fsharp" => "F#",
-                _ => throw new ArgumentOutOfRangeException()
-            };
+                case "csharp":
+                    language = "C#";
+                    break;
+                case "fsharp":
+                    language = "F#";
+                    Theme.Default = Theme.FSharp();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
 
             ansiConsole.Write(
                 new FigletText($".NET REPL: {language}")
                     .Centered()
-                    .Color(Theme.SplashColor));
+                    .Color(theme.SplashColor));
 
             ansiConsole.Write(
-                new Markup(".NET Interactive 💓 Spectre.Console\n\n", Theme.Splash)
+                new Markup(".NET Interactive 💓 Spectre.Console\n\n", theme.Splash)
                     .Centered());
         }
 
-        public static IRenderable GetErrorDisplay(DisplayEvent @event, string header = "❌") =>
+        public static IRenderable GetErrorDisplay(
+            DisplayEvent @event,
+            string header = "❌",
+            Theme? theme = default) =>
             new Panel(GetMarkup(@event))
                 .Header(header)
                 .Expand()
                 .RoundedBorder()
-                .BorderStyle(Theme.ErrorOutputBorder);
+                .BorderStyle((theme ?? Theme.Default).ErrorOutputBorder);
 
-        public static Panel GetErrorDisplay(string message, string header = "❌")
+        public static Panel GetErrorDisplay(
+            string message,
+            string header = "❌",
+            Theme? theme = default)
         {
             return new Panel(Markup.Escape(message))
                 .Header(header)
                 .Expand()
                 .RoundedBorder()
-                .BorderStyle(Theme.ErrorOutputBorder);
+                .BorderStyle((theme ?? Theme.Default).ErrorOutputBorder);
         }
 
-        public static Panel GetSuccessDisplay(DisplayEvent @event, string header = "✔")
+        public static Panel GetSuccessDisplay(
+            DisplayEvent @event,
+            string header = "✔",
+            Theme? theme = default)
         {
             return new Panel(GetMarkup(@event))
                 .Header(header)
                 .Expand()
                 .RoundedBorder()
-                .BorderStyle(Theme.SuccessOutputBorder);
+                .BorderStyle((theme ?? Theme.Default).SuccessOutputBorder);
         }
 
-        public static Panel GetSuccessDisplay(string message, string header)
+        public static Panel GetSuccessDisplay(
+            string message,
+            string header,
+            Theme? theme = default)
         {
             return new Panel(Markup.Escape(message))
                 .Header(header)
                 .Expand()
                 .RoundedBorder()
-                .BorderStyle(Theme.SuccessOutputBorder);
+                .BorderStyle((theme ?? Theme.Default).SuccessOutputBorder);
         }
 
-        public static void RenderErrorMessage(this IAnsiConsole ansiConsole, string message, string header = "❌")
+        public static void RenderErrorMessage(
+            this IAnsiConsole ansiConsole,
+            string message,
+            string header = "❌",
+            Theme? theme = default)
         {
-            ansiConsole.Write(GetErrorDisplay(message, header));
+            ansiConsole.Write(GetErrorDisplay(message, header, theme));
         }
 
-        public static void RenderSuccessMessage(this IAnsiConsole ansiConsole, string message, string header = "✔")
+        public static void RenderSuccessMessage(
+            this IAnsiConsole ansiConsole,
+            string message,
+            string header = "✔",
+            Theme? theme = default)
         {
-            ansiConsole.Write(GetSuccessDisplay(message, header));
+            ansiConsole.Write(GetSuccessDisplay(message, header, theme));
         }
 
         public static void RenderBufferedStandardOutAndErr(
             this IAnsiConsole ansiConsole,
             StringBuilder? stdOut = null,
-            StringBuilder? stdErr = null)
+            StringBuilder? stdErr = null,
+            Theme? theme = default)
         {
             if (stdOut is { })
             {
-                ansiConsole.RenderSuccessMessage(stdOut.ToString(), "✒");
+                ansiConsole.RenderSuccessMessage(stdOut.ToString(), "✒", theme);
             }
 
             if (stdErr is { })
             {
-                ansiConsole.RenderErrorMessage(stdErr.ToString(), "✒");
+                ansiConsole.RenderErrorMessage(stdErr.ToString(), "✒", theme);
             }
         }
 
@@ -109,14 +148,6 @@ namespace dotnet_repl
             };
 
             return markup;
-        }
-    }
-
-    internal static class KernelEventExtensions
-    {
-        public static string PlainTextValue(this DisplayEvent @event)
-        {
-            return @event.FormattedValues.FirstOrDefault()?.Value ?? string.Empty;
         }
     }
 }

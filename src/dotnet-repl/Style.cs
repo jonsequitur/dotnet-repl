@@ -1,21 +1,38 @@
+using RadLine;
 using Spectre.Console;
 
 namespace dotnet_repl
 {
-    internal static class Theme
+    public class Theme
     {
-        public static Color SplashColor { get; set; } = Color.Aqua;
+        public static Theme Default { get; set; } = new();
 
-        public static Style Splash { get; } = new(Color.Aqua);
+        public Color SplashColor { get; set; } = Color.Aqua;
 
-        public static Style AnnouncementText { get; set; } = new(Color.SandyBrown);
+        public Style Splash { get; } = new(Color.Aqua);
 
-        public static Style AnnouncementBorder { get; set; } = new(Color.Aqua);
+        public Style AnnouncementText { get; set; } = new(Color.SandyBrown);
 
-        public static Style ErrorOutputBorder { get; set; } = new(Color.Red);
+        public Style AnnouncementBorder { get; set; } = new(Color.Aqua);
 
-        public static Style SuccessOutputBorder { get; set; } = new(Color.Green);
+        public Style ErrorOutputBorder { get; set; } = new(Color.Red);
 
-        public static IStatusMessageGenerator StatusMessageGenerator { get; set; } = new SillyExecutionStatusMessageGenerator();
+        public Style SuccessOutputBorder { get; set; } = new(Color.Green);
+
+        public ILineEditorPrompt Prompt = new LineEditorPrompt(
+            $"[{Decoration.Bold} {Color.Aqua} {Decoration.SlowBlink}]  >[/]",
+            $"[{Decoration.Bold} {Color.Aqua} {Decoration.SlowBlink}]...[/]");
+
+        public IStatusMessageGenerator StatusMessageGenerator { get; set; } = new SillyExecutionStatusMessageGenerator();
+
+        internal static Theme FSharp() => new()
+        {
+            SplashColor = Color.Magenta1,
+
+            Prompt = new LineEditorPrompt(
+            $"[{Color.White}]F#[/][{Decoration.Bold} {Color.Magenta1} {Decoration.SlowBlink}]>[/]",
+            $"[{Decoration.Bold} {Color.Magenta1} {Decoration.SlowBlink}]...[/]")
+        };
+
     }
 }

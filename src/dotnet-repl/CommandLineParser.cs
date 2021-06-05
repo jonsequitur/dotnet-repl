@@ -8,17 +8,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Notebook;
-using Microsoft.DotNet.Interactive.PowerShell;
 using Pocket;
 using Spectre.Console;
-using static Pocket.Logger;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace dotnet_repl
@@ -78,7 +71,7 @@ namespace dotnet_repl
 
             ansiConsole.RenderSplash(options);
 
-            var kernel = CreateKernel(options);
+            var kernel = Repl.CreateKernel(options);
 
             NotebookDocument? notebook = default;
 
@@ -96,7 +89,7 @@ namespace dotnet_repl
 
             using var disposable = new CompositeDisposable();
 
-            using var loop = new LoopController(kernel, disposable.Dispose, ansiConsole);
+            using var loop = new Repl(kernel, disposable.Dispose, ansiConsole);
 
             disposable.Add(loop);
 
@@ -105,63 +98,6 @@ namespace dotnet_repl
             Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
 
             await loop.RunAsync(notebook, options.ExitAfterRun);
-        }
-
-        public static CompositeKernel CreateKernel(StartupOptions options)
-        {
-            using var _ = Log.OnEnterAndExit("Creating Kernels");
-
-            var compositeKernel = new CompositeKernel()
-                .UseDebugDirective()
-                .UseAboutMagicCommand();
-
-            compositeKernel.Add(
-                new CSharpKernel()
-                    .UseNugetDirective()
-                    .UseKernelHelpers()
-                    .UseWho()
-                    .UseDotNetVariableSharing(),
-                new[] { "c#", "C#" });
-
-            compositeKernel.Add(
-                new FSharpKernel()
-                    .UseDefaultFormatting()
-                    .UseNugetDirective()
-                    .UseKernelHelpers()
-                    .UseWho()
-                    .UseDefaultNamespaces()
-                    .UseDotNetVariableSharing(),
-                new[] { "f#", "F#" });
-
-            compositeKernel.Add(
-                new PowerShellKernel()
-                    .UseProfiles()
-                    .UseDotNetVariableSharing(),
-                new[] { "powershell" });
-
-            compositeKernel.Add(
-                new KeyValueStoreKernel()
-                    .UseWho());
-
-            var kernel = compositeKernel
-                .UseKernelClientConnection(new ConnectNamedPipe());
-
-            compositeKernel.Add(new SQLKernel());
-            compositeKernel.UseQuitCommand();
-
-            if (options.Verbose)
-            {
-                kernel.LogEventsToPocketLogger();
-            }
-
-            kernel.DefaultKernelName = options.DefaultKernelName;
-
-            if (kernel.DefaultKernelName == "fsharp")
-            {
-                kernel.FindKernel("fsharp").DeferCommand(new SubmitCode("Formatter.Register(fun(x: obj)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
-            }
-
-            return kernel;
         }
     }
 }

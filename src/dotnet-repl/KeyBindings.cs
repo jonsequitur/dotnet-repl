@@ -6,7 +6,7 @@ namespace dotnet_repl
 {
     internal static class KeyBindings
     {
-        public static void AddKeyBindings(this LoopController controller)
+        public static void AddKeyBindings(this Repl controller)
         {
             var editor = controller.LineEditor;
 

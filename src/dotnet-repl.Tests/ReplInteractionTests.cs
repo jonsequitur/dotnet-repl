@@ -13,12 +13,12 @@ namespace dotnet_repl.Tests
     public abstract class ReplInteractionTests : IDisposable
     {
         private readonly CompositeDisposable _disposables;
-        protected readonly LoopController LoopController;
+        protected readonly Repl Repl;
         protected readonly ServiceProvider ServiceProvider;
 
         protected ReplInteractionTests(ITestOutputHelper output)
         {
-            Kernel = CommandLineParser.CreateKernel(new StartupOptions("csharp"));
+            Kernel = Repl.CreateKernel(new StartupOptions("csharp"));
          
             AnsiConsole = new AnsiConsoleFactory().Create(new AnsiConsoleSettings
             {
@@ -30,18 +30,18 @@ namespace dotnet_repl.Tests
                               .AddSingleton(new KernelCompletion(Kernel))
                               .BuildServiceProvider();
 
-            LoopController = new(
+            Repl = new(
                 Kernel,
                 () => QuitWasSent = true,
                 AnsiConsole,
                 In);
 
-            LoopController.Start();
+            Repl.Start();
 
             _disposables = new CompositeDisposable
             {
                 output.SubscribeToPocketLogger(),
-                LoopController,
+                Repl,
                 Kernel
             };
         }
