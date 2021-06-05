@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -182,7 +182,7 @@ namespace dotnet_repl
                 ctx.Spinner(new ClockSpinner());
 
                 var t = events.FirstOrDefaultAsync(e => e is DisplayEvent or CommandFailed or CommandSucceeded);
-                
+
                 result = _kernel.SendAsync(command);
 
                 await t;
@@ -260,9 +260,9 @@ namespace dotnet_repl
                                 break;
                         }
                     });
-
-                    await result!;
                 });
+
+            await result!;
         }
 
         public void Dispose() => _disposables.Dispose();

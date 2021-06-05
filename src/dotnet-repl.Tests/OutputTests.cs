@@ -21,7 +21,7 @@ namespace dotnet_repl.Tests
 
             Out.ToString().Should().Contain("hellorepl");
         }
-        
+
         [Fact]
         public async Task Standard_error_is_batched()
         {
