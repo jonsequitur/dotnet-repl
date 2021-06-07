@@ -32,7 +32,7 @@ namespace dotnet_repl
         private TaskCompletionSource _waitingForInput;
 
         public Repl(
-            Kernel kernel,
+            CompositeKernel kernel,
             Action quit,
             IAnsiConsole ansiConsole,
             IInputSource? inputSource = null)
@@ -41,6 +41,7 @@ namespace dotnet_repl
             QuitAction = quit;
             AnsiConsole = ansiConsole;
             InputSource = inputSource;
+            Theme = KernelSpecificTheme.GetTheme(kernel.DefaultKernelName);
 
             _waitingForInput = new TaskCompletionSource();
 
@@ -92,7 +93,7 @@ namespace dotnet_repl
 
         internal string? StashedBufferContent { get; set; }
 
-        public Theme Theme { get; set; } = Theme.Default;
+        public KernelSpecificTheme Theme { get; set; }
 
         public void Start() => Task.Run(() => RunAsync());
 
@@ -214,7 +215,7 @@ namespace dotnet_repl
                             // output / display events
 
                             case ErrorProduced errorProduced:
-                                ctx.UpdateTarget(GetErrorDisplay(errorProduced));
+                                ctx.UpdateTarget(GetErrorDisplay(errorProduced, Theme));
 
                                 break;
 
@@ -233,29 +234,29 @@ namespace dotnet_repl
                                 break;
 
                             case DisplayedValueProduced displayedValueProduced:
-                                ctx.UpdateTarget(GetSuccessDisplay(displayedValueProduced));
+                                ctx.UpdateTarget(GetSuccessDisplay(displayedValueProduced, Theme));
                                 ctx.Refresh();
                                 break;
 
                             case DisplayedValueUpdated displayedValueUpdated:
-                                ctx.UpdateTarget(GetSuccessDisplay(displayedValueUpdated));
+                                ctx.UpdateTarget(GetSuccessDisplay(displayedValueUpdated, Theme));
                                 break;
 
                             case ReturnValueProduced returnValueProduced:
-                                ctx.UpdateTarget(GetSuccessDisplay(returnValueProduced));
+                                ctx.UpdateTarget(GetSuccessDisplay(returnValueProduced, Theme));
                                 break;
 
                             // command completion events
 
                             case CommandFailed failed when failed.Command == command:
-                                AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
-                                ctx.UpdateTarget(GetErrorDisplay(failed.Message));
+                                AnsiConsole.RenderBufferedStandardOutAndErr(Theme, stdOut, stdErr);
+                                ctx.UpdateTarget(GetErrorDisplay(failed.Message, Theme));
                                 tcs.SetResult();
 
                                 break;
 
                             case CommandSucceeded succeeded when succeeded.Command == command:
-                                AnsiConsole.RenderBufferedStandardOutAndErr(stdOut, stdErr);
+                                AnsiConsole.RenderBufferedStandardOutAndErr(Theme, stdOut, stdErr);
                                 tcs.SetResult();
 
                                 break;
@@ -279,6 +280,20 @@ namespace dotnet_repl
                 .UseDebugDirective()
                 .UseHelpMagicCommand()
                 .UseQuitCommand();
+
+            compositeKernel.AddMiddleware(async (command, context, next) =>
+            {
+                await next(command, context);
+
+                if (command.GetType().ToString() == "Microsoft.DotNet.Interactive.Commands.DirectiveCommand")
+                {
+
+                    
+
+
+
+                }
+            });
 
             compositeKernel.Add(
                 new CSharpKernel()

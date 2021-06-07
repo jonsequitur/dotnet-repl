@@ -48,7 +48,7 @@ namespace dotnet_repl.Tests
 
         public IAnsiConsole AnsiConsole { get; }
 
-        public Kernel Kernel { get; }
+        public CompositeKernel Kernel { get; }
 
         public TestInputSource In { get; } = new();
 

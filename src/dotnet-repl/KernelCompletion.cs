@@ -49,6 +49,7 @@ namespace dotnet_repl
             var matches = completionsProduced
                 .Completions
                 .Select(c => c.InsertText)
+                .OrderBy(c => c)
                 .Where(text => text is not null &&
                                text.StartsWith(code.Split('.', ' ').LastOrDefault() ?? code))
                 .ToArray();

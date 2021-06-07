@@ -11,36 +11,31 @@ namespace dotnet_repl
     {
         public static void Announce(
             this IAnsiConsole ansiConsole,
-            string text,
-            Theme? theme = default)
+            string text)
         {
-            theme ??= Theme.Default;
-
             ansiConsole.Write(
                 new Panel(
-                        new Paragraph(text, theme.AnnouncementText))
-                    .BorderStyle(theme.AnnouncementBorder)
+                        new Paragraph(text, Theme.Default.AnnouncementTextStyle))
+                    .BorderStyle(Theme.Default.AnnouncementBorderStyle)
                     .HeavyBorder()
                     .Expand());
-        } 
-        
+        }
+
         public static void Announce(
             this IAnsiConsole ansiConsole,
-            IRenderable content,
-            Theme? theme = default)
+            IRenderable content)
         {
-            theme ??= Theme.Default;
-
             ansiConsole.Write(
                 new Panel(content)
-                    .BorderStyle(theme.AnnouncementBorder)
+                    .BorderStyle(Theme.Default.AnnouncementBorderStyle)
                     .HeavyBorder()
                     .Expand());
         }
 
         public static void RenderSplash(
             this IAnsiConsole ansiConsole,
-            StartupOptions startupOptions)
+            StartupOptions startupOptions,
+            KernelSpecificTheme theme)
         {
             string language;
 
@@ -51,7 +46,6 @@ namespace dotnet_repl
                     break;
                 case "fsharp":
                     language = "F#";
-                    Theme.Default = Theme.FSharp();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -60,91 +54,91 @@ namespace dotnet_repl
             ansiConsole.Write(
                 new FigletText($".NET REPL: {language}")
                     .Centered()
-                    .Color(Theme.Default.SplashColor));
+                    .Color(theme.AccentStyle.Foreground));
 
             ansiConsole.Write(
-                new Markup(".NET Interactive 💓 Spectre.Console\n\n", Theme.Default.Splash)
+                new Markup(".NET Interactive 💓 Spectre.Console\n\n", theme.AnnouncementTextStyle)
                     .Centered());
         }
 
         public static IRenderable GetErrorDisplay(
             DisplayEvent @event,
-            string header = "❌",
-            Theme? theme = default) =>
+            KernelSpecificTheme theme,
+            string header = "❌") =>
             new Panel(GetMarkup(@event))
                 .Header(header)
                 .Expand()
                 .RoundedBorder()
-                .BorderStyle((theme ?? Theme.Default).ErrorOutputBorder);
+                .BorderStyle(theme.ErrorOutputBorderStyle);
 
         public static Panel GetErrorDisplay(
             string message,
-            string header = "❌",
-            Theme? theme = default)
+            KernelSpecificTheme theme,
+            string header = "❌")
         {
             return new Panel(Markup.Escape(message))
                 .Header(header)
                 .Expand()
                 .RoundedBorder()
-                .BorderStyle((theme ?? Theme.Default).ErrorOutputBorder);
+                .BorderStyle(theme.ErrorOutputBorderStyle);
         }
 
         public static Panel GetSuccessDisplay(
             DisplayEvent @event,
-            string header = "✔",
-            Theme? theme = default)
+            KernelSpecificTheme theme,
+            string header = "✔")
         {
             return new Panel(GetMarkup(@event))
                 .Header(header)
                 .Expand()
                 .RoundedBorder()
-                .BorderStyle((theme ?? Theme.Default).SuccessOutputBorder);
+                .BorderStyle(theme.SuccessOutputBorderStyle);
         }
 
         public static Panel GetSuccessDisplay(
             string message,
             string header,
-            Theme? theme = default)
+            KernelSpecificTheme theme)
         {
             return new Panel(Markup.Escape(message))
                 .Header(header)
                 .Expand()
                 .RoundedBorder()
-                .BorderStyle((theme ?? Theme.Default).SuccessOutputBorder);
+                .BorderStyle(theme.SuccessOutputBorderStyle);
         }
 
         public static void RenderErrorMessage(
             this IAnsiConsole ansiConsole,
             string message,
-            string header = "❌",
-            Theme? theme = default)
+            KernelSpecificTheme theme,
+            string header = "❌")
         {
-            ansiConsole.Write(GetErrorDisplay(message, header, theme));
+            ansiConsole.Write(GetErrorDisplay(message, theme, header));
         }
 
         public static void RenderSuccessMessage(
             this IAnsiConsole ansiConsole,
             string message,
-            string header = "✔",
-            Theme? theme = default)
+            KernelSpecificTheme theme,
+            string header = "✔")
         {
             ansiConsole.Write(GetSuccessDisplay(message, header, theme));
         }
 
         public static void RenderBufferedStandardOutAndErr(
             this IAnsiConsole ansiConsole,
+            KernelSpecificTheme theme,
             StringBuilder? stdOut = null,
-            StringBuilder? stdErr = null,
-            Theme? theme = default)
+            StringBuilder? stdErr = null)
         {
             if (stdOut is { })
             {
-                ansiConsole.RenderSuccessMessage(stdOut.ToString(), "✒", theme);
+                ansiConsole.RenderSuccessMessage(stdOut.ToString(), theme, "✒");
             }
 
             if (stdErr is { })
             {
-                ansiConsole.RenderErrorMessage(stdErr.ToString(), "✒", theme);
+                ansiConsole.RenderErrorMessage(stdErr.ToString(), theme, "✒");
             }
         }
 

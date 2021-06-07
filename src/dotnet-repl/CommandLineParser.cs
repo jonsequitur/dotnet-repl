@@ -69,7 +69,9 @@ namespace dotnet_repl
         {
             new DefaultSpectreFormatterSet().Register();
 
-            ansiConsole.RenderSplash(options);
+            var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
+
+            ansiConsole.RenderSplash(options, theme);
 
             var kernel = Repl.CreateKernel(options);
 
@@ -89,15 +91,15 @@ namespace dotnet_repl
 
             using var disposable = new CompositeDisposable();
 
-            using var loop = new Repl(kernel, disposable.Dispose, ansiConsole);
+            using var repl = new Repl(kernel, disposable.Dispose, ansiConsole);
 
-            disposable.Add(loop);
+            disposable.Add(repl);
 
-            cancellationToken.Register(() => loop.Dispose());
+            cancellationToken.Register(() => repl.Dispose());
 
             Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
 
-            await loop.RunAsync(notebook, options.ExitAfterRun);
+            await repl.RunAsync(notebook, options.ExitAfterRun);
         }
     }
 }
