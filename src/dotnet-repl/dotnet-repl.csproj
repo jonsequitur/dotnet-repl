@@ -13,8 +13,8 @@
     <PackageTags>dotnet interactive REPL csharp fsharp</PackageTags>
     <PackAsTool>true</PackAsTool>
     <Authors>jonsequitur</Authors>
-    <Version>0.1.7</Version>
-    <Description>A polyglot command line REPL for C#, F#, and other languages.</Description>
+    <Version>0.1.8</Version>
+    <Description>A polyglot command line REPL for C#, F#, SQL, and other languages.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 

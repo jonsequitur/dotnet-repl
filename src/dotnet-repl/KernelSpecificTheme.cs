@@ -23,7 +23,9 @@ namespace dotnet_repl
 
         public abstract string PromptText { get; }
 
-        public abstract ILineEditorPrompt Prompt { get; }
+        public virtual ILineEditorPrompt Prompt => new DelegatingPrompt(
+            $"[{AnnouncementTextStyle.Foreground}]{PromptText} [/][{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}]>[/]",
+            $"[{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}] ...[/]");
 
         public IStatusMessageGenerator StatusMessageGenerator { get; set; } = new SillyExecutionStatusMessageGenerator();
 
@@ -31,6 +33,8 @@ namespace dotnet_repl
         {
             "csharp" => new CSharpTheme(),
             "fsharp" => new FSharpTheme(),
+            "pwsh" => new PowerShellTheme(),
+            "sql" => new SqlTheme(),
             _ => null
         };
     }
@@ -40,10 +44,6 @@ namespace dotnet_repl
         public override Style AccentStyle => new(Color.Aqua);
 
         public override string PromptText => "C#";
-
-        public override ILineEditorPrompt Prompt => new DelegatingPrompt(
-            $"[{AnnouncementTextStyle.Foreground}]{PromptText} [/][{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}]>[/]",
-            $"[{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}] ...[/]");
     }
 
     public class FSharpTheme : KernelSpecificTheme
@@ -51,10 +51,20 @@ namespace dotnet_repl
         public override Style AccentStyle => new(Color.Magenta1);
 
         public override string PromptText => "F#";
+    }
 
-        public override ILineEditorPrompt Prompt => new DelegatingPrompt(
-            $"[{AnnouncementTextStyle.Foreground}]{PromptText} [/][{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}]>[/]",
-            $"[{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}] ...[/]");
+    public class PowerShellTheme : KernelSpecificTheme
+    {
+        public override Style AccentStyle => new(Color.Purple);
+
+        public override string PromptText => "PS";
+    }
+    
+    public class SqlTheme : KernelSpecificTheme
+    {
+        public override Style AccentStyle => new(Color.Yellow3);
+
+        public override string PromptText => "SQL";
     }
 
     internal class DelegatingPrompt : ILineEditorPrompt

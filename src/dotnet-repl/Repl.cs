@@ -27,8 +27,6 @@ namespace dotnet_repl
 
         private readonly CancellationTokenSource _disposalTokenSource = new();
 
-        private readonly List<SubmitCode> _history = new();
-
         private TaskCompletionSource _waitingForInput;
 
         public Repl(
@@ -51,6 +49,14 @@ namespace dotnet_repl
                 _waitingForInput?.TrySetResult();
             });
 
+            var provider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
+            LineEditor = new LineEditor(ansiConsole, inputSource, provider)
+            {
+                MultiLine = true,
+                Prompt = Theme.Prompt,
+                Highlighter = ReplWordHighlighter.Create()
+            };
+
             _kernel.AddMiddleware(async (command, context, next) =>
             {
                 await next(command, context);
@@ -64,17 +70,9 @@ namespace dotnet_repl
 
                 if (root is SubmitCode current)
                 {
-                    TryAddToHistory(current);
+                    LineEditor.History.Add(current.Code);
                 }
             });
-
-            var provider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
-            LineEditor = new LineEditor(ansiConsole, inputSource, provider)
-            {
-                MultiLine = true,
-                Prompt = Theme.Prompt,
-                Highlighter = ReplWordHighlighter.Create()
-            };
 
             SetTheme();
 
@@ -85,39 +83,13 @@ namespace dotnet_repl
 
         public IInputSource? InputSource { get; }
 
-        public IReadOnlyList<SubmitCode> History => _history;
-
-        public int HistoryIndex { get; internal set; } = -1;
-
         public LineEditor LineEditor { get; }
 
         internal Action QuitAction { get; }
 
-        internal string? StashedBufferContent { get; set; }
-
         public KernelSpecificTheme Theme { get; set; }
 
         public void Start() => Task.Run(() => RunAsync());
-
-        public bool TryAddToHistory(SubmitCode submitCode)
-        {
-            if (string.IsNullOrEmpty(submitCode.Code))
-            {
-                return false;
-            }
-
-            var added = false;
-
-            if (History.LastOrDefault() is not { } previous || !previous.Code.Equals(submitCode.Code))
-            {
-                _history.Add(submitCode);
-                added = true;
-            }
-
-            HistoryIndex = History.Count;
-
-            return added;
-        }
 
         public async Task RunAsync(
             NotebookDocument? notebook = null,
