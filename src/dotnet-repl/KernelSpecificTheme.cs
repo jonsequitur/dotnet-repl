@@ -27,11 +27,11 @@ namespace dotnet_repl
 
         public IStatusMessageGenerator StatusMessageGenerator { get; set; } = new SillyExecutionStatusMessageGenerator();
 
-        public static KernelSpecificTheme GetTheme(string kernelName) => kernelName switch
+        public static KernelSpecificTheme? GetTheme(string kernelName) => kernelName switch
         {
             "csharp" => new CSharpTheme(),
             "fsharp" => new FSharpTheme(),
-            _ => throw new ArgumentOutOfRangeException(nameof(kernelName), kernelName, null)
+            _ => null
         };
     }
 
@@ -41,7 +41,7 @@ namespace dotnet_repl
 
         public override string PromptText => "C#";
 
-        public override ILineEditorPrompt Prompt => new LineEditorPrompt(
+        public override ILineEditorPrompt Prompt => new DelegatingPrompt(
             $"[{AnnouncementTextStyle.Foreground}]{PromptText} [/][{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}]>[/]",
             $"[{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}] ...[/]");
     }
@@ -52,8 +52,23 @@ namespace dotnet_repl
 
         public override string PromptText => "F#";
 
-        public override ILineEditorPrompt Prompt => new LineEditorPrompt(
+        public override ILineEditorPrompt Prompt => new DelegatingPrompt(
             $"[{AnnouncementTextStyle.Foreground}]{PromptText} [/][{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}]>[/]",
             $"[{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}] ...[/]");
+    }
+
+    internal class DelegatingPrompt : ILineEditorPrompt
+    {
+        public DelegatingPrompt(string prompt, string? more = null)
+        {
+            InnerPrompt = new LineEditorPrompt(prompt, more);
+        }
+
+        public (Markup Markup, int Margin) GetPrompt(ILineEditorState state, int line)
+        {
+            return InnerPrompt.GetPrompt(state, line);
+        }
+
+        public ILineEditorPrompt InnerPrompt { get; set; }
     }
 }

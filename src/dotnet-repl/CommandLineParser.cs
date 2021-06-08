@@ -25,7 +25,7 @@ namespace dotnet_repl
         public static Option<string> DefaultKernelOption = new Option<string>(
             "--default-kernel",
             description: "The default language for the kernel",
-            getDefaultValue: () => "csharp").AddSuggestions("csharp", "fsharp");
+            getDefaultValue: () => "csharp").FromAmong("csharp", "fsharp");
 
         public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
                 "--notebook",
@@ -71,7 +71,7 @@ namespace dotnet_repl
 
             var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
 
-            ansiConsole.RenderSplash(options, theme);
+            ansiConsole.RenderSplash(options, theme ?? new CSharpTheme());
 
             var kernel = Repl.CreateKernel(options);
 

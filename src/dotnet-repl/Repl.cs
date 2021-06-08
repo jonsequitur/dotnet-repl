@@ -22,7 +22,7 @@ namespace dotnet_repl
 {
     public class Repl : IDisposable
     {
-        private readonly Kernel _kernel;
+        private readonly CompositeKernel _kernel;
         private readonly CompositeDisposable _disposables = new();
 
         private readonly CancellationTokenSource _disposalTokenSource = new();
@@ -41,7 +41,7 @@ namespace dotnet_repl
             QuitAction = quit;
             AnsiConsole = ansiConsole;
             InputSource = inputSource;
-            Theme = KernelSpecificTheme.GetTheme(kernel.DefaultKernelName);
+            Theme = KernelSpecificTheme.GetTheme(kernel.DefaultKernelName) ?? new CSharpTheme();
 
             _waitingForInput = new TaskCompletionSource();
 
@@ -75,6 +75,8 @@ namespace dotnet_repl
                 Prompt = Theme.Prompt,
                 Highlighter = ReplWordHighlighter.Create()
             };
+
+            SetTheme();
 
             this.AddKeyBindings();
         }
@@ -136,6 +138,7 @@ namespace dotnet_repl
                 {
                     if (!exitAfterRun)
                     {
+                        SetTheme();
                         input = await LineEditor.ReadLine(_disposalTokenSource.Token);
                     }
                 }
@@ -153,6 +156,19 @@ namespace dotnet_repl
                 }
 
                 ResetWaitingForInput();
+            }
+        }
+
+        private void SetTheme()
+        {
+            if (KernelSpecificTheme.GetTheme(_kernel.DefaultKernelName) is { } theme)
+            {
+                Theme = theme;
+
+                if (LineEditor.Prompt is DelegatingPrompt d)
+                {
+                    d.InnerPrompt = theme.Prompt;
+                }
             }
         }
 
@@ -283,15 +299,18 @@ namespace dotnet_repl
 
             compositeKernel.AddMiddleware(async (command, context, next) =>
             {
+                var rootKernel = (CompositeKernel) context.HandlingKernel.RootKernel;
+
                 await next(command, context);
 
-                if (command.GetType().ToString() == "Microsoft.DotNet.Interactive.Commands.DirectiveCommand")
+                if (command.GetType().Name == "DirectiveCommand")
                 {
+                    var name = command.ToString()?.Replace("Directive: #!", "");
 
-                    
-
-
-
+                    if (rootKernel.FindKernel(name) is { } kernel)
+                    {
+                        rootKernel.DefaultKernelName = kernel.Name;
+                    }
                 }
             });
 
