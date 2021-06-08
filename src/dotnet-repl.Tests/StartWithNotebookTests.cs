@@ -27,10 +27,7 @@ namespace dotnet_repl.Tests
             });
         }
 
-        public void Dispose()
-        {
-            _writer.Dispose();
-        }
+        public void Dispose() => _writer.Dispose();
 
         [Fact]
         public async Task when_an_ipynb_is_specified_it_runs_it()

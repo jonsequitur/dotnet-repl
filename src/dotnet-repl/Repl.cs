@@ -29,6 +29,11 @@ namespace dotnet_repl
 
         private TaskCompletionSource _waitingForInput;
 
+        private static readonly HashSet<string> _nonStickyKernelNames = new HashSet<string>
+        {
+            "value"
+        };
+
         public Repl(
             CompositeKernel kernel,
             Action quit,
@@ -231,6 +236,12 @@ namespace dotnet_repl
                                 break;
 
                             case ReturnValueProduced returnValueProduced:
+
+                                if (returnValueProduced.Value is DisplayedValue)
+                                {
+                                    break;
+                                }
+
                                 ctx.UpdateTarget(GetSuccessDisplay(returnValueProduced, Theme));
                                 break;
 
@@ -267,7 +278,8 @@ namespace dotnet_repl
                 .UseAboutMagicCommand()
                 .UseDebugDirective()
                 .UseHelpMagicCommand()
-                .UseQuitCommand();
+                .UseQuitCommand()
+                .UseKernelClientConnection(new ConnectNamedPipe());
 
             compositeKernel.AddMiddleware(async (command, context, next) =>
             {
@@ -279,7 +291,9 @@ namespace dotnet_repl
                 {
                     var name = command.ToString()?.Replace("Directive: #!", "");
 
-                    if (rootKernel.FindKernel(name) is { } kernel)
+                    if (name is { } &&
+                        !_nonStickyKernelNames.Contains(name) &&
+                        rootKernel.FindKernel(name) is { } kernel)
                     {
                         rootKernel.DefaultKernelName = kernel.Name;
                     }
@@ -314,24 +328,21 @@ namespace dotnet_repl
                 new KeyValueStoreKernel()
                     .UseWho());
 
-            var kernel = compositeKernel
-                .UseKernelClientConnection(new ConnectNamedPipe());
-
             compositeKernel.Add(new SQLKernel());
 
             if (options.Verbose)
             {
-                kernel.LogEventsToPocketLogger();
+                compositeKernel.LogEventsToPocketLogger();
             }
 
-            kernel.DefaultKernelName = options.DefaultKernelName;
+            compositeKernel.DefaultKernelName = options.DefaultKernelName;
 
-            if (kernel.DefaultKernelName == "fsharp")
+            if (compositeKernel.DefaultKernelName == "fsharp")
             {
-                kernel.FindKernel("fsharp").DeferCommand(new SubmitCode("Formatter.Register(fun(x: obj)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
+                compositeKernel.FindKernel("fsharp").DeferCommand(new SubmitCode("Formatter.Register(fun(x: obj)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
             }
 
-            return kernel;
+            return compositeKernel;
         }
     }
 }

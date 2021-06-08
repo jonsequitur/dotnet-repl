@@ -13,10 +13,14 @@
     <PackageTags>dotnet interactive REPL csharp fsharp</PackageTags>
     <PackAsTool>true</PackAsTool>
     <Authors>jonsequitur</Authors>
-    <Version>0.1.8</Version>
+    <Version>0.1.9</Version>
     <Description>A polyglot command line REPL for C#, F#, SQL, and other languages.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21307.1" />
