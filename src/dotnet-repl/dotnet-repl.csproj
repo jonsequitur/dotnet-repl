@@ -35,7 +35,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="radline" Version="0.3.0" />
+    <PackageReference Include="radline" Version="0.4.0" />
     <PackageReference Include="Spectre.Console" Version="0.39.1-preview.0.31" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageReference Include="system.commandline" Version="2.0.0-beta1.21257.1" />

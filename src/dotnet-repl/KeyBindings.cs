@@ -31,16 +31,6 @@ namespace dotnet_repl
             editor.KeyBindings.Add<Clear>(
                 ConsoleKey.C,
                 ConsoleModifiers.Control | ConsoleModifiers.Alt);
-
-            editor.KeyBindings.Add(
-                ConsoleKey.UpArrow,
-                ConsoleModifiers.Control,
-                () => new PreviousHistory(controller));
-
-            editor.KeyBindings.Add(
-                ConsoleKey.DownArrow,
-                ConsoleModifiers.Control,
-                () => new NextHistory(controller));
         }
     }
 }
