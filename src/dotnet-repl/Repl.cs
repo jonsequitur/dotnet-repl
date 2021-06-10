@@ -338,7 +338,10 @@ namespace dotnet_repl
 
             if (compositeKernel.DefaultKernelName == "fsharp")
             {
-                compositeKernel.FindKernel("fsharp").DeferCommand(new SubmitCode("Formatter.Register(fun(x: obj)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
+                var fsharpKernel = compositeKernel.FindKernel("fsharp");
+
+                fsharpKernel.DeferCommand(new SubmitCode("Formatter.Register(fun(x: obj)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
+                fsharpKernel.DeferCommand(new SubmitCode("Formatter.Register(fun(x: System.Collections.IEnumerable)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
             }
 
             return compositeKernel;
