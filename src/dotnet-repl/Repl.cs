@@ -72,11 +72,6 @@ namespace dotnet_repl
                 {
                     root = parent;
                 }
-
-                if (root is SubmitCode current)
-                {
-                    LineEditor.History.Add(current.Code);
-                }
             });
 
             SetTheme();
@@ -118,6 +113,10 @@ namespace dotnet_repl
                         SetTheme();
                         input = await LineEditor.ReadLine(_disposalTokenSource.Token);
                     }
+                }
+                else
+                {
+                    LineEditor.History.Add(input);
                 }
 
                 if (_disposalTokenSource.IsCancellationRequested)
