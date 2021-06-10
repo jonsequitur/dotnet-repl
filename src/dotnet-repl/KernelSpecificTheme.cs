@@ -23,6 +23,8 @@ namespace dotnet_repl
 
         public abstract string PromptText { get; }
 
+        public virtual string KernelDisplayName => PromptText;
+
         public virtual ILineEditorPrompt Prompt => new DelegatingPrompt(
             $"[{AnnouncementTextStyle.Foreground}]{PromptText} [/][{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}]>[/]",
             $"[{Decoration.Bold} {AccentStyle.Foreground} {Decoration.SlowBlink}] ...[/]");
@@ -55,11 +57,13 @@ namespace dotnet_repl
 
     public class PowerShellTheme : KernelSpecificTheme
     {
-        public override Style AccentStyle => new(Color.Purple);
+        public override Style AccentStyle => new(Color.BlueViolet);
+
+        public override string KernelDisplayName => "PowerShell";
 
         public override string PromptText => "PS";
     }
-    
+
     public class SqlTheme : KernelSpecificTheme
     {
         public override Style AccentStyle => new(Color.Yellow3);

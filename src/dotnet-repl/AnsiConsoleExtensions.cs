@@ -37,22 +37,8 @@ namespace dotnet_repl
             StartupOptions startupOptions,
             KernelSpecificTheme theme)
         {
-            string language;
-
-            switch (startupOptions.DefaultKernelName)
-            {
-                case "csharp":
-                    language = "C#";
-                    break;
-                case "fsharp":
-                    language = "F#";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
             ansiConsole.Write(
-                new FigletText($".NET REPL: {language}")
+                new FigletText($".NET REPL: {theme.KernelDisplayName}")
                     .Centered()
                     .Color(theme.AccentStyle.Foreground));
 

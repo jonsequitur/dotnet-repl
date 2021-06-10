@@ -26,10 +26,10 @@ namespace dotnet_repl
             "--default-kernel",
             description: "The default language for the kernel",
             getDefaultValue: () => "csharp").FromAmong(
-            "csharp", 
-            "fsharp", 
-            "pwsh",
-            "sql");
+                "csharp", 
+                "fsharp", 
+                "pwsh",
+                "sql");
 
         public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
                 "--notebook",
