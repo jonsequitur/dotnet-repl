@@ -13,20 +13,20 @@
     <PackageTags>dotnet interactive REPL csharp fsharp</PackageTags>
     <PackAsTool>true</PackAsTool>
     <Authors>jonsequitur</Authors>
-    <Version>0.1.9</Version>
+    <Version>0.1.10</Version>
     <Description>A polyglot command line REPL for C#, F#, SQL, and other languages.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+    <!-- <None Include="..\..\README.md" Pack="true" PackagePath="\" /> -->
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21307.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21307.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21307.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21307.1" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21309.4" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21309.4" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21309.4" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21309.4" />
     <PackageReference Include="pocket.disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -39,8 +39,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="radline" Version="0.4.0" />
-    <PackageReference Include="Spectre.Console" Version="0.39.1-preview.0.31" />
+    <PackageReference Include="radline" Version="0.4.1" />
+    <PackageReference Include="Spectre.Console" Version="0.40.0" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageReference Include="system.commandline" Version="2.0.0-beta1.21257.1" />
     <PackageReference Include="system.reactive" Version="5.0.0" />
