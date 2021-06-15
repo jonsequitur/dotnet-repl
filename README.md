@@ -6,7 +6,7 @@ This project is an experiment using [.NET Interactive](https://github.com/dotnet
 
 This is a personal project. Hopefully you enjoy it and find it useful. Contributions are welcome. 
 
-
+[![NuGet Status](https://img.shields.io/nuget/v/dotnet-repl.svg?style=flat)](https://www.nuget.org/packages/dotnet-repl/) 
 [![Build status](https://ci.appveyor.com/api/projects/status/j544mv4bxysjryru?svg=true)](https://ci.appveyor.com/project/jonsequitur/dotnet-repl)
 
 ## Installation
