@@ -10,10 +10,10 @@
     <PackageId>dotnet-repl</PackageId>
     <ToolCommandName>dotnet-repl</ToolCommandName>
     <IsPackable>true</IsPackable>
-    <PackageTags>dotnet interactive REPL csharp fsharp</PackageTags>
+    <PackageTags>dotnet interactive REPL csharp fsharp Jupyter</PackageTags>
     <PackAsTool>true</PackAsTool>
     <Authors>jonsequitur</Authors>
-    <Version>0.1.10</Version>
+    <Version>0.1.11</Version>
     <Description>A polyglot command line REPL for C#, F#, SQL, and other languages.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
@@ -23,10 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21309.4" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21309.4" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21309.4" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21309.4" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21311.4" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21311.4" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21311.4" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21311.4" />
     <PackageReference Include="pocket.disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
