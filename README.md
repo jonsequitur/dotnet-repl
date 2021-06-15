@@ -105,7 +105,7 @@ Keybinding      | What it does                                                  
 `Ctrl-Down`     | Go forward through your submission history (current session only)
 
 
-### 🧙‍♂️ Magic commands
+### 🧙‍♂️ *Magic commands*
 
 Because `dotnet-repl` is built on .NET Interactive, it supports "magic commands". You can recognize a magic command by the `#!` at the start of a line.
 
