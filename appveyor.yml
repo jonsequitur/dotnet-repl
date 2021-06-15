@@ -15,4 +15,4 @@ after_build:
 
 test_script:
   - cmd: >-
-      dotnet test .\src\dotnet-repl.Tests\dotnet-repl.Tests.csproj --blame-hang-timeout 5m
+      dotnet test .\src\dotnet-repl.Tests\dotnet-repl.Tests.csproj
