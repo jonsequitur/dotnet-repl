@@ -1,0 +1,18 @@
+image: Visual Studio 2019
+artifacts:
+  - path: '**\*.nupkg'
+
+configuration:
+  - Release
+
+build_script:
+  - cmd: >-
+      dotnet build .\src\dotnet-repl.sln -p:Version=%APPVEYOR_BUILD_VERSION%
+
+after_build:
+  - cmd: >-
+      dotnet pack .\src\dotnet-repl\dotnet-repl.csproj -c:release --no-build -p:Version=%APPVEYOR_BUILD_VERSION%
+
+test_script:
+  - cmd: >-
+      dotnet test .\src\dotnet-repl.Tests\dotnet-repl.Tests.csproj
