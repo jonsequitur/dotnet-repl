@@ -7,6 +7,16 @@ This project is an experiment using [.NET Interactive](https://github.com/dotnet
 
 This is a personal project. Hopefully you enjoy it and find it useful. Contributions are welcome. 
 
+## Installation
+
+To install `dotnet-repl`, run the following in your terminal:
+
+```console
+> dotnet tool install -g dotnet-repl
+```
+
+## Features
+
 Here's what you can do with it:
 
 ### *Code in C#*
@@ -77,11 +87,13 @@ You might also want to just use a notebook as a non-interactive script. You can 
 ```
 
 
-### 💁‍♀️ Ask for help:
+### 💁‍♀️ *Ask for help*
 
-You can see help for the REPL by running the `#!help` magic command.
+You can see help for the REPL by running the `#!help` magic command. I won't print it here because it's a work in progress. Just give it a try.
 
-### Keyboard shortcuts
+### *Keyboard shortcuts*
+
+`dotnet-repl` supports a number of keyboard shortcuts. These will evolve over time but for now, here they are:
 
 Keybinding      | What it does                                                      |
 ----------------|-------------------------------------------------------------------|
