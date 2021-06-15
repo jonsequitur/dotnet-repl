@@ -5,7 +5,11 @@
 
 This project is an experiment using [.NET Interactive](https://github.com/dotnet/interactive) and [Spectre.Console](https://github.com/spectreconsole) to create a polyglot .NET REPL for use on the command line. 
 
-### Code in C#:
+This is a personal project. Hopefully you enjoy it and find it useful. Contributions are welcome. 
+
+Here's what you can do with it:
+
+### *Code in C#*
 
 You can start `dotnet-repl` in one of a number of different language modes. The default is C#, so the following two commands are equivalent:
 
@@ -22,7 +26,7 @@ One notable feature of C# scripting is the ability to specify a return value for
 
 <img src="https://user-images.githubusercontent.com/547415/121977410-d0cfab00-cd3a-11eb-84a0-ab4f8889c9c7.png" width="60%" />
 
-### Code in F#:
+### *Code in F#*
 
 You can also start up the REPL in F# mode:
 
@@ -32,7 +36,7 @@ You can also start up the REPL in F# mode:
 
 <img src="https://user-images.githubusercontent.com/547415/121456837-8d9cc300-c95b-11eb-9a91-1daae2dbc655.png" width="60%" />
 
-### 📝 Submit multi-line entries
+### 📝 *Submit multi-line entries*
 
 By pressing `Shift-Enter`, you can add multiple lines before running your code using `Enter`. This can be useful for creating multi-line code constructs, including declaring classes.
 
@@ -42,22 +46,36 @@ Another handy aspect of multi-line entries is that you no longer need to use the
 
 <img src="https://user-images.githubusercontent.com/547415/121977822-b5b16b00-cd3b-11eb-90d6-2798289a47d5.png" width="60%" />
 
-### 🚥 Switch languages within the same session:
+### 🚥 *Switch languages within the same session*
 
 <img src="https://user-images.githubusercontent.com/547415/121456913-ab6a2800-c95b-11eb-9a47-0f0828b2ba3b.png" width="60%" />
 
-### 🎁 Add NuGet packages:
+### 🎁 *Add NuGet packages*
 
 You can use `#r nuget` to install a package for the duration of the current session.
 
 <img src="https://user-images.githubusercontent.com/547415/121978012-235d9700-cd3c-11eb-89d0-ba367089208c.gif" width="60%" />
 
 
-### Run a notebook or start your REPL session using a notebook: 
+### *Initialize your REPL session using a notebook*
+
+You can use a notebook file (either `.ipynb` or `.dib`) as an initialization script for the REPL.
 
 ```console
 > dotnet repl --notebook /path/to/notebook.ipynb
 ```
+
+<img src="https://user-images.githubusercontent.com/547415/121982282-13e24c00-cd44-11eb-9c00-b0e04bb18276.gif" width="60%" />
+
+### *Run a notebook as a script*
+
+You might also want to just use a notebook as a non-interactive script. You can do this by adding the `--exit-after-run` flag.
+
+
+```console
+> dotnet repl --notebook /path/to/notebook.ipynb --exit-after-run
+```
+
 
 ### 💁‍♀️ Ask for help:
 
