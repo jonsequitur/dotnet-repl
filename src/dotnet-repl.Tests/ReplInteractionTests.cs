@@ -22,7 +22,8 @@ namespace dotnet_repl.Tests
          
             AnsiConsole = new AnsiConsoleFactory().Create(new AnsiConsoleSettings
             {
-                Out = new AnsiConsoleOutput(Out)
+                Out = new AnsiConsoleOutput(Out),
+                Ansi = AnsiSupport.Yes
             });
 
             ServiceProvider = new ServiceCollection()
