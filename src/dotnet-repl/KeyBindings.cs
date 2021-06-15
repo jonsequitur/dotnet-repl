@@ -6,9 +6,9 @@ namespace dotnet_repl
 {
     internal static class KeyBindings
     {
-        public static void AddKeyBindings(this Repl controller)
+        public static void AddKeyBindings(this Repl repl)
         {
-            var editor = controller.LineEditor;
+            var editor = repl.LineEditor;
 
             // Remove old keybinding for autocomplete
             editor.KeyBindings.Remove(ConsoleKey.Tab);
@@ -26,7 +26,7 @@ namespace dotnet_repl
             editor.KeyBindings.Add(
                 ConsoleKey.C,
                 ConsoleModifiers.Control,
-                () => new Quit(controller.QuitAction));
+                () => new Quit(repl.QuitAction));
 
             editor.KeyBindings.Add<Clear>(
                 ConsoleKey.C,

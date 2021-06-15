@@ -75,7 +75,7 @@ namespace dotnet_repl
 
             var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
 
-            ansiConsole.RenderSplash(options, theme ?? new CSharpTheme());
+            ansiConsole.RenderSplash(theme ?? new CSharpTheme());
 
             var kernel = Repl.CreateKernel(options);
 

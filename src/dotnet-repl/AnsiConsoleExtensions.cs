@@ -34,7 +34,6 @@ namespace dotnet_repl
 
         public static void RenderSplash(
             this IAnsiConsole ansiConsole,
-            StartupOptions startupOptions,
             KernelSpecificTheme theme)
         {
             ansiConsole.Write(
