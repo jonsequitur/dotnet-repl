@@ -91,7 +91,7 @@ You might also want to just use a notebook as a non-interactive script. You can 
 
 You can see help for the REPL by running the `#!help` magic command. I won't print it here because it's a work in progress. Just give it a try.
 
-### *Keyboard shortcuts*
+### ⌨ *Keyboard shortcuts*
 
 `dotnet-repl` supports a number of keyboard shortcuts. These will evolve over time but for now, here they are:
 
