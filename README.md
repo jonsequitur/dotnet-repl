@@ -1,5 +1,8 @@
 # dotnet-repl
 
+![REPL preview in C# and F#](https://user-images.githubusercontent.com/547415/121978422-02497600-cd3d-11eb-96c6-9725bda6dcaa.png)
+
+
 This project is an experiment using [.NET Interactive](https://github.com/dotnet/interactive) and [Spectre.Console](https://github.com/spectreconsole) to create a polyglot .NET REPL for use on the command line. 
 
 ### Code in C#:
