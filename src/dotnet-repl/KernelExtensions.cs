@@ -93,6 +93,7 @@ namespace dotnet_repl
                         shortcutKeys.AddRow("Shift-Tab", "Show previous completion");
                         shortcutKeys.AddRow("Ctrl-Up", "Go back through your submission history (current session only)");
                         shortcutKeys.AddRow("Ctrl-Down", "Go forward through your submission history (current session only)");
+                        shortcutKeys.AddRow("Ctrl-C", "Quit");
                         grid.AddRow(shortcutKeys);
 
                         grid.AddRow(new Paragraph(""));
