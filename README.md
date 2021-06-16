@@ -103,6 +103,7 @@ Keybinding      | What it does                                                  
 `Shift+Enter`   | Inserts a newline without submitting the current code
 `Tab`           | Show next completion
 `Shift-Tab`     | Show previous completion
+`Ctrl-C`        | Exit the REPL
 `Ctrl-Up`       | Go back through your submission history (current session only)
 `Ctrl-Down`     | Go forward through your submission history (current session only)
 
