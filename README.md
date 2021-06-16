@@ -26,8 +26,8 @@ Here's what you can do with it:
 You can start `dotnet-repl` in one of a number of different language modes. The default is C#, so the following two commands are equivalent:
 
 ```console
-> dotnet repl --default-kernel csharp
-> dotnet repl
+> dotnet-repl --default-kernel csharp
+> dotnet-repl
 ```
 
 Once the REPL has started, you can type C# code at the prompt and run it by pressing `Enter`. (Note that this is the [C# scripting](https://docs.microsoft.com/en-us/archive/msdn-magazine/2016/january/essential-net-csharp-scripting) dialect, which is also used in Visual Studio's C# Interactive Window and in .NET Interactive Notebooks.)
@@ -43,7 +43,7 @@ One notable feature of C# scripting is the ability to specify a return value for
 You can also start up the REPL in F# mode:
 
 ```console
-> dotnet repl --default-kernel fsharp
+> dotnet-repl --default-kernel fsharp
 ```
 
 <img src="https://user-images.githubusercontent.com/547415/121456837-8d9cc300-c95b-11eb-9a91-1daae2dbc655.png" width="60%" />
@@ -74,7 +74,7 @@ You can use `#r nuget` to install a package for the duration of the current sess
 You can use a notebook file (either `.ipynb` or `.dib`) as an initialization script for the REPL.
 
 ```console
-> dotnet repl --notebook /path/to/notebook.ipynb
+> dotnet-repl --notebook /path/to/notebook.ipynb
 ```
 
 <img src="https://user-images.githubusercontent.com/547415/121982282-13e24c00-cd44-11eb-9c00-b0e04bb18276.gif" width="60%" />
@@ -85,7 +85,7 @@ You might also want to just use a notebook as a non-interactive script. You can 
 
 
 ```console
-> dotnet repl --notebook /path/to/notebook.ipynb --exit-after-run
+> dotnet-repl --notebook /path/to/notebook.ipynb --exit-after-run
 ```
 
 
