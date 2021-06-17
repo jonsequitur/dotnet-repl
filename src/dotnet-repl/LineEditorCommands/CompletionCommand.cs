@@ -104,7 +104,7 @@ namespace dotnet_repl.LineEditorCommands
 
         private static int GetSuffixPosition(LineEditorContext context)
         {
-            var start = context.Buffer.CursorPosition - 1;
+            var start = Math.Max(context.Buffer.CursorPosition - 1, 0);
             var length = context.Buffer.Length;
             for (var pos = start; pos < length; pos++)
             {
