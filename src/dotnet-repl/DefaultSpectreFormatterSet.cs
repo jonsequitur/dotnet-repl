@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -9,7 +8,7 @@ using Spectre.Console.Rendering;
 
 namespace dotnet_repl
 {
-    public class DefaultSpectreFormatterSet
+    internal class DefaultSpectreFormatterSet
     {
         internal static readonly ITypeFormatter[] DefaultFormatters =
         {
@@ -53,52 +52,6 @@ namespace dotnet_repl
                 }
 
                 return false;
-            }),
-
-            new SpectreFormatter<IEnumerable>((enumerable, context, console) =>
-            {
-                var columnIndexByName = new Dictionary<string, int>();
-                var columnCount = 0;
-
-                var table = new Table();
-
-                var destructuredObjects = new List<IDictionary<string, object>>();
-
-                foreach (var item in enumerable)
-                {
-                    var dictionary = Destructurer.GetOrCreate(item?.GetType()).Destructure(item);
-                    destructuredObjects.Add(dictionary);
-
-                    foreach (var key in dictionary.Keys)
-                    {
-                        if (!columnIndexByName.ContainsKey(key))
-                        {
-                            columnIndexByName[key] = columnCount++;
-                            table.AddColumn(Markup.Escape(key));
-                        }
-                    }
-                }
-
-                // add a row to the table for each item
-                foreach (var dict in destructuredObjects)
-                {
-                    var values = new List<object>(new object[columnCount]);
-
-                    // add a row to the table for each item
-                    foreach (var pair in dict)
-                    {
-                        if (columnIndexByName.TryGetValue(pair.Key, out var index))
-                        {
-                            values[index] = pair.Value;
-                        }
-                    }
-
-                    table.AddRow(values.Select(v => v is null ? "" : Markup.Escape(v.ToDisplayString())).ToArray());
-                }
-
-                table.FormatTo(context);
-
-                return true;
             }),
 
             new SpectreFormatter<IDictionary<string, object>>((dict, context, console) =>

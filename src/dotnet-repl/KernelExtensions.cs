@@ -1,4 +1,6 @@
-﻿using System.CommandLine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.Diagnostics;
@@ -121,7 +123,63 @@ namespace dotnet_repl
                     })
             };
 
+            help.AddAlias("#help");
+
             kernel.AddDirective(help);
+
+            return kernel;
+        }
+
+        public static T UseTableFormattingForEnumerables<T>(this T kernel)
+            where T : Kernel
+        {
+            var formatter = new SpectreFormatter<IEnumerable>((enumerable, context, console) =>
+            {
+                var columnIndexByName = new Dictionary<string, int>();
+                var columnCount = 0;
+
+                var table = new Table();
+
+                var destructuredObjects = new List<IDictionary<string, object>>();
+
+                foreach (var item in enumerable)
+                {
+                    var dictionary = Destructurer.GetOrCreate(item?.GetType()).Destructure(item);
+                    destructuredObjects.Add(dictionary);
+
+                    foreach (var key in dictionary.Keys)
+                    {
+                        if (!columnIndexByName.ContainsKey(key))
+                        {
+                            columnIndexByName[key] = columnCount++;
+                            table.AddColumn(Markup.Escape(key));
+                        }
+                    }
+                }
+
+                // add a row to the table for each item
+                foreach (var dict in destructuredObjects)
+                {
+                    var values = new List<object>(new object[columnCount]);
+
+                    // add a row to the table for each item
+                    foreach (var pair in dict)
+                    {
+                        if (columnIndexByName.TryGetValue(pair.Key, out var index))
+                        {
+                            values[index] = pair.Value;
+                        }
+                    }
+
+                    table.AddRow(values.Select(v => v is null ? "" : Markup.Escape(v.ToDisplayString())).ToArray());
+                }
+
+                table.FormatTo(context);
+
+                return true;
+            });
+
+            Formatter.Register(formatter);
 
             return kernel;
         }

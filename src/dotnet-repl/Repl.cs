@@ -10,6 +10,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.PowerShell;
@@ -17,6 +18,7 @@ using Pocket;
 using RadLine;
 using Spectre.Console;
 using static dotnet_repl.AnsiConsoleExtensions;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace dotnet_repl
 {
@@ -273,6 +275,8 @@ namespace dotnet_repl
         {
             using var _ = Logger.Log.OnEnterAndExit("Creating Kernels");
 
+            ResetFormattersToDefault();
+
             var compositeKernel = new CompositeKernel()
                 .UseAboutMagicCommand()
                 .UseDebugDirective()
@@ -345,6 +349,12 @@ namespace dotnet_repl
             }
 
             return compositeKernel;
+        }
+
+        public static void ResetFormattersToDefault()
+        {
+            Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
+            new DefaultSpectreFormatterSet().Register();
         }
     }
 }

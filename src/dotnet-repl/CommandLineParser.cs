@@ -8,11 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Notebook;
 using Pocket;
 using Spectre.Console;
-using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace dotnet_repl
 {
@@ -26,10 +24,10 @@ namespace dotnet_repl
             "--default-kernel",
             description: "The default language for the kernel",
             getDefaultValue: () => "csharp").FromAmong(
-                "csharp", 
-                "fsharp", 
-                "pwsh",
-                "sql");
+            "csharp",
+            "fsharp",
+            "pwsh",
+            "sql");
 
         public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
                 "--notebook",
@@ -46,7 +44,10 @@ namespace dotnet_repl
                 "Working directory to which to change after launching the kernel.")
             .ExistingOnly();
 
-        public static Parser Create(IAnsiConsole? ansiConsole = null)
+        public static Parser Create(
+            IAnsiConsole? ansiConsole = null,
+            Func<StartupOptions, IAnsiConsole, CancellationToken, Task<IDisposable>>? startRepl = null,
+            Action<IDisposable>? registerForDisposal = null)
         {
             var rootCommand = new RootCommand("dotnet-repl")
             {
@@ -57,8 +58,15 @@ namespace dotnet_repl
                 ExitAfterRun
             };
 
+            startRepl ??= StartRepl;
+
             rootCommand.Handler = CommandHandler.Create<StartupOptions, CancellationToken>(
-                (options, token) => StartRepl(options, token, ansiConsole ?? AnsiConsole.Console));
+                (options, token) =>
+                {
+                    var repl = startRepl(options, ansiConsole ?? AnsiConsole.Console, token);
+                    registerForDisposal?.Invoke(repl);
+                    return repl;
+                });
 
             return new CommandLineBuilder(rootCommand)
                 .UseDefaults()
@@ -66,13 +74,11 @@ namespace dotnet_repl
                 .Build();
         }
 
-        private static async Task StartRepl(
+        public static async Task<IDisposable> StartRepl(
             StartupOptions options,
-            CancellationToken cancellationToken,
-            IAnsiConsole ansiConsole)
+            IAnsiConsole ansiConsole,
+            CancellationToken cancellationToken)
         {
-            new DefaultSpectreFormatterSet().Register();
-
             var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
 
             ansiConsole.RenderSplash(theme ?? new CSharpTheme());
@@ -98,12 +104,13 @@ namespace dotnet_repl
             using var repl = new Repl(kernel, disposable.Dispose, ansiConsole);
 
             disposable.Add(repl);
+            disposable.Add(kernel);
 
-            cancellationToken.Register(() => repl.Dispose());
-
-            Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
+            cancellationToken.Register(() => disposable.Dispose());
 
             await repl.RunAsync(notebook, options.ExitAfterRun);
+
+            return disposable;
         }
     }
 }

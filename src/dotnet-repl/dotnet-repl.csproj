@@ -23,10 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21311.4" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21311.4" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21311.4" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21311.4" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21317.3" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21317.3" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21317.3" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21317.3" />
     <PackageReference Include="pocket.disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
