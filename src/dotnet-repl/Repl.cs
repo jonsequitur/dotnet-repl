@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,15 +26,18 @@ namespace dotnet_repl
 {
     public class Repl : IDisposable
     {
-        private readonly CompositeKernel _kernel;
-        private readonly CompositeDisposable _disposables = new();
-
-        private readonly CancellationTokenSource _disposalTokenSource = new();
-
         private static readonly HashSet<string> _nonStickyKernelNames = new HashSet<string>
         {
             "value"
         };
+
+        private readonly CompositeKernel _kernel;
+
+        private readonly CompositeDisposable _disposables = new();
+
+        private readonly CancellationTokenSource _disposalTokenSource = new();
+
+        private readonly Subject<Unit> _readyForInput = new();
 
         public Repl(
             CompositeKernel kernel,
@@ -73,6 +78,8 @@ namespace dotnet_repl
             this.AddKeyBindings();
         }
 
+        public IObservable<Unit> ReadyForInput => _readyForInput;
+
         public IAnsiConsole AnsiConsole { get; }
 
         public IInputSource? InputSource { get; }
@@ -105,6 +112,7 @@ namespace dotnet_repl
                     if (!exitAfterRun)
                     {
                         SetTheme();
+                        _readyForInput.OnNext(Unit.Default);
                         input = await LineEditor.ReadLine(_disposalTokenSource.Token);
                     }
                 }
