@@ -19,7 +19,7 @@ namespace dotnet_repl.Tests
             In.PushEnter();
 
             // FIX: (Standard_out_is_batched) need a better way to await consumption of the input
-            await Task.Delay(3000);
+            await Task.Delay(5000);
 
             Out.ToString().Should().Contain("hellorepl");
         }
@@ -30,7 +30,7 @@ namespace dotnet_repl.Tests
             In.Push("Console.Error.Write(\"hello\");Console.Error.Write(\"repl\");");
             In.PushEnter();
 
-            await Task.Delay(3000);
+            await Task.Delay(5000);
 
             Out.ToString().Should().Contain("hellorepl");
         }
