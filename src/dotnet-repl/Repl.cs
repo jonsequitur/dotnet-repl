@@ -90,7 +90,12 @@ namespace dotnet_repl
 
         public KernelSpecificTheme Theme { get; set; }
 
-        public void Start() => Task.Run(() => RunAsync());
+        public void Start()
+        {
+            var ready = ReadyForInput.FirstAsync();
+            Task.Run(() => RunAsync());
+            ready.FirstAsync().Wait();
+        }
 
         public async Task RunAsync(
             NotebookDocument? notebook = null,
