@@ -1,16 +1,20 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System.Threading.Tasks;
 using FluentAssertions;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Xunit;
 
 namespace dotnet_repl.Tests
 {
     public class FormattingTests
     {
+        public FormattingTests()
+        {
+            Repl.ResetFormattersToDefault();
+        }
+
         [Fact]
         public async Task Null_is_formatted_as_null()
         {
@@ -26,7 +30,13 @@ namespace dotnet_repl.Tests
                 .Which
                 .FormattedValues
                 .Should()
-                .ContainSingle(f => f.Value == "null");
+                .ContainSingle(f => f.Value =="<null>");
+        }
+
+        [Fact]
+        public void List_expansion_is_limited()
+        {
+            Enumerable.Range(1, 1000).ToDisplayString().Should().Contain("(980 more)");
         }
     }
 }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +12,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.PowerShell;
@@ -17,22 +20,24 @@ using Pocket;
 using RadLine;
 using Spectre.Console;
 using static dotnet_repl.AnsiConsoleExtensions;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace dotnet_repl
 {
     public class Repl : IDisposable
     {
-        private readonly CompositeKernel _kernel;
-        private readonly CompositeDisposable _disposables = new();
-
-        private readonly CancellationTokenSource _disposalTokenSource = new();
-
-        private TaskCompletionSource _waitingForInput;
-
         private static readonly HashSet<string> _nonStickyKernelNames = new HashSet<string>
         {
             "value"
         };
+
+        private readonly CompositeKernel _kernel;
+
+        private readonly CompositeDisposable _disposables = new();
+
+        private readonly CancellationTokenSource _disposalTokenSource = new();
+
+        private readonly Subject<Unit> _readyForInput = new();
 
         public Repl(
             CompositeKernel kernel,
@@ -46,13 +51,7 @@ namespace dotnet_repl
             InputSource = inputSource;
             Theme = KernelSpecificTheme.GetTheme(kernel.DefaultKernelName) ?? new CSharpTheme();
 
-            _waitingForInput = new TaskCompletionSource();
-
-            _disposables.Add(() =>
-            {
-                _disposalTokenSource.Cancel();
-                _waitingForInput?.TrySetResult();
-            });
+            _disposables.Add(() => { _disposalTokenSource.Cancel(); });
 
             var provider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
             LineEditor = new LineEditor(ansiConsole, inputSource, provider)
@@ -79,6 +78,8 @@ namespace dotnet_repl
             this.AddKeyBindings();
         }
 
+        public IObservable<Unit> ReadyForInput => _readyForInput;
+
         public IAnsiConsole AnsiConsole { get; }
 
         public IInputSource? InputSource { get; }
@@ -89,7 +90,12 @@ namespace dotnet_repl
 
         public KernelSpecificTheme Theme { get; set; }
 
-        public void Start() => Task.Run(() => RunAsync());
+        public void Start()
+        {
+            var ready = ReadyForInput.FirstAsync();
+            Task.Run(() => RunAsync());
+            ready.FirstAsync().Wait();
+        }
 
         public async Task RunAsync(
             NotebookDocument? notebook = null,
@@ -111,6 +117,7 @@ namespace dotnet_repl
                     if (!exitAfterRun)
                     {
                         SetTheme();
+                        _readyForInput.OnNext(Unit.Default);
                         input = await LineEditor.ReadLine(_disposalTokenSource.Token);
                     }
                 }
@@ -130,8 +137,6 @@ namespace dotnet_repl
                 {
                     break;
                 }
-
-                ResetWaitingForInput();
             }
         }
 
@@ -146,17 +151,6 @@ namespace dotnet_repl
                     d.InnerPrompt = theme.Prompt;
                 }
             }
-        }
-
-        public Task WaitingForInputAsync() => _waitingForInput!.Task;
-
-        private void ResetWaitingForInput()
-        {
-            var previous = _waitingForInput;
-
-            _waitingForInput = new TaskCompletionSource();
-
-            previous?.TrySetResult();
         }
 
         private async Task RunKernelCommand(KernelCommand command)
@@ -177,7 +171,7 @@ namespace dotnet_repl
                 var t = events.FirstOrDefaultAsync(
                     e => e is DisplayEvent or CommandFailed or CommandSucceeded);
 
-                result = _kernel.SendAsync(command);
+                result = _kernel.SendAsync(command, _disposalTokenSource.Token);
 
                 await t;
             });
@@ -273,6 +267,8 @@ namespace dotnet_repl
         {
             using var _ = Logger.Log.OnEnterAndExit("Creating Kernels");
 
+            ResetFormattersToDefault();
+
             var compositeKernel = new CompositeKernel()
                 .UseAboutMagicCommand()
                 .UseDebugDirective()
@@ -345,6 +341,12 @@ namespace dotnet_repl
             }
 
             return compositeKernel;
+        }
+
+        public static void ResetFormattersToDefault()
+        {
+            Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
+            new DefaultSpectreFormatterSet().Register();
         }
     }
 }

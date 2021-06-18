@@ -1,72 +1,85 @@
 using System;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using RadLine;
+
+// adapted from https://github.com/spectreconsole/radline/blob/8a95e79877da12c7f702ca98c8acd2040a3ef58c/src/RadLine.Tests/Utilities/TestInputSource.cs
 
 namespace dotnet_repl.Tests.Utility
 {
-    public class TestInputSource : IInputSource
+    public sealed class TestInputSource : IInputSource
     {
-        private readonly BlockingCollection<ConsoleKeyInfo> _input = new();
+        private readonly Queue<ConsoleKeyInfo> _input;
 
-        private readonly ManualResetEvent _inputConsumed = new(false);
+        public bool ByPassProcessing => true;
 
-        public async Task<ConsoleKeyInfo?> ReadKey(CancellationToken cancellationToken = new())
+        public TestInputSource()
         {
-            await Task.Yield();
+            _input = new Queue<ConsoleKeyInfo>();
+        }
 
-            var value = _input.Take(cancellationToken);
+        public TestInputSource Push(string input)
+        {
+            if (input is null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
 
+            foreach (var character in input)
+            {
+                Push(character);
+            }
+
+            return this;
+        }
+
+        public TestInputSource Push(char input)
+        {
+            var control = char.IsUpper(input);
+            _input.Enqueue(new ConsoleKeyInfo(input, (ConsoleKey)input, false, false, control));
+            return this;
+        }
+
+        public TestInputSource Push(ConsoleKey input)
+        {
+            _input.Enqueue(new ConsoleKeyInfo((char)input, input, false, false, false));
+            return this;
+        }
+
+        public TestInputSource PushNewLine()
+        {
+            Push(ConsoleKey.Enter, ConsoleModifiers.Shift);
+            return this;
+        }
+
+        public TestInputSource PushEnter()
+        {
+            Push(ConsoleKey.Enter);
+            return this;
+        }
+
+        public TestInputSource Push(ConsoleKey input, ConsoleModifiers modifiers)
+        {
+            var shift = modifiers.HasFlag(ConsoleModifiers.Shift);
+            var control = modifiers.HasFlag(ConsoleModifiers.Control);
+            var alt = modifiers.HasFlag(ConsoleModifiers.Alt);
+
+            _input.Enqueue(new ConsoleKeyInfo((char)0, input, shift, alt, control));
+            return this;
+        }
+
+        public bool IsKeyAvailable()
+        {
+            return _input.Count > 0;
+        }
+
+        ConsoleKeyInfo IInputSource.ReadKey()
+        {
             if (_input.Count == 0)
             {
-                _inputConsumed.Set();
+                throw new InvalidOperationException("No keys available");
             }
 
-            return value;
+            return _input.Dequeue();
         }
-
-        public async Task InputConsumed()
-        {
-            await Task.Yield();
-
-            _inputConsumed.WaitOne();
-        }
-
-        public void SendKeys(params ConsoleKeyInfo[] keys)
-        {
-            _inputConsumed.Reset();
-
-            foreach (var keyInfo in keys)
-            {
-                _input.Add(keyInfo);
-            }
-        }
-
-        public void SendKey(ConsoleKey key, bool shift = false, bool alt = false, bool control = false) =>
-            SendKeys(new ConsoleKeyInfo(' ', key, shift, alt, control));
-
-        public void SendString(string value)
-        {
-            foreach (var c in value)
-            {
-                ConsoleKey consoleKey;
-
-                var parsed = Enum.TryParse(typeof(ConsoleKey), c.ToString(), true, out var consoleKeyObj);
-
-                if (!parsed)
-                {
-                    consoleKey = ConsoleKey.NoName;
-                }
-                else
-                {
-                    consoleKey = (ConsoleKey) consoleKeyObj;
-                }
-
-                SendKeys(new ConsoleKeyInfo(c, consoleKey, false, false, false));
-            }
-        }
-
-        public void SendEnter() => SendKeys(new ConsoleKeyInfo('\r', ConsoleKey.Enter, false, false, false));
     }
 }
