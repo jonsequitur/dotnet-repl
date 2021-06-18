@@ -43,7 +43,8 @@ namespace dotnet_repl.Tests
             {
                 output.SubscribeToPocketLogger(),
                 Repl,
-                Kernel
+                Kernel,
+                ServiceProvider
             };
         }
 

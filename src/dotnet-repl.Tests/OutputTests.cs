@@ -1,5 +1,6 @@
-using System.Threading.Tasks;
 using FluentAssertions;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,10 +15,11 @@ namespace dotnet_repl.Tests
         [Fact]
         public async Task Standard_out_is_batched()
         {
-            In.SendString("Console.Write(\"hello\");Console.Write(\"repl\");");
-            In.SendEnter();
+            In.Push("Console.Write(\"hello\");Console.Write(\"repl\");");
+            In.PushEnter();
 
-            await Repl.WaitingForInputAsync();
+            // FIX: (Standard_out_is_batched) need a better way to await consumption of the input
+            await Task.Delay(3000);
 
             Out.ToString().Should().Contain("hellorepl");
         }
@@ -25,10 +27,10 @@ namespace dotnet_repl.Tests
         [Fact]
         public async Task Standard_error_is_batched()
         {
-            In.SendString("Console.Error.Write(\"hello\");Console.Error.Write(\"repl\");");
-            In.SendEnter();
+            In.Push("Console.Error.Write(\"hello\");Console.Error.Write(\"repl\");");
+            In.PushEnter();
 
-            await Repl.WaitingForInputAsync();
+            await Task.Delay(3000);
 
             Out.ToString().Should().Contain("hellorepl");
         }

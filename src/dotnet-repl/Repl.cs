@@ -29,8 +29,6 @@ namespace dotnet_repl
 
         private readonly CancellationTokenSource _disposalTokenSource = new();
 
-        private TaskCompletionSource _waitingForInput;
-
         private static readonly HashSet<string> _nonStickyKernelNames = new HashSet<string>
         {
             "value"
@@ -48,13 +46,7 @@ namespace dotnet_repl
             InputSource = inputSource;
             Theme = KernelSpecificTheme.GetTheme(kernel.DefaultKernelName) ?? new CSharpTheme();
 
-            _waitingForInput = new TaskCompletionSource();
-
-            _disposables.Add(() =>
-            {
-                _disposalTokenSource.Cancel();
-                _waitingForInput?.TrySetResult();
-            });
+            _disposables.Add(() => { _disposalTokenSource.Cancel(); });
 
             var provider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
             LineEditor = new LineEditor(ansiConsole, inputSource, provider)
@@ -132,8 +124,6 @@ namespace dotnet_repl
                 {
                     break;
                 }
-
-                ResetWaitingForInput();
             }
         }
 
@@ -148,17 +138,6 @@ namespace dotnet_repl
                     d.InnerPrompt = theme.Prompt;
                 }
             }
-        }
-
-        public Task WaitingForInputAsync() => _waitingForInput!.Task;
-
-        private void ResetWaitingForInput()
-        {
-            var previous = _waitingForInput;
-
-            _waitingForInput = new TaskCompletionSource();
-
-            previous?.TrySetResult();
         }
 
         private async Task RunKernelCommand(KernelCommand command)
@@ -179,7 +158,7 @@ namespace dotnet_repl
                 var t = events.FirstOrDefaultAsync(
                     e => e is DisplayEvent or CommandFailed or CommandSucceeded);
 
-                result = _kernel.SendAsync(command);
+                result = _kernel.SendAsync(command, _disposalTokenSource.Token);
 
                 await t;
             });
