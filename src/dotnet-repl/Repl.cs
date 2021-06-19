@@ -51,7 +51,11 @@ namespace dotnet_repl
             InputSource = inputSource;
             Theme = KernelSpecificTheme.GetTheme(kernel.DefaultKernelName) ?? new CSharpTheme();
 
-            _disposables.Add(() => { _disposalTokenSource.Cancel(); });
+            _disposables.Add(() =>
+            {
+                _readyForInput.OnCompleted();
+                _disposalTokenSource.Cancel();
+            });
 
             var provider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
             LineEditor = new LineEditor(ansiConsole, inputSource, provider)
@@ -92,9 +96,9 @@ namespace dotnet_repl
 
         public void Start()
         {
-            var ready = ReadyForInput.FirstAsync();
-            Task.Run(() => RunAsync());
-            ready.FirstAsync().Wait();
+            Task.Factory.StartNew(
+                () => RunAsync(),
+                TaskCreationOptions.LongRunning);
         }
 
         public async Task RunAsync(
@@ -126,18 +130,18 @@ namespace dotnet_repl
                     LineEditor.History.Add(input);
                 }
 
-                if (_disposalTokenSource.IsCancellationRequested)
+                if (!_disposalTokenSource.IsCancellationRequested)
                 {
-                    return;
-                }
+                    await RunKernelCommand(new SubmitCode(input));
 
-                await RunKernelCommand(new SubmitCode(input));
-
-                if (exitAfterRun && queuedSubmissions.Count == 0)
-                {
-                    break;
+                    if (exitAfterRun && queuedSubmissions.Count == 0)
+                    {
+                        break;
+                    }
                 }
             }
+
+            _readyForInput.OnCompleted();
         }
 
         private void SetTheme()

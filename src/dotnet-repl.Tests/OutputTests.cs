@@ -2,7 +2,6 @@ using System;
 using System.Reactive.Linq;
 using FluentAssertions;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -15,10 +14,10 @@ namespace dotnet_repl.Tests
 
         public OutputTests(ITestOutputHelper output) : base(output)
         {
-            this._output = output;
+            _output = output;
         }
 
-        [Fact(Skip = "later")]
+        [Fact]
         public async Task Standard_out_is_batched()
         {
             var events = Repl.ReadyForInput.Count();
@@ -30,17 +29,17 @@ namespace dotnet_repl.Tests
             In.Push("Console.Write(\"hello\");Console.Write(\"repl\");");
             In.PushEnter();
 
-             // await Task.Delay(3000);
+            // await Task.Delay(3000);
 
-             await Repl.ReadyForInput.FirstAsync();
-             await Task.Delay(3000);
+            await Repl.ReadyForInput.FirstAsync();
+            await Task.Delay(3000);
 
             // await events.FirstAsync(count => count >= 1);
 
             Out.ToString().Should().Contain("hellorepl");
         }
 
-        [Fact(Skip = "later")]
+        [Fact]
         public async Task Standard_error_is_batched()
         {
             var events = Repl.ReadyForInput.Replay();
