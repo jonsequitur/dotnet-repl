@@ -40,10 +40,14 @@ One notable feature of C# scripting is the ability to specify a return value for
 
 ### *Code in F#*
 
-You can also start up the REPL in F# mode:
+You can also start up the REPL in F# mode with `--default-kernel` or set the environment variable `DOTNET_REPL_DEFAULT_KERNEL` to `fsharp`:
 
 ```console
 > dotnet repl --default-kernel fsharp
+```
+```console
+# DOTNET_REPL_DEFAULT_KERNEL=fsharp
+> dotnet repl
 ```
 
 <img src="https://user-images.githubusercontent.com/547415/121456837-8d9cc300-c95b-11eb-9a91-1daae2dbc655.png" width="60%" />
