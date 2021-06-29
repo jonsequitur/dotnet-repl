@@ -17,10 +17,11 @@
     <Description>A polyglot command line REPL for C#, F#, SQL, and other languages.</Description>
     <RepositoryUrl>https://github.com/jonsequitur/dotnet-repl</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- <None Include="..\..\README.md" Pack="true" PackagePath="\" /> -->
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
