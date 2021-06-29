@@ -13,8 +13,9 @@
     <PackageTags>dotnet interactive REPL csharp fsharp Jupyter</PackageTags>
     <PackAsTool>true</PackAsTool>
     <Authors>jonsequitur</Authors>
-    <Version>0.1.12</Version>
+    <Version>0.1.0</Version>
     <Description>A polyglot command line REPL for C#, F#, SQL, and other languages.</Description>
+    <RepositoryUrl>https://github.com/jonsequitur/dotnet-repl</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
@@ -23,10 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21317.3" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21317.3" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21317.3" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21317.3" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21329.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21329.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21329.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21329.1" />
     <PackageReference Include="pocket.disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -40,7 +41,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="radline" Version="0.5.0" />
-    <PackageReference Include="Spectre.Console" Version="0.40.0" />
+    <PackageReference Include="Spectre.Console" Version="0.40.1-preview.0.13" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageReference Include="system.reactive" Version="5.0.0" />
   </ItemGroup>
