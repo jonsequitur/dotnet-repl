@@ -68,7 +68,7 @@ namespace dotnet_repl
                     "while"
                  }),
 
-                 // C#-only operators (or shared)
+                 // C#-only operators
                  (new Style(foreground: Color.SteelBlue1_1),
                   new []
                   {
