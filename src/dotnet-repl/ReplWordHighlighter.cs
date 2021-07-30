@@ -25,6 +25,7 @@ namespace dotnet_repl
                 "finally",
                 "for",
                 "foreach",
+                "fun",
                 "if",
                 "in",
                 "int",
