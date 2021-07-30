@@ -58,7 +58,7 @@ namespace dotnet_repl
             {
                 MultiLine = true,
                 Prompt = Theme.Prompt,
-                Highlighter = ReplWordHighlighter.Create()
+                Highlighter = ReplWordHighlighter.Create(_kernel.DefaultKernelName)
             };
 
             _kernel.AddMiddleware(async (command, context, next) =>
@@ -294,7 +294,7 @@ namespace dotnet_repl
                     }
                 }
             });
-
+            
             compositeKernel.Add(
                 new CSharpKernel()
                     .UseNugetDirective()
@@ -302,7 +302,7 @@ namespace dotnet_repl
                     .UseWho()
                     .UseDotNetVariableSharing(),
                 new[] { "c#", "C#" });
-
+                
             compositeKernel.Add(
                 new FSharpKernel()
                     .UseDefaultFormatting()
