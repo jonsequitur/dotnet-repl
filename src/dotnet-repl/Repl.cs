@@ -294,7 +294,7 @@ namespace dotnet_repl
                     }
                 }
             });
-            
+
             compositeKernel.Add(
                 new CSharpKernel()
                     .UseNugetDirective()
@@ -302,7 +302,7 @@ namespace dotnet_repl
                     .UseWho()
                     .UseDotNetVariableSharing(),
                 new[] { "c#", "C#" });
-                
+
             compositeKernel.Add(
                 new FSharpKernel()
                     .UseDefaultFormatting()
