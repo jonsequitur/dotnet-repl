@@ -39,6 +39,17 @@ namespace dotnet_repl
 
         private readonly Subject<Unit> _readyForInput = new();
 
+        private LineEditor GetLineEditorLanguageLocal(string kernelName)
+        {
+            var lineEditor = new LineEditor(AnsiConsole, InputSource, LineEditorProvider)
+            {
+                MultiLine = true,
+                Prompt = Theme.Prompt,
+                Highlighter = ReplWordHighlighter.Create(kernelName)
+            };
+            return lineEditor;
+        }
+
         public Repl(
             CompositeKernel kernel,
             Action quit,
@@ -53,13 +64,8 @@ namespace dotnet_repl
 
             _disposables.Add(() => { _disposalTokenSource.Cancel(); });
 
-            var provider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
-            LineEditor = new LineEditor(ansiConsole, inputSource, provider)
-            {
-                MultiLine = true,
-                Prompt = Theme.Prompt,
-                Highlighter = ReplWordHighlighter.Create(_kernel.DefaultKernelName)
-            };
+            LineEditorProvider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
+            LineEditor = GetLineEditorLanguageLocal(_kernel.DefaultKernelName);
 
             _kernel.AddMiddleware(async (command, context, next) =>
             {
@@ -71,6 +77,9 @@ namespace dotnet_repl
                 {
                     root = parent;
                 }
+
+                if (_kernel.Directives.FirstOrDefault(c => $"Directive: {c.Name}" == command.ToString()) is { } directive)
+                    LineEditor = GetLineEditorLanguageLocal(directive.Name[2..]);
             });
 
             SetTheme();
@@ -84,11 +93,13 @@ namespace dotnet_repl
 
         public IInputSource? InputSource { get; }
 
-        public LineEditor LineEditor { get; }
+        public LineEditor LineEditor { get; private set; }
 
         internal Action QuitAction { get; }
 
         public KernelSpecificTheme Theme { get; set; }
+
+        private LineEditorServiceProvider LineEditorProvider { get; }
 
         public void Start()
         {
