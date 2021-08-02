@@ -31,6 +31,7 @@ namespace dotnet_repl
             return wordHighlighter;
         }
 
+
         private static readonly WordsToHighlight sharedWordsToHighlight = new[]
             {
                 
@@ -84,7 +85,7 @@ namespace dotnet_repl
                      "=>", 
                      ">", 
                      "|", 
-                     "$",
+                     "$"
                   }),
             };
 
