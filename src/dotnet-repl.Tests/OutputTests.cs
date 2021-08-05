@@ -2,7 +2,6 @@ using System;
 using System.Reactive.Linq;
 using FluentAssertions;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -15,7 +14,7 @@ namespace dotnet_repl.Tests
 
         public OutputTests(ITestOutputHelper output) : base(output)
         {
-            this._output = output;
+            _output = output;
         }
 
         [Fact(Skip = "later")]
