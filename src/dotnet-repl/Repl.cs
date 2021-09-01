@@ -14,7 +14,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Notebook;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Pocket;
 using RadLine;
@@ -109,10 +109,10 @@ namespace dotnet_repl
         }
 
         public async Task RunAsync(
-            NotebookDocument? notebook = null,
+            InteractiveDocument? notebook = null,
             bool exitAfterRun = false)
         {
-            var queuedSubmissions = new Queue<string>(notebook?.Cells.Select(c => $"#!{c.Language}\n{c.Contents}") ?? Array.Empty<string>());
+            var queuedSubmissions = new Queue<string>(notebook?.Elements.Select(c => $"#!{c.Language}\n{c.Contents}") ?? Array.Empty<string>());
 
             if (!queuedSubmissions.Any())
             {
