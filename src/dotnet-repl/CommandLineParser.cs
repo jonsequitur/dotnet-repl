@@ -5,16 +5,15 @@ using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Notebook;
+using Microsoft.DotNet.Interactive.Documents;
 using Pocket;
 using Spectre.Console;
 
 namespace dotnet_repl
 {
-    public static class CommandLineParser
+    public static partial class CommandLineParser
     {
         public static Option<DirectoryInfo> LogPathOption { get; } = new(
             "--log-path",
@@ -23,12 +22,12 @@ namespace dotnet_repl
         public static Option<string> DefaultKernelOption = new Option<string>(
             "--default-kernel",
             description: "The default language for the kernel",
-            getDefaultValue: () => Environment.GetEnvironmentVariable("DOTNET_REPL_DEFAULT_KERNEL") ?? "csharp"
-            ).FromAmong(
-                "csharp",
-                "fsharp",
-                "pwsh",
-                "sql");
+            getDefaultValue: () => Environment.GetEnvironmentVariable("DOTNET_REPL_DEFAULT_KERNEL") ?? "csharp")
+                .FromAmong(
+                    "csharp",
+                    "fsharp",
+                    "pwsh",
+                    "sql");
 
         public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
                 "--notebook",
@@ -86,15 +85,13 @@ namespace dotnet_repl
 
             var kernel = Repl.CreateKernel(options);
 
-            NotebookDocument? notebook = default;
+            InteractiveDocument? notebook = default;
 
-            if (options.Notebook is { })
+            if (options.Notebook is { } file)
             {
-                var content = await File.ReadAllTextAsync(options.Notebook.FullName, cancellationToken);
-                var rawData = Encoding.UTF8.GetBytes(content);
-                notebook = kernel.ParseNotebook(options.Notebook.FullName, rawData);
+                notebook = await DocumentParser.ReadFileAsInteractiveDocument(file, kernel);
 
-                if (notebook.Cells.Any())
+                if (notebook.Elements.Any())
                 {
                     ansiConsole.Announce($"📓 Running notebook: {options.Notebook}");
                 }
