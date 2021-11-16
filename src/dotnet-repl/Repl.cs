@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -26,7 +25,7 @@ namespace dotnet_repl
 {
     public class Repl : IDisposable
     {
-        private static readonly HashSet<string> _nonStickyKernelNames = new HashSet<string>
+        private static readonly HashSet<string> _nonStickyKernelNames = new()
         {
             "value"
         };
@@ -284,8 +283,7 @@ namespace dotnet_repl
                 .UseAboutMagicCommand()
                 .UseDebugDirective()
                 .UseHelpMagicCommand()
-                .UseQuitCommand()
-                .UseKernelClientConnection(new ConnectNamedPipe());
+                .UseQuitCommand();
 
             compositeKernel.AddMiddleware(async (command, context, next) =>
             {
@@ -311,7 +309,7 @@ namespace dotnet_repl
                     .UseNugetDirective()
                     .UseKernelHelpers()
                     .UseWho()
-                    .UseDotNetVariableSharing(),
+                    .UseValueSharing(),
                 new[] { "c#", "C#" });
                 
             compositeKernel.Add(
@@ -321,20 +319,21 @@ namespace dotnet_repl
                     .UseKernelHelpers()
                     .UseWho()
                     .UseDefaultNamespaces()
-                    .UseDotNetVariableSharing(),
+                    .UseValueSharing(),
                 new[] { "f#", "F#" });
 
             compositeKernel.Add(
                 new PowerShellKernel()
                     .UseProfiles()
-                    .UseDotNetVariableSharing(),
+                    .UseValueSharing(),
                 new[] { "powershell" });
 
             compositeKernel.Add(
                 new KeyValueStoreKernel()
                     .UseWho());
 
-            compositeKernel.Add(new SQLKernel());
+            compositeKernel.Add(new SqlDiscoverabilityKernel());
+            compositeKernel.Add(new KqlDiscoverabilityKernel());
 
             if (options.Verbose)
             {
