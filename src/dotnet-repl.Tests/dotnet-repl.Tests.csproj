@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>dotnet_repl.Tests</RootNamespace>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="fluentassertions" Version="5.10.3" />
-    <PackageReference Include="microsoft.extensions.dependencyinjection" Version="5.0.1" />
+    <PackageReference Include="fluentassertions" Version="6.1.0" />
+    <PackageReference Include="microsoft.extensions.dependencyinjection" Version="6.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
     <PackageReference Include="pocketlogger.for.xunit" Version="0.6.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
