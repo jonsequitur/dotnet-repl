@@ -1,8 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.IO;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -19,11 +17,9 @@ namespace dotnet_repl
         public static T UseAboutMagicCommand<T>(this T kernel)
             where T : Kernel
         {
-            var about = new Command("#!about", "Show version and build information")
-            {
-                Handler = CommandHandler.Create<KernelInvocationContext>(
-                    context => context.Display(VersionSensor.Version()))
-            };
+            var about = new Command("#!about", "Show version and build information");
+
+            about.SetHandler<KernelInvocationContext>(context => context.Display(VersionSensor.Version()));
 
             kernel.AddDirective(about);
 
@@ -47,27 +43,28 @@ namespace dotnet_repl
         public static TKernel UseDebugDirective<TKernel>(this TKernel kernel)
             where TKernel : Kernel
         {
-            kernel.AddDirective(new Command("#!debug")
+            var debug = new Command("#!debug");
+
+            debug.SetHandler<KernelInvocationContext, IConsole, CancellationToken>(async (context, console, cancellationToken) =>
             {
-                Handler = CommandHandler.Create<KernelInvocationContext, IConsole, CancellationToken>(async (context, console, cancellationToken) =>
+                await Attach();
+
+                async Task Attach()
                 {
-                    await Attach();
+                    var process = Process.GetCurrentProcess();
 
-                    async Task Attach()
+                    var processId = process.Id;
+
+                    context.Display($"Attach your debugger to process {processId} ({process.ProcessName}).");
+                    
+                    while (!Debugger.IsAttached)
                     {
-                        var process = Process.GetCurrentProcess();
-
-                        var processId = process.Id;
-
-                        console.Out.WriteLine($"Attach your debugger to process {processId} ({process.ProcessName}).");
-
-                        while (!Debugger.IsAttached)
-                        {
-                            await Task.Delay(500, cancellationToken);
-                        }
+                        await Task.Delay(500, cancellationToken);
                     }
-                })
+                }
             });
+
+            kernel.AddDirective(debug);
 
             return kernel;
         }
@@ -75,53 +72,51 @@ namespace dotnet_repl
         public static T UseHelpMagicCommand<T>(this T kernel)
             where T : Kernel
         {
-            var help = new Command("#!help", "Show help for the REPL")
+            var help = new Command("#!help", "Show help for the REPL");
+
+            help.SetHandler(() =>
             {
-                Handler = CommandHandler.Create<KernelInvocationContext>(
-                    context =>
+                var console = AnsiConsole.Console;
+
+                var grid = new Grid();
+                grid.AddColumn();
+
+                grid.AddRow(new Paragraph("⌨ Shortcut keys:"));
+
+                var shortcutKeys = new Table();
+                shortcutKeys.AddColumn("Key");
+                shortcutKeys.AddColumn("What it does");
+                shortcutKeys.AddRow("Shift+Enter", "Inserts a newline without submitting the current code");
+                shortcutKeys.AddRow("Tab", "Show next completion");
+                shortcutKeys.AddRow("Shift-Tab", "Show previous completion");
+                shortcutKeys.AddRow("Ctrl-C", "Exit the REPL");
+                shortcutKeys.AddRow("Ctrl-Up", "Go back through your submission history (current session only)");
+                shortcutKeys.AddRow("Ctrl-Down", "Go forward through your submission history (current session only)");
+                grid.AddRow(shortcutKeys);
+
+                grid.AddRow(new Paragraph(""));
+                grid.AddRow(new Paragraph("🧙‍ Magic commands:"));
+
+                var magics = new Table();
+                magics.AddColumn("Kernel");
+                magics.AddColumn("Command");
+                magics.AddColumn("What it does");
+                kernel.VisitSubkernelsAndSelf(k =>
+                {
+                    var kernelName = k.Name == ".NET"
+                                         ? "root"
+                                         : k.Name;
+
+                    foreach (var magic in k.Directives.Where(d => !d.IsHidden))
                     {
-                        var console = AnsiConsole.Console;
+                        magics.AddRow(kernelName, magic.Name, magic.Description ?? "");
+                    }
+                });
 
-                        var grid = new Grid();
-                        grid.AddColumn();
+                grid.AddRow(magics);
 
-                        grid.AddRow(new Paragraph("⌨ Shortcut keys:"));
-
-                        var shortcutKeys = new Table();
-                        shortcutKeys.AddColumn("Key");
-                        shortcutKeys.AddColumn("What it does");
-                        shortcutKeys.AddRow("Shift+Enter", "Inserts a newline without submitting the current code");
-                        shortcutKeys.AddRow("Tab", "Show next completion");
-                        shortcutKeys.AddRow("Shift-Tab", "Show previous completion");
-                        shortcutKeys.AddRow("Ctrl-C", "Exit the REPL");
-                        shortcutKeys.AddRow("Ctrl-Up", "Go back through your submission history (current session only)");
-                        shortcutKeys.AddRow("Ctrl-Down", "Go forward through your submission history (current session only)");
-                        grid.AddRow(shortcutKeys);
-
-                        grid.AddRow(new Paragraph(""));
-                        grid.AddRow(new Paragraph("🧙‍ Magic commands:"));
-
-                        var magics = new Table();
-                        magics.AddColumn("Kernel");
-                        magics.AddColumn("Command");
-                        magics.AddColumn("What it does");
-                        kernel.VisitSubkernelsAndSelf(k =>
-                        {
-                            var kernelName = k.Name == ".NET"
-                                                 ? "root"
-                                                 : k.Name;
-
-                            foreach (var magic in k.Directives.Where(d => !d.IsHidden))
-                            {
-                                magics.AddRow(kernelName, magic.Name, magic.Description ?? "");
-                            }
-                        });
-
-                        grid.AddRow(magics);
-
-                        console.Announce(grid);
-                    })
-            };
+                console.Announce(grid);
+            });
 
             help.AddAlias("#help");
 
