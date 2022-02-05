@@ -22,7 +22,7 @@ namespace dotnet_repl
 
             var result = parser.Parse(args);
 
-            if (result.ValueForOption(CommandLineParser.LogPathOption) is { } path)
+            if (result.GetValueForOption(CommandLineParser.LogPathOption) is { } path)
             {
                 StartToolLogging(path);
             }

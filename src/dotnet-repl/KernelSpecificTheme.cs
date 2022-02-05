@@ -1,4 +1,3 @@
-using System;
 using RadLine;
 using Spectre.Console;
 

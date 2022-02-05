@@ -55,6 +55,16 @@ namespace dotnet_repl
                 .Expand()
                 .RoundedBorder()
                 .BorderStyle(theme.ErrorOutputBorderStyle);
+        
+        public static IRenderable GetErrorDisplay(
+            CommandFailed failed,
+            KernelSpecificTheme theme,
+            string header = "❌") =>
+            new Panel(failed.Exception.GetRenderable())
+                .Header(header)
+                .Expand()
+                .RoundedBorder()
+                .BorderStyle(theme.ErrorOutputBorderStyle);
 
         public static Panel GetErrorDisplay(
             string message,

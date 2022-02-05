@@ -252,7 +252,7 @@ namespace dotnet_repl
 
                             case CommandFailed failed when failed.Command == command:
                                 AnsiConsole.RenderBufferedStandardOutAndErr(Theme, stdOut, stdErr);
-                                ctx.UpdateTarget(GetErrorDisplay(failed.Message, Theme));
+                                ctx.UpdateTarget(GetErrorDisplay(failed, Theme));
                                 tcs.SetResult();
 
                                 break;

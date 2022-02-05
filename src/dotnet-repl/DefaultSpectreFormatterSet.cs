@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
 using System.Linq;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -15,6 +16,12 @@ namespace dotnet_repl
             new SpectreFormatter<IRenderable>((value, context, ansiConsole) =>
             {
                 ansiConsole.Write(value);
+                return true;
+            }),
+
+            new SpectreFormatter<Exception>((value, context, ansiConsole) =>
+            {
+                ansiConsole.WriteException(value);
                 return true;
             }),
 
@@ -54,16 +61,16 @@ namespace dotnet_repl
                 return false;
             }),
 
-            new SpectreFormatter<IDictionary<string, object>>((dict, context, console) =>
+            new SpectreFormatter<IDictionary>((dict, context, console) =>
             {
                 var table = new Table();
 
                 foreach (var key in dict.Keys)
                 {
-                    table.AddColumn(key);
+                    table.AddColumn(key.ToDisplayString());
                 }
 
-                table.AddRow(dict.Keys.Select(k => Markup.Escape(dict[k]?.ToDisplayString() ?? string.Empty)).ToArray());
+                table.AddRow(dict.Keys.Cast<object>().Select(k => Markup.Escape(dict[k]?.ToDisplayString() ?? string.Empty)).ToArray());
 
                 console.Write(table);
 

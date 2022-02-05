@@ -1,7 +1,6 @@
 ﻿using System;
 using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
@@ -60,17 +59,17 @@ namespace dotnet_repl
 
             startRepl ??= StartRepl;
 
-            rootCommand.Handler = CommandHandler.Create<StartupOptions, CancellationToken>(
+            rootCommand.SetHandler<StartupOptions, CancellationToken>(
                 (options, token) =>
                 {
                     var repl = startRepl(options, ansiConsole ?? AnsiConsole.Console, token);
                     registerForDisposal?.Invoke(repl);
                     return repl;
-                });
+                }, new StartupOptionsBinder(DefaultKernelOption, WorkingDirOption, NotebookOption, LogPathOption, ExitAfterRun));
 
             return new CommandLineBuilder(rootCommand)
                 .UseDefaults()
-                .UseHelpBuilder(context => new SpectreHelpBuilder(context.Console))
+                .UseHelpBuilder(context => new SpectreHelpBuilder(LocalizationResources.Instance))
                 .Build();
         }
 

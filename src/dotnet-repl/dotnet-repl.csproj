@@ -13,7 +13,7 @@
     <PackageTags>dotnet interactive REPL csharp fsharp Jupyter</PackageTags>
     <PackAsTool>true</PackAsTool>
     <Authors>jonsequitur</Authors>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Description>A polyglot command line REPL for C#, F#, SQL, and other languages.</Description>
     <RepositoryUrl>https://github.com/jonsequitur/dotnet-repl</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -25,11 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21566.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21566.1" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.Documents" Version="1.0.0-beta.21566.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.21566.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.21566.1" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.22103.3" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.22103.3" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.Documents" Version="1.0.0-beta.22103.3" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.22103.3" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.22103.3" />
     <PackageReference Include="pocket.disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -43,7 +43,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="radline" Version="0.5.0" />
-    <PackageReference Include="Spectre.Console" Version="0.42.1-preview.0.18" />
+    <PackageReference Include="Spectre.Console" Version="0.43.1-preview.0.24" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageReference Include="system.reactive" Version="5.0.0" />
   </ItemGroup>
