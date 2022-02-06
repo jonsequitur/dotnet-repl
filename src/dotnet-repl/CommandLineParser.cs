@@ -16,21 +16,27 @@ namespace dotnet_repl
     {
         public static Option<DirectoryInfo> LogPathOption { get; } = new(
             "--log-path",
-            "Enable file logging to the specified directory");
+            "Enable file logging to the specified directory")
+        {
+            ArgumentHelpName = "PATH"
+        };
 
         public static Option<string> DefaultKernelOption = new Option<string>(
-            "--default-kernel",
-            description: "The default language for the kernel",
-            getDefaultValue: () => Environment.GetEnvironmentVariable("DOTNET_REPL_DEFAULT_KERNEL") ?? "csharp")
-                .FromAmong(
-                    "csharp",
-                    "fsharp",
-                    "pwsh",
-                    "sql");
+                "--default-kernel",
+                description: "The default language for the kernel",
+                getDefaultValue: () => Environment.GetEnvironmentVariable("DOTNET_REPL_DEFAULT_KERNEL") ?? "csharp")
+            .FromAmong(
+                "csharp",
+                "fsharp",
+                "pwsh",
+                "sql");
 
         public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
                 "--notebook",
                 description: "After starting the REPL, run all of the cells in the specified notebook file.")
+            {
+                ArgumentHelpName = "PATH"
+            }
             .ExistingOnly();
 
         public static Option<bool> ExitAfterRun = new(

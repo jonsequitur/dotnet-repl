@@ -56,7 +56,7 @@ namespace dotnet_repl
                     var processId = process.Id;
 
                     context.Display($"Attach your debugger to process {processId} ({process.ProcessName}).");
-                    
+
                     while (!Debugger.IsAttached)
                     {
                         await Task.Delay(500, cancellationToken);
@@ -81,39 +81,11 @@ namespace dotnet_repl
                 var grid = new Grid();
                 grid.AddColumn();
 
-                grid.AddRow(new Paragraph("⌨ Shortcut keys:"));
-
-                var shortcutKeys = new Table();
-                shortcutKeys.AddColumn("Key");
-                shortcutKeys.AddColumn("What it does");
-                shortcutKeys.AddRow("Shift+Enter", "Inserts a newline without submitting the current code");
-                shortcutKeys.AddRow("Tab", "Show next completion");
-                shortcutKeys.AddRow("Shift-Tab", "Show previous completion");
-                shortcutKeys.AddRow("Ctrl-C", "Exit the REPL");
-                shortcutKeys.AddRow("Ctrl-Up", "Go back through your submission history (current session only)");
-                shortcutKeys.AddRow("Ctrl-Down", "Go forward through your submission history (current session only)");
-                grid.AddRow(shortcutKeys);
-
+                grid.ShowShortcutKeys();
+                
                 grid.AddRow(new Paragraph(""));
-                grid.AddRow(new Paragraph("🧙‍ Magic commands:"));
 
-                var magics = new Table();
-                magics.AddColumn("Kernel");
-                magics.AddColumn("Command");
-                magics.AddColumn("What it does");
-                kernel.VisitSubkernelsAndSelf(k =>
-                {
-                    var kernelName = k.Name == ".NET"
-                                         ? "root"
-                                         : k.Name;
-
-                    foreach (var magic in k.Directives.Where(d => !d.IsHidden))
-                    {
-                        magics.AddRow(kernelName, magic.Name, magic.Description ?? "");
-                    }
-                });
-
-                grid.AddRow(magics);
+                grid.ShowMagics(kernel);
 
                 console.Announce(grid);
             });

@@ -79,7 +79,7 @@ namespace dotnet_repl
 
             new SpectreFormatter<string>((value, context, console) =>
             {
-                console.Write(Markup.Escape(value));
+                console.Write(value);
 
                 return true;
             }),
