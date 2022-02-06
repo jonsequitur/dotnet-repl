@@ -10,55 +10,54 @@ using Serilog.Sinks.RollingFileAlternate;
 using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 using static Pocket.Logger<dotnet_repl.Program>;
 
-namespace dotnet_repl
+namespace dotnet_repl;
+
+public class Program
 {
-    public class Program
+    public static async Task<int> Main(string[] args)
     {
-        public static async Task<int> Main(string[] args)
+        Console.OutputEncoding = Encoding.UTF8;
+
+        var parser = CommandLineParser.Create();
+
+        var result = parser.Parse(args);
+
+        if (result.GetValueForOption(CommandLineParser.LogPathOption) is { } path)
         {
-            Console.OutputEncoding = Encoding.UTF8;
-
-            var parser = CommandLineParser.Create();
-
-            var result = parser.Parse(args);
-
-            if (result.GetValueForOption(CommandLineParser.LogPathOption) is { } path)
-            {
-                StartToolLogging(path);
-            }
-
-            return await parser.InvokeAsync(args);
+            StartToolLogging(path);
         }
 
-        private static readonly Assembly[] _assembliesEmittingPocketLoggerLogs =
+        return await parser.InvokeAsync(args);
+    }
+
+    private static readonly Assembly[] _assembliesEmittingPocketLoggerLogs =
+    {
+        typeof(Program).Assembly,
+        typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
+    };
+
+    internal static IDisposable StartToolLogging(DirectoryInfo path)
+    {
+        var disposables = new CompositeDisposable();
+
+        var log = new SerilogLoggerConfiguration()
+                  .WriteTo
+                  .RollingFileAlternate(path.FullName, outputTemplate: "{Message}{NewLine}")
+                  .CreateLogger();
+
+        var subscription = LogEvents.Subscribe(
+            e => log.Information(e.ToLogString()),
+            _assembliesEmittingPocketLoggerLogs);
+
+        disposables.Add(subscription);
+        disposables.Add(log);
+
+        TaskScheduler.UnobservedTaskException += (sender, args) =>
         {
-            typeof(Program).Assembly,
-            typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
+            Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
+            args.SetObserved();
         };
 
-        internal static IDisposable StartToolLogging(DirectoryInfo path)
-        {
-            var disposables = new CompositeDisposable();
-
-            var log = new SerilogLoggerConfiguration()
-                      .WriteTo
-                      .RollingFileAlternate(path.FullName, outputTemplate: "{Message}{NewLine}")
-                      .CreateLogger();
-
-            var subscription = LogEvents.Subscribe(
-                e => log.Information(e.ToLogString()),
-                _assembliesEmittingPocketLoggerLogs);
-
-            disposables.Add(subscription);
-            disposables.Add(log);
-
-            TaskScheduler.UnobservedTaskException += (sender, args) =>
-            {
-                Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
-                args.SetObserved();
-            };
-
-            return disposables;
-        }
+        return disposables;
     }
 }

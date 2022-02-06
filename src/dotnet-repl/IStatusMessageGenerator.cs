@@ -1,7 +1,6 @@
-﻿namespace dotnet_repl
+﻿namespace dotnet_repl;
+
+public interface IStatusMessageGenerator
 {
-    public interface IStatusMessageGenerator
-    {
-        string GetStatusMessage();
-    }
+    string GetStatusMessage();
 }

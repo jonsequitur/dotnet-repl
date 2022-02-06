@@ -10,110 +10,109 @@ using Microsoft.DotNet.Interactive.Documents;
 using Pocket;
 using Spectre.Console;
 
-namespace dotnet_repl
+namespace dotnet_repl;
+
+public static partial class CommandLineParser
 {
-    public static partial class CommandLineParser
+    public static Option<DirectoryInfo> LogPathOption { get; } = new(
+        "--log-path",
+        "Enable file logging to the specified directory")
     {
-        public static Option<DirectoryInfo> LogPathOption { get; } = new(
-            "--log-path",
-            "Enable file logging to the specified directory")
+        ArgumentHelpName = "PATH"
+    };
+
+    public static Option<string> DefaultKernelOption = new Option<string>(
+            "--default-kernel",
+            description: "The default language for the kernel",
+            getDefaultValue: () => Environment.GetEnvironmentVariable("DOTNET_REPL_DEFAULT_KERNEL") ?? "csharp")
+        .FromAmong(
+            "csharp",
+            "fsharp",
+            "pwsh",
+            "sql");
+
+    public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
+            "--notebook",
+            description: "After starting the REPL, run all of the cells in the specified notebook file.")
         {
             ArgumentHelpName = "PATH"
+        }
+        .ExistingOnly();
+
+    public static Option<bool> ExitAfterRun = new(
+        "--exit-after-run",
+        "Exit the REPL when the specified notebook or script has run.");
+
+    public static Option<DirectoryInfo> WorkingDirOption = new Option<DirectoryInfo>(
+            "--working-dir",
+            () => new DirectoryInfo(Environment.CurrentDirectory),
+            "Working directory to which to change after launching the kernel.")
+        .ExistingOnly();
+
+    public static Parser Create(
+        IAnsiConsole? ansiConsole = null,
+        Func<StartupOptions, IAnsiConsole, CancellationToken, Task<IDisposable>>? startRepl = null,
+        Action<IDisposable>? registerForDisposal = null)
+    {
+        var rootCommand = new RootCommand("dotnet-repl")
+        {
+            LogPathOption,
+            DefaultKernelOption,
+            NotebookOption,
+            WorkingDirOption,
+            ExitAfterRun
         };
 
-        public static Option<string> DefaultKernelOption = new Option<string>(
-                "--default-kernel",
-                description: "The default language for the kernel",
-                getDefaultValue: () => Environment.GetEnvironmentVariable("DOTNET_REPL_DEFAULT_KERNEL") ?? "csharp")
-            .FromAmong(
-                "csharp",
-                "fsharp",
-                "pwsh",
-                "sql");
+        startRepl ??= StartRepl;
 
-        public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
-                "--notebook",
-                description: "After starting the REPL, run all of the cells in the specified notebook file.")
+        rootCommand.SetHandler<StartupOptions, CancellationToken>(
+            (options, token) =>
             {
-                ArgumentHelpName = "PATH"
-            }
-            .ExistingOnly();
+                var repl = startRepl(options, ansiConsole ?? AnsiConsole.Console, token);
+                registerForDisposal?.Invoke(repl);
+                return repl;
+            }, new StartupOptionsBinder(DefaultKernelOption, WorkingDirOption, NotebookOption, LogPathOption, ExitAfterRun));
 
-        public static Option<bool> ExitAfterRun = new(
-            "--exit-after-run",
-            "Exit the REPL when the specified notebook or script has run.");
+        return new CommandLineBuilder(rootCommand)
+               .UseDefaults()
+               .UseHelpBuilder(context => new SpectreHelpBuilder(LocalizationResources.Instance))
+               .Build();
+    }
 
-        public static Option<DirectoryInfo> WorkingDirOption = new Option<DirectoryInfo>(
-                "--working-dir",
-                () => new DirectoryInfo(Environment.CurrentDirectory),
-                "Working directory to which to change after launching the kernel.")
-            .ExistingOnly();
+    public static async Task<IDisposable> StartRepl(
+        StartupOptions options,
+        IAnsiConsole ansiConsole,
+        CancellationToken cancellationToken)
+    {
+        var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
 
-        public static Parser Create(
-            IAnsiConsole? ansiConsole = null,
-            Func<StartupOptions, IAnsiConsole, CancellationToken, Task<IDisposable>>? startRepl = null,
-            Action<IDisposable>? registerForDisposal = null)
+        ansiConsole.RenderSplash(theme ?? new CSharpTheme());
+
+        var kernel = Repl.CreateKernel(options);
+
+        InteractiveDocument? notebook = default;
+
+        if (options.Notebook is { } file)
         {
-            var rootCommand = new RootCommand("dotnet-repl")
+            notebook = await DocumentParser.ReadFileAsInteractiveDocument(file, kernel);
+
+            if (notebook.Elements.Any())
             {
-                LogPathOption,
-                DefaultKernelOption,
-                NotebookOption,
-                WorkingDirOption,
-                ExitAfterRun
-            };
-
-            startRepl ??= StartRepl;
-
-            rootCommand.SetHandler<StartupOptions, CancellationToken>(
-                (options, token) =>
-                {
-                    var repl = startRepl(options, ansiConsole ?? AnsiConsole.Console, token);
-                    registerForDisposal?.Invoke(repl);
-                    return repl;
-                }, new StartupOptionsBinder(DefaultKernelOption, WorkingDirOption, NotebookOption, LogPathOption, ExitAfterRun));
-
-            return new CommandLineBuilder(rootCommand)
-                .UseDefaults()
-                .UseHelpBuilder(context => new SpectreHelpBuilder(LocalizationResources.Instance))
-                .Build();
+                ansiConsole.Announce($"📓 Running notebook: {options.Notebook}");
+            }
         }
 
-        public static async Task<IDisposable> StartRepl(
-            StartupOptions options,
-            IAnsiConsole ansiConsole,
-            CancellationToken cancellationToken)
-        {
-            var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
+        using var disposable = new CompositeDisposable();
 
-            ansiConsole.RenderSplash(theme ?? new CSharpTheme());
+        using var repl = new Repl(kernel, disposable.Dispose, ansiConsole);
 
-            var kernel = Repl.CreateKernel(options);
+        disposable.Add(repl);
+        disposable.Add(kernel);
 
-            InteractiveDocument? notebook = default;
+        cancellationToken.Register(() => disposable.Dispose());
 
-            if (options.Notebook is { } file)
-            {
-                notebook = await DocumentParser.ReadFileAsInteractiveDocument(file, kernel);
+        await repl.RunAsync(notebook, options.ExitAfterRun);
 
-                if (notebook.Elements.Any())
-                {
-                    ansiConsole.Announce($"📓 Running notebook: {options.Notebook}");
-                }
-            }
-
-            using var disposable = new CompositeDisposable();
-
-            using var repl = new Repl(kernel, disposable.Dispose, ansiConsole);
-
-            disposable.Add(repl);
-            disposable.Add(kernel);
-
-            cancellationToken.Register(() => disposable.Dispose());
-
-            await repl.RunAsync(notebook, options.ExitAfterRun);
-
-            return disposable;
-        }
+        return disposable;
     }
 }

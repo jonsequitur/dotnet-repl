@@ -1,24 +1,23 @@
 ﻿using System;
 
-namespace dotnet_repl
+namespace dotnet_repl;
+
+public sealed class LineEditorServiceProvider : IServiceProvider
 {
-    public sealed class LineEditorServiceProvider : IServiceProvider
+    private readonly KernelCompletion _completion;
+
+    public LineEditorServiceProvider(KernelCompletion completion)
     {
-        private readonly KernelCompletion _completion;
+        _completion = completion ?? throw new ArgumentNullException(nameof(completion));
+    }
 
-        public LineEditorServiceProvider(KernelCompletion completion)
+    public object? GetService(Type serviceType)
+    {
+        if (serviceType == typeof(KernelCompletion))
         {
-            _completion = completion ?? throw new ArgumentNullException(nameof(completion));
+            return _completion;
         }
 
-        public object? GetService(Type serviceType)
-        {
-            if (serviceType == typeof(KernelCompletion))
-            {
-                return _completion;
-            }
-
-            return null;
-        }
+        return null;
     }
 }
