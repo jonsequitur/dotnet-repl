@@ -21,342 +21,341 @@ using Spectre.Console;
 using static dotnet_repl.AnsiConsoleExtensions;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
-namespace dotnet_repl
+namespace dotnet_repl;
+
+public class Repl : IDisposable
 {
-    public class Repl : IDisposable
+    private static readonly HashSet<string> _nonStickyKernelNames = new()
     {
-        private static readonly HashSet<string> _nonStickyKernelNames = new()
+        "value"
+    };
+
+    private readonly CompositeKernel _kernel;
+
+    private readonly CompositeDisposable _disposables = new();
+
+    private readonly CancellationTokenSource _disposalTokenSource = new();
+
+    private readonly Subject<Unit> _readyForInput = new();
+
+    private LineEditor GetLineEditorLanguageLocal(string kernelName)
+    {
+        var lineEditor = new LineEditor(AnsiConsole, InputSource, LineEditorProvider)
         {
-            "value"
+            MultiLine = true,
+            Prompt = Theme.Prompt,
+            Highlighter = ReplWordHighlighter.Create(kernelName)
         };
+        return lineEditor;
+    }
 
-        private readonly CompositeKernel _kernel;
+    public Repl(
+        CompositeKernel kernel,
+        Action quit,
+        IAnsiConsole ansiConsole,
+        IInputSource? inputSource = null)
+    {
+        _kernel = kernel;
+        QuitAction = quit;
+        AnsiConsole = ansiConsole;
+        InputSource = inputSource;
+        Theme = KernelSpecificTheme.GetTheme(kernel.DefaultKernelName) ?? new CSharpTheme();
 
-        private readonly CompositeDisposable _disposables = new();
+        _disposables.Add(() => { _disposalTokenSource.Cancel(); });
 
-        private readonly CancellationTokenSource _disposalTokenSource = new();
+        LineEditorProvider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
+        LineEditor = GetLineEditorLanguageLocal(_kernel.DefaultKernelName);
 
-        private readonly Subject<Unit> _readyForInput = new();
-
-        private LineEditor GetLineEditorLanguageLocal(string kernelName)
+        _kernel.AddMiddleware(async (command, context, next) =>
         {
-            var lineEditor = new LineEditor(AnsiConsole, InputSource, LineEditorProvider)
+            await next(command, context);
+
+            KernelCommand root = command;
+
+            while (root.Parent is { } parent)
             {
-                MultiLine = true,
-                Prompt = Theme.Prompt,
-                Highlighter = ReplWordHighlighter.Create(kernelName)
-            };
-            return lineEditor;
-        }
-
-        public Repl(
-            CompositeKernel kernel,
-            Action quit,
-            IAnsiConsole ansiConsole,
-            IInputSource? inputSource = null)
-        {
-            _kernel = kernel;
-            QuitAction = quit;
-            AnsiConsole = ansiConsole;
-            InputSource = inputSource;
-            Theme = KernelSpecificTheme.GetTheme(kernel.DefaultKernelName) ?? new CSharpTheme();
-
-            _disposables.Add(() => { _disposalTokenSource.Cancel(); });
-
-            LineEditorProvider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
-            LineEditor = GetLineEditorLanguageLocal(_kernel.DefaultKernelName);
-
-            _kernel.AddMiddleware(async (command, context, next) =>
-            {
-                await next(command, context);
-
-                KernelCommand root = command;
-
-                while (root.Parent is { } parent)
-                {
-                    root = parent;
-                }
-
-                if (_kernel.Directives.FirstOrDefault(c => $"Directive: {c.Name}" == command.ToString()) is { } directive)
-                    LineEditor = GetLineEditorLanguageLocal(directive.Name[2..]);
-            });
-
-            SetTheme();
-
-            this.AddKeyBindings();
-        }
-
-        public IObservable<Unit> ReadyForInput => _readyForInput;
-
-        public IAnsiConsole AnsiConsole { get; }
-
-        public IInputSource? InputSource { get; }
-
-        public LineEditor LineEditor { get; private set; }
-
-        internal Action QuitAction { get; }
-
-        public KernelSpecificTheme Theme { get; set; }
-
-        private LineEditorServiceProvider LineEditorProvider { get; }
-
-        public void Start()
-        {
-            var ready = ReadyForInput.FirstAsync();
-            Task.Run(() => RunAsync());
-            ready.FirstAsync().Wait();
-        }
-
-        public async Task RunAsync(
-            InteractiveDocument? notebook = null,
-            bool exitAfterRun = false)
-        {
-            var queuedSubmissions = new Queue<string>(notebook?.Elements.Select(c => $"#!{c.Language}\n{c.Contents}") ?? Array.Empty<string>());
-
-            if (!queuedSubmissions.Any())
-            {
-                exitAfterRun = false;
+                root = parent;
             }
 
-            while (!_disposalTokenSource.IsCancellationRequested)
+            if (_kernel.Directives.FirstOrDefault(c => $"Directive: {c.Name}" == command.ToString()) is { } directive)
+                LineEditor = GetLineEditorLanguageLocal(directive.Name[2..]);
+        });
+
+        SetTheme();
+
+        this.AddKeyBindings();
+    }
+
+    public IObservable<Unit> ReadyForInput => _readyForInput;
+
+    public IAnsiConsole AnsiConsole { get; }
+
+    public IInputSource? InputSource { get; }
+
+    public LineEditor LineEditor { get; private set; }
+
+    internal Action QuitAction { get; }
+
+    public KernelSpecificTheme Theme { get; set; }
+
+    private LineEditorServiceProvider LineEditorProvider { get; }
+
+    public void Start()
+    {
+        var ready = ReadyForInput.FirstAsync();
+        Task.Run(() => RunAsync());
+        ready.FirstAsync().Wait();
+    }
+
+    public async Task RunAsync(
+        InteractiveDocument? notebook = null,
+        bool exitAfterRun = false)
+    {
+        var queuedSubmissions = new Queue<string>(notebook?.Elements.Select(c => $"#!{c.Language}\n{c.Contents}") ?? Array.Empty<string>());
+
+        if (!queuedSubmissions.Any())
+        {
+            exitAfterRun = false;
+        }
+
+        while (!_disposalTokenSource.IsCancellationRequested)
+        {
+            await Task.Yield();
+
+            if (!queuedSubmissions.TryDequeue(out var input))
             {
-                await Task.Yield();
-
-                if (!queuedSubmissions.TryDequeue(out var input))
+                if (!exitAfterRun)
                 {
-                    if (!exitAfterRun)
-                    {
-                        SetTheme();
-                        _readyForInput.OnNext(Unit.Default);
-                        input = await LineEditor.ReadLine(_disposalTokenSource.Token);
-                    }
-                }
-                else
-                {
-                    LineEditor.History.Add(input);
-                }
-
-                if (_disposalTokenSource.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                await RunKernelCommand(new SubmitCode(input));
-
-                if (exitAfterRun && queuedSubmissions.Count == 0)
-                {
-                    break;
+                    SetTheme();
+                    _readyForInput.OnNext(Unit.Default);
+                    input = await LineEditor.ReadLine(_disposalTokenSource.Token);
                 }
             }
-        }
-
-        private void SetTheme()
-        {
-            if (KernelSpecificTheme.GetTheme(_kernel.DefaultKernelName) is { } theme)
+            else
             {
-                Theme = theme;
+                LineEditor.History.Add(input);
+            }
 
-                if (LineEditor.Prompt is DelegatingPrompt d)
-                {
-                    d.InnerPrompt = theme.Prompt;
-                }
+            if (_disposalTokenSource.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await RunKernelCommand(new SubmitCode(input));
+
+            if (exitAfterRun && queuedSubmissions.Count == 0)
+            {
+                break;
             }
         }
+    }
 
-        private async Task RunKernelCommand(KernelCommand command)
+    private void SetTheme()
+    {
+        if (KernelSpecificTheme.GetTheme(_kernel.DefaultKernelName) is { } theme)
         {
-            StringBuilder? stdOut = default;
-            StringBuilder? stdErr = default;
+            Theme = theme;
 
-            Task<KernelCommandResult>? result = default;
-
-            var events = _kernel.KernelEvents.Replay();
-
-            using var _ = events.Connect();
-
-            await AnsiConsole.Status().StartAsync(Theme.StatusMessageGenerator.GetStatusMessage(), async ctx =>
+            if (LineEditor.Prompt is DelegatingPrompt d)
             {
-                ctx.Spinner(new ClockSpinner());
-
-                var t = events.FirstOrDefaultAsync(
-                    e => e is DisplayEvent or CommandFailed or CommandSucceeded);
-
-                result = _kernel.SendAsync(command, _disposalTokenSource.Token);
-
-                await t;
-            });
-
-            var waiting = new Panel("").NoBorder();
-
-            var tcs = new TaskCompletionSource();
-
-            await AnsiConsole
-                .Live(waiting)
-                .StartAsync(async ctx =>
-                {
-                    using var _ = events.Subscribe(@event =>
-                    {
-                        switch (@event)
-                        {
-                            // events that tell us whether the submission was valid
-                            case IncompleteCodeSubmissionReceived incomplete when incomplete.Command == command:
-                                break;
-
-                            case CompleteCodeSubmissionReceived complete when complete.Command == command:
-                                break;
-
-                            case CodeSubmissionReceived codeSubmissionReceived:
-                                break;
-
-                            // output / display events
-
-                            case ErrorProduced errorProduced:
-                                ctx.UpdateTarget(GetErrorDisplay(errorProduced, Theme));
-
-                                break;
-
-                            case StandardOutputValueProduced standardOutputValueProduced:
-
-                                stdOut ??= new StringBuilder();
-                                stdOut.Append(standardOutputValueProduced.PlainTextValue());
-
-                                break;
-
-                            case StandardErrorValueProduced standardErrorValueProduced:
-
-                                stdErr ??= new StringBuilder();
-                                stdErr.Append(standardErrorValueProduced.PlainTextValue());
-
-                                break;
-
-                            case DisplayedValueProduced displayedValueProduced:
-                                ctx.UpdateTarget(GetSuccessDisplay(displayedValueProduced, Theme));
-                                ctx.Refresh();
-                                break;
-
-                            case DisplayedValueUpdated displayedValueUpdated:
-                                ctx.UpdateTarget(GetSuccessDisplay(displayedValueUpdated, Theme));
-                                break;
-
-                            case ReturnValueProduced returnValueProduced:
-
-                                if (returnValueProduced.Value is DisplayedValue)
-                                {
-                                    break;
-                                }
-
-                                ctx.UpdateTarget(GetSuccessDisplay(returnValueProduced, Theme));
-                                break;
-
-                            // command completion events
-
-                            case CommandFailed failed when failed.Command == command:
-                                AnsiConsole.RenderBufferedStandardOutAndErr(Theme, stdOut, stdErr);
-                                ctx.UpdateTarget(GetErrorDisplay(failed, Theme));
-                                tcs.SetResult();
-
-                                break;
-
-                            case CommandSucceeded succeeded when succeeded.Command == command:
-                                AnsiConsole.RenderBufferedStandardOutAndErr(Theme, stdOut, stdErr);
-                                tcs.SetResult();
-
-                                break;
-                        }
-                    });
-
-                    await tcs.Task;
-                });
-
-            await result!;
+                d.InnerPrompt = theme.Prompt;
+            }
         }
+    }
 
-        public void Dispose() => _disposables.Dispose();
+    private async Task RunKernelCommand(KernelCommand command)
+    {
+        StringBuilder? stdOut = default;
+        StringBuilder? stdErr = default;
 
-        public static CompositeKernel CreateKernel(StartupOptions options)
+        Task<KernelCommandResult>? result = default;
+
+        var events = _kernel.KernelEvents.Replay();
+
+        using var _ = events.Connect();
+
+        await AnsiConsole.Status().StartAsync(Theme.StatusMessageGenerator.GetStatusMessage(), async ctx =>
         {
-            using var _ = Logger.Log.OnEnterAndExit("Creating Kernels");
+            ctx.Spinner(new ClockSpinner());
 
-            ResetFormattersToDefault();
+            var t = events.FirstOrDefaultAsync(
+                e => e is DisplayEvent or CommandFailed or CommandSucceeded);
 
-            var compositeKernel = new CompositeKernel()
-                .UseAboutMagicCommand()
-                .UseDebugDirective()
-                .UseHelpMagicCommand()
-                .UseQuitCommand();
+            result = _kernel.SendAsync(command, _disposalTokenSource.Token);
 
-            compositeKernel.AddMiddleware(async (command, context, next) =>
+            await t;
+        });
+
+        var waiting = new Panel("").NoBorder();
+
+        var tcs = new TaskCompletionSource();
+
+        await AnsiConsole
+              .Live(waiting)
+              .StartAsync(async ctx =>
+              {
+                  using var _ = events.Subscribe(@event =>
+                  {
+                      switch (@event)
+                      {
+                          // events that tell us whether the submission was valid
+                          case IncompleteCodeSubmissionReceived incomplete when incomplete.Command == command:
+                              break;
+
+                          case CompleteCodeSubmissionReceived complete when complete.Command == command:
+                              break;
+
+                          case CodeSubmissionReceived codeSubmissionReceived:
+                              break;
+
+                          // output / display events
+
+                          case ErrorProduced errorProduced:
+                              ctx.UpdateTarget(GetErrorDisplay(errorProduced, Theme));
+
+                              break;
+
+                          case StandardOutputValueProduced standardOutputValueProduced:
+
+                              stdOut ??= new StringBuilder();
+                              stdOut.Append(standardOutputValueProduced.PlainTextValue());
+
+                              break;
+
+                          case StandardErrorValueProduced standardErrorValueProduced:
+
+                              stdErr ??= new StringBuilder();
+                              stdErr.Append(standardErrorValueProduced.PlainTextValue());
+
+                              break;
+
+                          case DisplayedValueProduced displayedValueProduced:
+                              ctx.UpdateTarget(GetSuccessDisplay(displayedValueProduced, Theme));
+                              ctx.Refresh();
+                              break;
+
+                          case DisplayedValueUpdated displayedValueUpdated:
+                              ctx.UpdateTarget(GetSuccessDisplay(displayedValueUpdated, Theme));
+                              break;
+
+                          case ReturnValueProduced returnValueProduced:
+
+                              if (returnValueProduced.Value is DisplayedValue)
+                              {
+                                  break;
+                              }
+
+                              ctx.UpdateTarget(GetSuccessDisplay(returnValueProduced, Theme));
+                              break;
+
+                          // command completion events
+
+                          case CommandFailed failed when failed.Command == command:
+                              AnsiConsole.RenderBufferedStandardOutAndErr(Theme, stdOut, stdErr);
+                              ctx.UpdateTarget(GetErrorDisplay(failed, Theme));
+                              tcs.SetResult();
+
+                              break;
+
+                          case CommandSucceeded succeeded when succeeded.Command == command:
+                              AnsiConsole.RenderBufferedStandardOutAndErr(Theme, stdOut, stdErr);
+                              tcs.SetResult();
+
+                              break;
+                      }
+                  });
+
+                  await tcs.Task;
+              });
+
+        await result!;
+    }
+
+    public void Dispose() => _disposables.Dispose();
+
+    public static CompositeKernel CreateKernel(StartupOptions options)
+    {
+        using var _ = Logger.Log.OnEnterAndExit("Creating Kernels");
+
+        ResetFormattersToDefault();
+
+        var compositeKernel = new CompositeKernel()
+                              .UseAboutMagicCommand()
+                              .UseDebugDirective()
+                              .UseHelpMagicCommand()
+                              .UseQuitCommand();
+
+        compositeKernel.AddMiddleware(async (command, context, next) =>
+        {
+            var rootKernel = (CompositeKernel) context.HandlingKernel.RootKernel;
+
+            await next(command, context);
+
+            if (command.GetType().Name == "DirectiveCommand")
             {
-                var rootKernel = (CompositeKernel) context.HandlingKernel.RootKernel;
+                var name = command.ToString()?.Replace("Directive: #!", "");
 
-                await next(command, context);
-
-                if (command.GetType().Name == "DirectiveCommand")
+                if (name is { } &&
+                    !_nonStickyKernelNames.Contains(name) &&
+                    rootKernel.FindKernel(name) is { } kernel)
                 {
-                    var name = command.ToString()?.Replace("Directive: #!", "");
-
-                    if (name is { } &&
-                        !_nonStickyKernelNames.Contains(name) &&
-                        rootKernel.FindKernel(name) is { } kernel)
-                    {
-                        rootKernel.DefaultKernelName = kernel.Name;
-                    }
+                    rootKernel.DefaultKernelName = kernel.Name;
                 }
-            });
+            }
+        });
             
-            compositeKernel.Add(
-                new CSharpKernel()
-                    .UseNugetDirective()
-                    .UseKernelHelpers()
-                    .UseWho()
-                    .UseValueSharing(),
-                new[] { "c#", "C#" });
+        compositeKernel.Add(
+            new CSharpKernel()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseWho()
+                .UseValueSharing(),
+            new[] { "c#", "C#" });
                 
-            compositeKernel.Add(
-                new FSharpKernel()
-                    .UseDefaultFormatting()
-                    .UseNugetDirective()
-                    .UseKernelHelpers()
-                    .UseWho()
-                    .UseDefaultNamespaces()
-                    .UseValueSharing(),
-                new[] { "f#", "F#" });
+        compositeKernel.Add(
+            new FSharpKernel()
+                .UseDefaultFormatting()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseWho()
+                .UseDefaultNamespaces()
+                .UseValueSharing(),
+            new[] { "f#", "F#" });
 
-            compositeKernel.Add(
-                new PowerShellKernel()
-                    .UseProfiles()
-                    .UseValueSharing(),
-                new[] { "powershell" });
+        compositeKernel.Add(
+            new PowerShellKernel()
+                .UseProfiles()
+                .UseValueSharing(),
+            new[] { "powershell" });
 
-            compositeKernel.Add(
-                new KeyValueStoreKernel()
-                    .UseWho());
+        compositeKernel.Add(
+            new KeyValueStoreKernel()
+                .UseWho());
 
-            compositeKernel.Add(new SqlDiscoverabilityKernel());
-            compositeKernel.Add(new KqlDiscoverabilityKernel());
+        compositeKernel.Add(new SqlDiscoverabilityKernel());
+        compositeKernel.Add(new KqlDiscoverabilityKernel());
 
-            if (options.Verbose)
-            {
-                compositeKernel.LogEventsToPocketLogger();
-            }
-
-            compositeKernel.DefaultKernelName = options.DefaultKernelName;
-
-            if (compositeKernel.DefaultKernelName == "fsharp")
-            {
-                var fsharpKernel = compositeKernel.FindKernel("fsharp");
-
-                fsharpKernel.DeferCommand(new SubmitCode("Formatter.Register(fun(x: obj)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
-                fsharpKernel.DeferCommand(new SubmitCode("Formatter.Register(fun(x: System.Collections.IEnumerable)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
-            }
-
-            return compositeKernel;
-        }
-
-        public static void ResetFormattersToDefault()
+        if (options.Verbose)
         {
-            Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
-            new DefaultSpectreFormatterSet().Register();
+            compositeKernel.LogEventsToPocketLogger();
         }
+
+        compositeKernel.DefaultKernelName = options.DefaultKernelName;
+
+        if (compositeKernel.DefaultKernelName == "fsharp")
+        {
+            var fsharpKernel = compositeKernel.FindKernel("fsharp");
+
+            fsharpKernel.DeferCommand(new SubmitCode("Formatter.Register(fun(x: obj)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
+            fsharpKernel.DeferCommand(new SubmitCode("Formatter.Register(fun(x: System.Collections.IEnumerable)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
+        }
+
+        return compositeKernel;
+    }
+
+    public static void ResetFormattersToDefault()
+    {
+        Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
+        new DefaultSpectreFormatterSet().Register();
     }
 }

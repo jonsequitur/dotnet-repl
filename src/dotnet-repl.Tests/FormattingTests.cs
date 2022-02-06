@@ -6,37 +6,36 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Xunit;
 
-namespace dotnet_repl.Tests
+namespace dotnet_repl.Tests;
+
+public class FormattingTests
 {
-    public class FormattingTests
+    public FormattingTests()
     {
-        public FormattingTests()
-        {
-            Repl.ResetFormattersToDefault();
-        }
+        Repl.ResetFormattersToDefault();
+    }
 
-        [Fact]
-        public async Task Null_is_formatted_as_null()
-        {
-            using var kernel = Repl.CreateKernel(new("csharp"));
+    [Fact]
+    public async Task Null_is_formatted_as_null()
+    {
+        using var kernel = Repl.CreateKernel(new("csharp"));
 
-            var result = await kernel.SubmitCodeAsync("null");
+        var result = await kernel.SubmitCodeAsync("null");
 
-            var events = result.KernelEvents.ToSubscribedList();
+        var events = result.KernelEvents.ToSubscribedList();
 
-            events
-                .Should()
-                .ContainSingle<ReturnValueProduced>()
-                .Which
-                .FormattedValues
-                .Should()
-                .ContainSingle(f => f.Value =="<null>");
-        }
+        events
+            .Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(f => f.Value =="<null>");
+    }
 
-        [Fact]
-        public void List_expansion_is_limited()
-        {
-            Enumerable.Range(1, 1000).ToDisplayString().Should().Contain("(more)");
-        }
+    [Fact]
+    public void List_expansion_is_limited()
+    {
+        Enumerable.Range(1, 1000).ToDisplayString().Should().Contain("(more)");
     }
 }

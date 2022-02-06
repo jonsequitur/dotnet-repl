@@ -10,145 +10,144 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Recipes;
 using Spectre.Console;
 
-namespace dotnet_repl
+namespace dotnet_repl;
+
+internal static class KernelExtensions
 {
-    internal static class KernelExtensions
+    public static T UseAboutMagicCommand<T>(this T kernel)
+        where T : Kernel
     {
-        public static T UseAboutMagicCommand<T>(this T kernel)
-            where T : Kernel
+        var about = new Command("#!about", "Show version and build information");
+
+        about.SetHandler<KernelInvocationContext>(context => context.Display(VersionSensor.Version()));
+
+        kernel.AddDirective(about);
+
+        Formatter.Register<VersionSensor.BuildInfo>((info, context) =>
         {
-            var about = new Command("#!about", "Show version and build information");
+            var table = new Grid();
+            table.AddColumn(new GridColumn());
+            table.AddColumn(new GridColumn());
+            table.AddRow("Version", info.AssemblyInformationalVersion);
+            table.AddRow("Built", info.BuildDate);
+            table.AddRow("Home", "https://github.com/jonsequitur/dotnet-repl");
 
-            about.SetHandler<KernelInvocationContext>(context => context.Display(VersionSensor.Version()));
+            table.FormatTo(context, PlainTextFormatter.MimeType);
 
-            kernel.AddDirective(about);
+            return true;
+        }, PlainTextFormatter.MimeType);
 
-            Formatter.Register<VersionSensor.BuildInfo>((info, context) =>
-            {
-                var table = new Grid();
-                table.AddColumn(new GridColumn());
-                table.AddColumn(new GridColumn());
-                table.AddRow("Version", info.AssemblyInformationalVersion);
-                table.AddRow("Built", info.BuildDate);
-                table.AddRow("Home", "https://github.com/jonsequitur/dotnet-repl");
+        return kernel;
+    }
 
-                table.FormatTo(context, PlainTextFormatter.MimeType);
+    public static TKernel UseDebugDirective<TKernel>(this TKernel kernel)
+        where TKernel : Kernel
+    {
+        var debug = new Command("#!debug");
 
-                return true;
-            }, PlainTextFormatter.MimeType);
-
-            return kernel;
-        }
-
-        public static TKernel UseDebugDirective<TKernel>(this TKernel kernel)
-            where TKernel : Kernel
+        debug.SetHandler<KernelInvocationContext, IConsole, CancellationToken>(async (context, console, cancellationToken) =>
         {
-            var debug = new Command("#!debug");
+            await Attach();
 
-            debug.SetHandler<KernelInvocationContext, IConsole, CancellationToken>(async (context, console, cancellationToken) =>
+            async Task Attach()
             {
-                await Attach();
+                var process = Process.GetCurrentProcess();
 
-                async Task Attach()
+                var processId = process.Id;
+
+                context.Display($"Attach your debugger to process {processId} ({process.ProcessName}).");
+
+                while (!Debugger.IsAttached)
                 {
-                    var process = Process.GetCurrentProcess();
-
-                    var processId = process.Id;
-
-                    context.Display($"Attach your debugger to process {processId} ({process.ProcessName}).");
-
-                    while (!Debugger.IsAttached)
-                    {
-                        await Task.Delay(500, cancellationToken);
-                    }
+                    await Task.Delay(500, cancellationToken);
                 }
-            });
+            }
+        });
 
-            kernel.AddDirective(debug);
+        kernel.AddDirective(debug);
 
-            return kernel;
-        }
+        return kernel;
+    }
 
-        public static T UseHelpMagicCommand<T>(this T kernel)
-            where T : Kernel
+    public static T UseHelpMagicCommand<T>(this T kernel)
+        where T : Kernel
+    {
+        var help = new Command("#!help", "Show help for the REPL");
+
+        help.SetHandler(() =>
         {
-            var help = new Command("#!help", "Show help for the REPL");
+            var console = AnsiConsole.Console;
 
-            help.SetHandler(() =>
-            {
-                var console = AnsiConsole.Console;
+            var grid = new Grid();
+            grid.AddColumn();
 
-                var grid = new Grid();
-                grid.AddColumn();
-
-                grid.ShowShortcutKeys();
+            grid.ShowShortcutKeys();
                 
-                grid.AddRow(new Paragraph(""));
+            grid.AddRow(new Paragraph(""));
 
-                grid.ShowMagics(kernel);
+            grid.ShowMagics(kernel);
 
-                console.Announce(grid);
-            });
+            console.Announce(grid);
+        });
 
-            help.AddAlias("#help");
+        help.AddAlias("#help");
 
-            kernel.AddDirective(help);
+        kernel.AddDirective(help);
 
-            return kernel;
-        }
+        return kernel;
+    }
 
-        public static T UseTableFormattingForEnumerables<T>(this T kernel)
-            where T : Kernel
+    public static T UseTableFormattingForEnumerables<T>(this T kernel)
+        where T : Kernel
+    {
+        var formatter = new SpectreFormatter<IEnumerable>((enumerable, context, console) =>
         {
-            var formatter = new SpectreFormatter<IEnumerable>((enumerable, context, console) =>
+            var columnIndexByName = new Dictionary<string, int>();
+            var columnCount = 0;
+
+            var table = new Table();
+
+            var destructuredObjects = new List<IDictionary<string, object>>();
+
+            foreach (var item in enumerable)
             {
-                var columnIndexByName = new Dictionary<string, int>();
-                var columnCount = 0;
+                var dictionary = Destructurer.GetOrCreate(item?.GetType()).Destructure(item);
+                destructuredObjects.Add(dictionary);
 
-                var table = new Table();
-
-                var destructuredObjects = new List<IDictionary<string, object>>();
-
-                foreach (var item in enumerable)
+                foreach (var key in dictionary.Keys)
                 {
-                    var dictionary = Destructurer.GetOrCreate(item?.GetType()).Destructure(item);
-                    destructuredObjects.Add(dictionary);
-
-                    foreach (var key in dictionary.Keys)
+                    if (!columnIndexByName.ContainsKey(key))
                     {
-                        if (!columnIndexByName.ContainsKey(key))
-                        {
-                            columnIndexByName[key] = columnCount++;
-                            table.AddColumn(Markup.Escape(key));
-                        }
+                        columnIndexByName[key] = columnCount++;
+                        table.AddColumn(Markup.Escape(key));
                     }
                 }
+            }
+
+            // add a row to the table for each item
+            foreach (var dict in destructuredObjects)
+            {
+                var values = new List<object>(new object[columnCount]);
 
                 // add a row to the table for each item
-                foreach (var dict in destructuredObjects)
+                foreach (var pair in dict)
                 {
-                    var values = new List<object>(new object[columnCount]);
-
-                    // add a row to the table for each item
-                    foreach (var pair in dict)
+                    if (columnIndexByName.TryGetValue(pair.Key, out var index))
                     {
-                        if (columnIndexByName.TryGetValue(pair.Key, out var index))
-                        {
-                            values[index] = pair.Value;
-                        }
+                        values[index] = pair.Value;
                     }
-
-                    table.AddRow(values.Select(v => v is null ? "" : Markup.Escape(v.ToDisplayString())).ToArray());
                 }
 
-                table.FormatTo(context);
+                table.AddRow(values.Select(v => v is null ? "" : Markup.Escape(v.ToDisplayString())).ToArray());
+            }
 
-                return true;
-            });
+            table.FormatTo(context);
 
-            Formatter.Register(formatter);
+            return true;
+        });
 
-            return kernel;
-        }
+        Formatter.Register(formatter);
+
+        return kernel;
     }
 }
