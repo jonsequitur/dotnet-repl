@@ -106,10 +106,10 @@ Keybinding      | What it does                                                  
 `Enter`         | Submit and run the current code
 `Shift+Enter`   | Inserts a newline without submitting the current code
 `Tab`           | Show next completion
-`Shift-Tab`     | Show previous completion
-`Ctrl-C`        | Exit the REPL
-`Ctrl-Up`       | Go back through your submission history (current session only)
-`Ctrl-Down`     | Go forward through your submission history (current session only)
+`Shift+Tab`     | Show previous completion
+`Ctrl+C`        | Exit the REPL
+`Ctrl+Up`       | Go back through your submission history (current session only)
+`Ctrl+Down`     | Go forward through your submission history (current session only)
 
 
 ### 🧙‍♂️ *Magic commands*
