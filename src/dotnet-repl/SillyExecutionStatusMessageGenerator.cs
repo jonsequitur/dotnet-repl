@@ -174,7 +174,6 @@ public class SillyExecutionStatusMessageGenerator : IStatusMessageGenerator
         "control structures",
         "coroutines",
         "CPUs",
-        "cyclomatic complexity",
         "data structures",
         "data transformations",
         "data types",
