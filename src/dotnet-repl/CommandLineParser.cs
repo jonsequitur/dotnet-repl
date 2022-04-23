@@ -12,7 +12,7 @@ using Spectre.Console;
 
 namespace dotnet_repl;
 
-public static partial class CommandLineParser
+public static class CommandLineParser
 {
     public static Option<DirectoryInfo> LogPathOption { get; } = new(
         "--log-path",
@@ -33,7 +33,7 @@ public static partial class CommandLineParser
 
     public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
             "--notebook",
-            description: "After starting the REPL, run all of the cells in the specified notebook file.")
+            description: "After starting the REPL, run all of the cells in the specified notebook file")
         {
             ArgumentHelpName = "PATH"
         }
@@ -41,12 +41,12 @@ public static partial class CommandLineParser
 
     public static Option<bool> ExitAfterRun = new(
         "--exit-after-run",
-        "Exit the REPL when the specified notebook or script has run.");
+        "Exit the REPL when the specified notebook or script has run");
 
     public static Option<DirectoryInfo> WorkingDirOption = new Option<DirectoryInfo>(
             "--working-dir",
             () => new DirectoryInfo(Environment.CurrentDirectory),
-            "Working directory to which to change after launching the kernel.")
+            "Working directory to which to change after launching the kernel")
         .ExistingOnly();
 
     public static Parser Create(
@@ -75,7 +75,7 @@ public static partial class CommandLineParser
 
         return new CommandLineBuilder(rootCommand)
                .UseDefaults()
-               .UseHelpBuilder(context => new SpectreHelpBuilder(LocalizationResources.Instance))
+               .UseHelpBuilder(_ => new SpectreHelpBuilder(LocalizationResources.Instance))
                .Build();
     }
 
