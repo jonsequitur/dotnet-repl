@@ -10,9 +10,9 @@ using FluentAssertions.Equivalency;
 using FluentAssertions.Execution;
 using FluentAssertions.Primitives;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
-using Microsoft.DotNet.Interactive.Server;
 using Newtonsoft.Json;
 
 namespace dotnet_repl.Tests;

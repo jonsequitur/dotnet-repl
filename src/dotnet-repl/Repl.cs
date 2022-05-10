@@ -318,7 +318,6 @@ public class Repl : IDisposable
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseWho()
-                .UseDefaultNamespaces()
                 .UseValueSharing(),
             new[] { "f#", "F#" });
 

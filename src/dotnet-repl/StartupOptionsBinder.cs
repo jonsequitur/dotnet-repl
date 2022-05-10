@@ -36,7 +36,6 @@ internal class StartupOptionsBinder : BinderBase<StartupOptions>
             bindingContext.ParseResult.GetValueForOption(_workingDirOption),
             bindingContext.ParseResult.GetValueForOption(_notebookOption),
             bindingContext.ParseResult.GetValueForOption(_logPathOption),
-            bindingContext.ParseResult.GetValueForOption(_exitAfterRun)
-        );
+            bindingContext.ParseResult.GetValueForOption(_exitAfterRun));
     }
 }
