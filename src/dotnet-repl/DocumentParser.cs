@@ -15,7 +15,7 @@ public static class DocumentParser
         FileInfo file,
         CompositeKernel kernel)
     {
-        using var stream = file.OpenRead();
+        await using var stream = file.OpenRead();
 
         List<KernelName> kernelNames = new();
 

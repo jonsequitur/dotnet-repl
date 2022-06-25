@@ -1,7 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System.CommandLine;
+﻿using System.CommandLine;
 using System.CommandLine.Binding;
 using System.IO;
 
@@ -32,7 +29,7 @@ internal class StartupOptionsBinder : BinderBase<StartupOptions>
     protected override StartupOptions GetBoundValue(BindingContext bindingContext)
     {
         return new StartupOptions(
-            bindingContext.ParseResult.GetValueForOption(_defaultKernelOption),
+            bindingContext.ParseResult.GetValueForOption(_defaultKernelOption)!,
             bindingContext.ParseResult.GetValueForOption(_workingDirOption),
             bindingContext.ParseResult.GetValueForOption(_notebookOption),
             bindingContext.ParseResult.GetValueForOption(_logPathOption),

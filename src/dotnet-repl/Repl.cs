@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reactive.Linq;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Pocket;
 using RadLine;
@@ -103,11 +103,12 @@ public class Repl : IDisposable
     public void Start()
     {
         var ready = ReadyForInput.FirstAsync();
-        Task.Run(() => RunAsync());
+        Task.Run(() => RunAsync(_ => { }));
         ready.FirstAsync().Wait();
     }
 
     public async Task RunAsync(
+        Action<int> setExitCode,
         InteractiveDocument? notebook = null,
         bool exitAfterRun = false)
     {
@@ -138,10 +139,15 @@ public class Repl : IDisposable
 
             if (_disposalTokenSource.IsCancellationRequested)
             {
-                return;
+                setExitCode(129);
             }
 
-            await RunKernelCommand(new SubmitCode(input));
+            var result = await RunKernelCommand(new SubmitCode(input));
+
+            if (await result.KernelEvents.LastAsync() is CommandFailed failed)
+            {
+                setExitCode(1);
+            }
 
             if (exitAfterRun && queuedSubmissions.Count == 0)
             {
@@ -163,7 +169,7 @@ public class Repl : IDisposable
         }
     }
 
-    private async Task RunKernelCommand(KernelCommand command)
+    private async Task<KernelCommandResult> RunKernelCommand(KernelCommand command)
     {
         StringBuilder? stdOut = default;
         StringBuilder? stdErr = default;
@@ -268,13 +274,15 @@ public class Repl : IDisposable
                   await tcs.Task;
               });
 
-        await result!;
+        return await result!;
     }
 
     public void Dispose() => _disposables.Dispose();
 
-    public static CompositeKernel CreateKernel(StartupOptions options)
+    public static CompositeKernel CreateKernel(StartupOptions? options = null)
     {
+        options ??= new();
+
         using var _ = Logger.Log.OnEnterAndExit("Creating Kernels");
 
         ResetFormattersToDefault();
@@ -287,7 +295,7 @@ public class Repl : IDisposable
 
         compositeKernel.AddMiddleware(async (command, context, next) =>
         {
-            var rootKernel = (CompositeKernel) context.HandlingKernel.RootKernel;
+            var rootKernel = (CompositeKernel)context.HandlingKernel.RootKernel;
 
             await next(command, context);
 
@@ -303,7 +311,7 @@ public class Repl : IDisposable
                 }
             }
         });
-            
+
         compositeKernel.Add(
             new CSharpKernel()
                 .UseNugetDirective()
@@ -311,7 +319,7 @@ public class Repl : IDisposable
                 .UseWho()
                 .UseValueSharing(),
             new[] { "c#", "C#" });
-                
+
         compositeKernel.Add(
             new FSharpKernel()
                 .UseDefaultFormatting()
@@ -331,13 +339,10 @@ public class Repl : IDisposable
             new KeyValueStoreKernel()
                 .UseWho());
 
+        compositeKernel.Add(new MarkdownKernel());
+
         compositeKernel.Add(new SqlDiscoverabilityKernel());
         compositeKernel.Add(new KqlDiscoverabilityKernel());
-
-        if (options.Verbose)
-        {
-            compositeKernel.LogEventsToPocketLogger();
-        }
 
         compositeKernel.DefaultKernelName = options.DefaultKernelName;
 
