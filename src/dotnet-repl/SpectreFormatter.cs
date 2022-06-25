@@ -26,7 +26,7 @@ internal class SpectreFormatter : ITypeFormatter
     public Type Type { get; }
 
     protected IAnsiConsole CreateAnsiConsole(FormatContext context) =>
-        new AnsiConsoleFactory().Create(new AnsiConsoleSettings
+        AnsiConsole.Create(new AnsiConsoleSettings
         {
             Ansi = AnsiSupport.Yes,
             Out = new AnsiConsoleOutput(context.Writer)

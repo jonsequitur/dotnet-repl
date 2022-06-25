@@ -12,7 +12,6 @@ using Xunit;
 namespace dotnet_repl.Tests;
 
 public class StartWithNotebookTests : IDisposable
-
 {
     private readonly IAnsiConsole _ansiConsole;
 
@@ -20,7 +19,7 @@ public class StartWithNotebookTests : IDisposable
 
     public StartWithNotebookTests()
     {
-        _ansiConsole = new AnsiConsoleFactory().Create(new AnsiConsoleSettings
+        _ansiConsole = AnsiConsole.Create(new AnsiConsoleSettings
         {
             Ansi = AnsiSupport.Yes,
             Interactive = InteractionSupport.Yes,
@@ -30,7 +29,7 @@ public class StartWithNotebookTests : IDisposable
 
     public void Dispose() => _writer.Dispose();
 
-    [Fact(Skip = "Later")]
+    [Fact]
     public async Task when_an_ipynb_is_specified_it_runs_it()
     {
         using var disposables = new CompositeDisposable();

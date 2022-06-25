@@ -59,7 +59,7 @@ internal static class AnsiConsoleExtensions
         CommandFailed failed,
         KernelSpecificTheme theme,
         string header = "❌") =>
-        new Panel(failed.Exception.GetRenderable())
+        new Panel(failed.Exception?.GetRenderable() ?? new Text(failed.Message ?? ""))
             .Header(header)
             .Expand()
             .RoundedBorder()

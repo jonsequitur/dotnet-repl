@@ -1,10 +1,10 @@
 ﻿using System;
 using System.CommandLine;
 using System.CommandLine.Builder;
+using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Documents;
 using Pocket;
@@ -51,7 +51,7 @@ public static class CommandLineParser
 
     public static Parser Create(
         IAnsiConsole? ansiConsole = null,
-        Func<StartupOptions, IAnsiConsole, CancellationToken, Task<IDisposable>>? startRepl = null,
+        Func<StartupOptions, IAnsiConsole, InvocationContext, Task<IDisposable>>? startRepl = null,
         Action<IDisposable>? registerForDisposal = null)
     {
         var rootCommand = new RootCommand("dotnet-repl")
@@ -65,13 +65,19 @@ public static class CommandLineParser
 
         startRepl ??= StartRepl;
 
-        rootCommand.SetHandler<StartupOptions, CancellationToken>(
-            (options, token) =>
+        rootCommand.SetHandler(
+            async (options, context) =>
             {
-                var repl = startRepl(options, ansiConsole ?? AnsiConsole.Console, token);
-                registerForDisposal?.Invoke(repl);
-                return repl;
-            }, new StartupOptionsBinder(DefaultKernelOption, WorkingDirOption, NotebookOption, LogPathOption, ExitAfterRun));
+                var disposable = await startRepl(options, ansiConsole ?? AnsiConsole.Console, context);
+                registerForDisposal?.Invoke(disposable);
+            },
+            new StartupOptionsBinder(
+                DefaultKernelOption, 
+                WorkingDirOption, 
+                NotebookOption, 
+                LogPathOption, 
+                ExitAfterRun),
+            Bind.FromServiceProvider<InvocationContext>());
 
         return new CommandLineBuilder(rootCommand)
                .UseDefaults()
@@ -82,7 +88,7 @@ public static class CommandLineParser
     public static async Task<IDisposable> StartRepl(
         StartupOptions options,
         IAnsiConsole ansiConsole,
-        CancellationToken cancellationToken)
+        InvocationContext context)
     {
         var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
 
@@ -109,9 +115,12 @@ public static class CommandLineParser
         disposable.Add(repl);
         disposable.Add(kernel);
 
-        cancellationToken.Register(() => disposable.Dispose());
+        context.GetCancellationToken().Register(() => disposable.Dispose());
 
-        await repl.RunAsync(notebook, options.ExitAfterRun);
+        await repl.RunAsync(
+            i => context.ExitCode = i, 
+            notebook, 
+            options.ExitAfterRun);
 
         return disposable;
     }

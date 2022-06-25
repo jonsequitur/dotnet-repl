@@ -15,7 +15,7 @@ internal class SpectreHelpBuilder : HelpBuilder
 
     private IEnumerable<HelpSectionDelegate> GetLayout(HelpContext context)
     {
-        var console = new AnsiConsoleFactory().Create(new AnsiConsoleSettings
+        var console = AnsiConsole.Create(new AnsiConsoleSettings
         {
             Ansi = AnsiSupport.Yes,
             Out = new AnsiConsoleOutput(context.Output)
