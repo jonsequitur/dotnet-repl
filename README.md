@@ -87,11 +87,15 @@ You can use a notebook file (either `.ipynb` or `.dib`) as an initialization scr
 
 You might also want to just use a notebook as a non-interactive script. You can do this by adding the `--exit-after-run` flag.
 
-
 ```console
 > dotnet repl --notebook /path/to/notebook.ipynb --exit-after-run
 ```
 
+Both `.ipynb` and `.dib` files are supported.
+
+If all of the notebook's cells execute successfully, a `0` exit code is returned. Otherwise, `1` is returned. This can be used a simple way to test notebooks. 
+
+<img width="60%" alt="image" src="https://user-images.githubusercontent.com/547415/176486922-8db22f68-3198-4a5f-bdf7-398805b9f295.png">
 
 ### 💁‍♀️ *Ask for help*
 
