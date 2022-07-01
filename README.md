@@ -98,6 +98,8 @@ way to test notebooks.
 
 <img width="60%" alt="image" src="https://user-images.githubusercontent.com/547415/176486922-8db22f68-3198-4a5f-bdf7-398805b9f295.png">
 
+If you redirect output when using `--exit-after-run`, the output will be formatted using the `.ipynb` JSON format, allowing you to rerun the code or view the results in a notebook editor.
+
 ### 💁‍♀️ *Ask for help*
 
 You can see help for the REPL by running the `#!help` magic command. I won't print it here because it's a work in progress. Just give it a try.
