@@ -18,7 +18,7 @@ public abstract class ReplInteractionTests : IDisposable
 
     protected ReplInteractionTests(ITestOutputHelper output)
     {
-        Kernel = Repl.CreateKernel(new StartupOptions("csharp"));
+        Kernel = KernelBuilder.CreateKernel(new StartupOptions("csharp"));
 
         AnsiConsole = Spectre.Console.AnsiConsole.Create(new AnsiConsoleSettings
         {

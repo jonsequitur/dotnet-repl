@@ -9,12 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.PowerShell;
 using Pocket;
 using RadLine;
 using Spectre.Console;
@@ -25,11 +22,6 @@ namespace dotnet_repl;
 
 public class Repl : IDisposable
 {
-    private static readonly HashSet<string> _nonStickyKernelNames = new()
-    {
-        "value"
-    };
-
     private readonly CompositeKernel _kernel;
 
     private readonly CompositeDisposable _disposables = new();
@@ -61,14 +53,14 @@ public class Repl : IDisposable
         InputSource = inputSource;
         Theme = KernelSpecificTheme.GetTheme(kernel.DefaultKernelName) ?? new CSharpTheme();
 
-        _disposables.Add(() => { _disposalTokenSource.Cancel(); });
+        _disposables.Add(() => _disposalTokenSource.Cancel());
 
-        if (inputSource?.IsKeyAvailable() == true)
+        if (ansiConsole.Profile.Capabilities.Ansi)
         {
             LineEditorProvider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
             LineEditor = GetLineEditorLanguageLocal(_kernel.DefaultKernelName);
         }
-
+        
         _kernel.AddMiddleware(async (command, context, next) =>
         {
             await next(command, context);
@@ -101,7 +93,7 @@ public class Repl : IDisposable
 
     public KernelSpecificTheme Theme { get; set; }
 
-    private LineEditorServiceProvider LineEditorProvider { get; }
+    private LineEditorServiceProvider? LineEditorProvider { get; }
 
     public void Start()
     {
@@ -285,87 +277,16 @@ public class Repl : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    public static CompositeKernel CreateKernel(StartupOptions? options = null)
+    public static void UseDefaultSpectreFormatting()
     {
-        options ??= new();
-
-        using var _ = Logger.Log.OnEnterAndExit("Creating Kernels");
-
-        ResetFormattersToDefault();
-
-        var compositeKernel = new CompositeKernel()
-                              .UseAboutMagicCommand()
-                              .UseDebugDirective()
-                              .UseHelpMagicCommand()
-                              .UseQuitCommand();
-
-        compositeKernel.AddMiddleware(async (command, context, next) =>
-        {
-            var rootKernel = (CompositeKernel)context.HandlingKernel.RootKernel;
-
-            await next(command, context);
-
-            if (command.GetType().Name == "DirectiveCommand")
-            {
-                var name = command.ToString()?.Replace("Directive: #!", "");
-
-                if (name is { } &&
-                    !_nonStickyKernelNames.Contains(name) &&
-                    rootKernel.FindKernel(name) is { } kernel)
-                {
-                    rootKernel.DefaultKernelName = kernel.Name;
-                }
-            }
-        });
-
-        compositeKernel.Add(
-            new CSharpKernel()
-                .UseNugetDirective()
-                .UseKernelHelpers()
-                .UseWho()
-                .UseValueSharing(),
-            new[] { "c#", "C#" });
-
-        compositeKernel.Add(
-            new FSharpKernel()
-                .UseDefaultFormatting()
-                .UseNugetDirective()
-                .UseKernelHelpers()
-                .UseWho()
-                .UseValueSharing(),
-            new[] { "f#", "F#" });
-
-        compositeKernel.Add(
-            new PowerShellKernel()
-                .UseProfiles()
-                .UseValueSharing(),
-            new[] { "powershell" });
-
-        compositeKernel.Add(
-            new KeyValueStoreKernel()
-                .UseWho());
-
-        compositeKernel.Add(new MarkdownKernel());
-
-        compositeKernel.Add(new SqlDiscoverabilityKernel());
-        compositeKernel.Add(new KqlDiscoverabilityKernel());
-
-        compositeKernel.DefaultKernelName = options.DefaultKernelName;
-
-        if (compositeKernel.DefaultKernelName == "fsharp")
-        {
-            var fsharpKernel = compositeKernel.FindKernel("fsharp");
-
-            fsharpKernel.DeferCommand(new SubmitCode("Formatter.Register(fun(x: obj)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
-            fsharpKernel.DeferCommand(new SubmitCode("Formatter.Register(fun(x: System.Collections.IEnumerable)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
-        }
-
-        return compositeKernel;
-    }
-
-    public static void ResetFormattersToDefault()
-    {
+        Formatter.ResetToDefault();
         Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
         new DefaultSpectreFormatterSet().Register();
+    }
+    
+    public static void UseDefaultPlainTextFormatting()
+    {
+        Formatter.ResetToDefault();
+        Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
     }
 }

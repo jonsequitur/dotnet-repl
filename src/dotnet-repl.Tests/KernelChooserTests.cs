@@ -16,7 +16,7 @@ public class KernelChooserTests
     [InlineData("#!csharp\n123\n#!fsharp\n#!help", "fsharp")]
     public async Task Kernel_chooser_magic_commands_are_sticky(string submission, string expectedKernelName)
     {
-        using var kernel = Repl.CreateKernel(new StartupOptions("csharp"));
+        using var kernel = KernelBuilder.CreateKernel(new StartupOptions("csharp"));
 
         await kernel.SubmitCodeAsync(submission);
 
@@ -28,7 +28,7 @@ public class KernelChooserTests
     [InlineData("#!value --name x\nsome text")]
     public async Task Value_kernel_magic_command_is_not_sticky(string submission)
     {
-        using var kernel = Repl.CreateKernel(new StartupOptions("csharp"));
+        using var kernel = KernelBuilder.CreateKernel(new StartupOptions("csharp"));
 
         await kernel.SubmitCodeAsync(submission);
 

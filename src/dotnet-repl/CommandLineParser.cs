@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Documents;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Pocket;
 using Spectre.Console;
 
@@ -63,7 +64,7 @@ public static class CommandLineParser
             ExitAfterRun
         };
 
-        startRepl ??= StartRepl;
+        startRepl ??= StartAsync;
 
         rootCommand.SetHandler(
             async (options, context) =>
@@ -72,10 +73,10 @@ public static class CommandLineParser
                 registerForDisposal?.Invoke(disposable);
             },
             new StartupOptionsBinder(
-                DefaultKernelOption, 
-                WorkingDirOption, 
-                NotebookOption, 
-                LogPathOption, 
+                DefaultKernelOption,
+                WorkingDirOption,
+                NotebookOption,
+                LogPathOption,
                 ExitAfterRun),
             Bind.FromServiceProvider<InvocationContext>());
 
@@ -85,43 +86,76 @@ public static class CommandLineParser
                .Build();
     }
 
-    public static async Task<IDisposable> StartRepl(
+    public static async Task<IDisposable> StartAsync(
         StartupOptions options,
         IAnsiConsole ansiConsole,
         InvocationContext context)
     {
-        var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
+        using var disposables = new CompositeDisposable();
 
-        ansiConsole.RenderSplash(theme ?? new CSharpTheme());
+        var isTerminal = ansiConsole.Profile.Out.IsTerminal;
 
-        var kernel = Repl.CreateKernel(options);
+        if (isTerminal)
+        {
+            var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
+            ansiConsole.RenderSplash(theme ?? new CSharpTheme());
+        }
+
+        var kernel = KernelBuilder.CreateKernel(options);
 
         InteractiveDocument? notebook = default;
 
         if (options.Notebook is { } file)
         {
             notebook = await DocumentParser.ReadFileAsInteractiveDocument(file, kernel);
+        }
 
-            if (notebook.Elements.Any())
+        if (notebook is { } && notebook.Elements.Any())
+        {
+            if (isTerminal)
             {
                 ansiConsole.Announce($"📓 Running notebook: {options.Notebook}");
             }
         }
 
-        using var disposable = new CompositeDisposable();
+        if (options.ExitAfterRun && !isTerminal)
+        {
+            if (notebook is null)
+            {
+                // TODO: (StartAsync) move this validation to the parser configuration
+                ansiConsole.WriteLine($"Option {ExitAfterRun.Aliases.First()} option cannot be used without also specifying the {NotebookOption.Aliases.First()} option.");
+                return disposables;
+            }
 
-        using var repl = new Repl(kernel, disposable.Dispose, ansiConsole);
+            var resultDocument = await new NotebookRunner(kernel)
+                                     .RunNotebookAsync(
+                                         notebook,
+                                         context.GetCancellationToken());
 
-        disposable.Add(repl);
-        disposable.Add(kernel);
+            await using var writer = new StringWriter();
+            Notebook.Write(resultDocument, "\n", writer);
+            ansiConsole.Write(writer.ToString());
 
-        context.GetCancellationToken().Register(() => disposable.Dispose());
+            context.ExitCode = resultDocument.Elements.SelectMany(e => e.Outputs).OfType<ErrorElement>().Any()
+                                   ? 1
+                                   : 0;
+        }
+        else
+        {
+            using var repl = new Repl(kernel, disposables.Dispose, ansiConsole);
 
-        await repl.RunAsync(
-            i => context.ExitCode = i, 
-            notebook, 
-            options.ExitAfterRun);
+            disposables.Add(repl);
 
-        return disposable;
+            disposables.Add(kernel);
+
+            context.GetCancellationToken().Register(() => disposables.Dispose());
+
+            await repl.RunAsync(
+                i => context.ExitCode = i,
+                notebook,
+                options.ExitAfterRun);
+        }
+
+        return disposables;
     }
 }

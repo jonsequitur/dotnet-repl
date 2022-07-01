@@ -9,13 +9,16 @@ using Pocket;
 using Spectre.Console;
 using Xunit;
 
-namespace dotnet_repl.Tests.Notebooks;
+namespace dotnet_repl.Tests.Automation;
 
 public class NotebookAutomationTests : IDisposable
 {
     private readonly IAnsiConsole _ansiConsole;
-
+    private readonly CompositeDisposable _disposables = new();
     private readonly StringWriter _writer;
+    private readonly string _directory = Path.GetDirectoryName(PathUtility.PathToCurrentSourceFile());
+    private readonly Parser _parser;
+    private readonly TestConsole console = new();
 
     public NotebookAutomationTests()
     {
@@ -25,20 +28,18 @@ public class NotebookAutomationTests : IDisposable
             Interactive = InteractionSupport.Yes,
             Out = new AnsiConsoleOutput(_writer = new StringWriter())
         });
+
+        _parser = CommandLineParser.Create(_ansiConsole, registerForDisposal: d => _disposables.Add(d));
+
+        _disposables.Add(_writer);
     }
 
-    public void Dispose() => _writer.Dispose();
+    public void Dispose() => _disposables.Dispose();
 
     [Fact]
     public async Task When_an_ipynb_is_run_and_no_error_is_produced_then_the_exit_code_is_0()
     {
-        using var disposables = new CompositeDisposable();
-        var directory = Path.GetDirectoryName(PathUtility.PathToCurrentSourceFile());
-
-        var parser = CommandLineParser.Create(_ansiConsole, registerForDisposal: d => disposables.Add(d));
-
-        var console = new TestConsole();
-        var result = await parser.InvokeAsync($"--notebook \"{directory}/succeed.ipynb\" --exit-after-run", console);
+        var result = await _parser.InvokeAsync($"--notebook \"{_directory}/succeed.ipynb\" --exit-after-run", console);
 
         var output = _writer.ToString();
         console.Error.ToString().Should().BeEmpty();
@@ -49,13 +50,7 @@ public class NotebookAutomationTests : IDisposable
     [Fact]
     public async Task When_an_ipynb_is_run_and_an_error_is_produced_from_a_cell_then_the_exit_code_is_1()
     {
-        using var disposables = new CompositeDisposable();
-        var directory = Path.GetDirectoryName(PathUtility.PathToCurrentSourceFile());
-
-        var parser = CommandLineParser.Create(_ansiConsole, registerForDisposal: d => disposables.Add(d));
-
-        var console = new TestConsole();
-        var result = await parser.InvokeAsync($"--notebook \"{directory}/fail.ipynb\" --exit-after-run", console);
+        var result = await _parser.InvokeAsync($"--notebook \"{_directory}/fail.ipynb\" --exit-after-run", console);
 
         var output = _writer.ToString();
         console.Error.ToString().Should().BeEmpty();
