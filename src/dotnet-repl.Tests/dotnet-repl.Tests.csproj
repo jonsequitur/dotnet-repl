@@ -35,7 +35,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="test.ipynb">
+    <None Update="Notebooks\fail.ipynb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Notebooks\succeed.ipynb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
