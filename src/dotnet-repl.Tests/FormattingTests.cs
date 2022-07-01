@@ -12,13 +12,13 @@ public class FormattingTests
 {
     public FormattingTests()
     {
-        Repl.ResetFormattersToDefault();
+        Repl.UseDefaultSpectreFormatting();
     }
 
     [Fact]
     public async Task Null_is_formatted_as_null()
     {
-        using var kernel = Repl.CreateKernel(new("csharp"));
+        using var kernel = KernelBuilder.CreateKernel(new("csharp"));
 
         var result = await kernel.SubmitCodeAsync("null");
 

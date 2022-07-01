@@ -25,11 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.22323.2" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.22323.2" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.Documents" Version="1.0.0-beta.22323.2" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.22323.2" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.22323.2" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.22329.3" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.22329.3" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.Documents" Version="1.0.0-beta.22329.3" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.22329.3" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.22329.3" />
     <PackageReference Include="microsoft.playwright" Version="1.22.0" />
     <PackageReference Include="pocket.disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>
@@ -44,13 +44,14 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="radline" Version="0.6.0" />
-    <PackageReference Include="Spectre.Console" Version="0.44.1-preview.0.17" />
+    <PackageReference Include="Spectre.Console" Version="0.44.1-preview.0.27" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageReference Include="system.reactive" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="%28Recipes%29\" />
+    <Folder Include="Automation\" />
   </ItemGroup>
 
 </Project>
