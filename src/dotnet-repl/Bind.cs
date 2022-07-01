@@ -10,6 +10,6 @@ internal static class Bind
     {
         public static ServiceProviderBinder<T> Instance { get; } = new();
 
-        protected override T GetBoundValue(BindingContext bindingContext) => (T)bindingContext.GetService(typeof(T));
+        protected override T GetBoundValue(BindingContext bindingContext) => (T)bindingContext.GetService(typeof(T))!;
     }
 }

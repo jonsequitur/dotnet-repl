@@ -63,8 +63,11 @@ public class Repl : IDisposable
 
         _disposables.Add(() => { _disposalTokenSource.Cancel(); });
 
-        LineEditorProvider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
-        LineEditor = GetLineEditorLanguageLocal(_kernel.DefaultKernelName);
+        if (inputSource?.IsKeyAvailable() == true)
+        {
+            LineEditorProvider = new LineEditorServiceProvider(new KernelCompletion(_kernel));
+            LineEditor = GetLineEditorLanguageLocal(_kernel.DefaultKernelName);
+        }
 
         _kernel.AddMiddleware(async (command, context, next) =>
         {
@@ -92,7 +95,7 @@ public class Repl : IDisposable
 
     public IInputSource? InputSource { get; }
 
-    public LineEditor LineEditor { get; private set; }
+    public LineEditor? LineEditor { get; private set; }
 
     internal Action QuitAction { get; }
 
@@ -129,12 +132,15 @@ public class Repl : IDisposable
                 {
                     SetTheme();
                     _readyForInput.OnNext(Unit.Default);
-                    input = await LineEditor.ReadLine(_disposalTokenSource.Token);
+                    input = await LineEditor!.ReadLine(_disposalTokenSource.Token);
                 }
             }
             else
             {
-                LineEditor.History.Add(input);
+                if (!exitAfterRun)
+                {
+                    LineEditor!.History.Add(input);
+                }
             }
 
             if (_disposalTokenSource.IsCancellationRequested)
@@ -162,7 +168,7 @@ public class Repl : IDisposable
         {
             Theme = theme;
 
-            if (LineEditor.Prompt is DelegatingPrompt d)
+            if (LineEditor?.Prompt is DelegatingPrompt d)
             {
                 d.InnerPrompt = theme.Prompt;
             }

@@ -8,7 +8,10 @@ internal static class KeyBindings
 {
     public static void AddKeyBindings(this Repl repl)
     {
-        var editor = repl.LineEditor;
+        if (repl.LineEditor is not { } editor)
+        {
+            return;
+        }
 
         // Remove old keybinding for autocomplete
         editor.KeyBindings.Remove(ConsoleKey.Tab);
