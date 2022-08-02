@@ -10,9 +10,11 @@ using System.Threading.Tasks;
 using Automation;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using Microsoft.DotNet.Interactive.Formatting;
 using Pocket;
 using Spectre.Console;
 using TRexLib;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace dotnet_repl;
 
@@ -117,7 +119,7 @@ public static class CommandLineParser
             var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
             ansiConsole.RenderSplash(theme ?? new CSharpTheme());
         }
-        
+
         var kernel = KernelBuilder.CreateKernel(options);
 
         InteractiveDocument? notebook = default;
@@ -139,6 +141,8 @@ public static class CommandLineParser
 
         if (!isAutomationMode)
         {
+            Repl.UseDefaultSpectreFormatting();
+
             using var repl = new Repl(kernel, disposables.Dispose, ansiConsole);
 
             disposables.Add(repl);
@@ -154,6 +158,9 @@ public static class CommandLineParser
         }
         else
         {
+            Formatter.ResetToDefault();
+            Formatter.DefaultMimeType = HtmlFormatter.MimeType;
+
             if (notebook is null)
             {
                 // TODO: (StartAsync) move this validation to the parser configuration
@@ -169,6 +176,7 @@ public static class CommandLineParser
             switch (options.OutputFormat)
             {
                 case OutputFormat.ipynb:
+                {
                     var outputNotebook = resultNotebook.Serialize();
                     if (options.OutputPath is null)
                     {
@@ -178,42 +186,25 @@ public static class CommandLineParser
                     {
                         await File.WriteAllTextAsync(options.OutputPath.FullName, outputNotebook);
                     }
+
                     break;
+                }
 
                 case OutputFormat.trx:
+                {
+                    var output = WriteTrx(resultNotebook);
 
-                    // FIX: (StartAsync) 
-                    var testResults = new List<TestResult>();
-
-                    for (var i = 0; i < resultNotebook.Elements.Count; i++)
+                    if (options.OutputPath is null)
                     {
-                        var element = resultNotebook.Elements[i];
-
-                        var testResult = new TestResult(
-                            fullyQualifiedTestName: $"Cell {i + 1}",
-                            outcome: element.Outputs.OfType<ErrorElement>().Any()
-                                         ? TestOutcome.Failed
-                                         : TestOutcome.Passed,
-                            output: element.Outputs.FirstOrDefault() switch
-                            {
-                                DisplayElement displayElement => displayElement.Data.FirstOrDefault().Value.ToString(),
-                                ErrorElement errorElement1 => errorElement1.ErrorValue,
-                                ReturnValueElement returnValueElement => returnValueElement.Data.FirstOrDefault().Value.ToString(),
-                                TextElement textElement => textElement.Text,
-                                _ => null
-                            },
-                            stacktrace: element.Outputs.FirstOrDefault() switch
-                            {
-                                ErrorElement errorElement => string.Join("\n", errorElement.StackTrace),
-                                _ => null
-                            });
-
-                        testResults.Add(testResult);
+                        ansiConsole.Write(output);
+                    }
+                    else
+                    {
+                        await File.WriteAllTextAsync(options.OutputPath.FullName, output);
                     }
 
-
-
                     break;
+                }
             }
 
             context.ExitCode = resultNotebook.Elements.SelectMany(e => e.Outputs).OfType<ErrorElement>().Any()
@@ -223,10 +214,46 @@ public static class CommandLineParser
 
         return disposables;
     }
-}
 
-public enum OutputFormat
-{
-    ipynb,
-    trx
+    private static string WriteTrx(InteractiveDocument resultNotebook)
+    {
+        var testResults = new List<TestResult>();
+
+        for (var i = 0; i < resultNotebook.Elements.Count; i++)
+        {
+            var element = resultNotebook.Elements[i];
+
+            var content = element.Contents.Trim().Replace("\r", "").Replace("\n", " ") ?? "";
+
+            var testResult = new TestResult(
+                fullyQualifiedTestName: $"Cell {i + 1,4}: {content.Substring(0, Math.Min(25, content.Length))}",
+                outcome: element.Outputs.OfType<ErrorElement>().Any()
+                             ? TestOutcome.Failed
+                             : TestOutcome.Passed,
+                output: element.Outputs.FirstOrDefault() switch
+                {
+                    DisplayElement displayElement => displayElement.Data.FirstOrDefault().Value.ToString(),
+                    ErrorElement errorElement1 => errorElement1.ErrorValue,
+                    ReturnValueElement returnValueElement => returnValueElement.Data.FirstOrDefault().Value.ToString(),
+                    TextElement textElement => textElement.Text,
+                    _ => null
+                },
+                stacktrace: element.Outputs.FirstOrDefault() switch
+                {
+                    ErrorElement errorElement => string.Join("\n", errorElement.StackTrace),
+                    _ => null
+                });
+
+            testResults.Add(testResult);
+        }
+
+        using var writer = new StringWriter();
+
+        var testOutputWriter = new TestOutputFileWriter(writer);
+
+        testOutputWriter.Write(new TestResultSet(testResults));
+
+        var output = writer.ToString();
+        return output;
+    }
 }

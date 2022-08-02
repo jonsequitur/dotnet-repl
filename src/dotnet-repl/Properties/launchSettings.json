@@ -2,7 +2,7 @@
   "profiles": {
     "dotnet-repl": {
       "commandName": "Project",
-      "commandLineArgs": "--notebook C:\\dev\\dotnet-repl\\src\\dotnet-repl.Tests\\Automation\\succeed.ipynb --output-path c:\\temp\\succeeded.ipynb --exit-after-run --log-path c:\\temp "
+      "commandLineArgs": "--notebook \"C:\\dev\\interactive\\samples\\Notebooks\\csharp\\Samples\\DataFrame-Getting Started.ipynb\" --output-format ipynb --output-path c:\\temp\\automation\\DataFrame-output.ipynb --exit-after-run"
     }
   }
 }
