@@ -5,12 +5,13 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using dotnet_repl;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace dotnet_repl;
+namespace Automation;
 
 public class NotebookRunner
 {
@@ -23,7 +24,7 @@ public class NotebookRunner
 
     public async Task<InteractiveDocument> RunNotebookAsync(
         InteractiveDocument notebook,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var documentElements = new List<InteractiveDocumentElement>();
 
@@ -100,7 +101,10 @@ public class NotebookRunner
                     // command completion events
 
                     case CommandFailed failed when failed.Command == command:
-                        outputs.Add(CreateBufferedStandardOutAndErrElement(stdOut, stdErr));
+                        if (CreateBufferedStandardOutAndErrElement(stdOut, stdErr) is { } te)
+                        {
+                            outputs.Add(te);
+                        }
 
                         outputs.Add(CreateErrorOutputElement(failed));
                         tcs.SetResult();
@@ -108,9 +112,16 @@ public class NotebookRunner
                         break;
 
                     case CommandSucceeded succeeded when succeeded.Command == command:
-                        outputs.Add(CreateBufferedStandardOutAndErrElement(stdOut, stdErr));
+                        if (CreateBufferedStandardOutAndErrElement(stdOut, stdErr) is { } textElement)
+                        {
+                            outputs.Add(textElement);
+                        }
 
                         tcs.SetResult();
+
+                        break;
+
+                    default:
 
                         break;
                 }
@@ -118,7 +129,7 @@ public class NotebookRunner
 
             await tcs.Task;
 
-            var resultElement = new InteractiveDocumentElement(element.Language, element.Contents, outputs.ToArray());
+            var resultElement = new InteractiveDocumentElement(element.Contents, element.Language, outputs.ToArray());
 
             documentElements.Add(resultElement);
         }
@@ -126,10 +137,15 @@ public class NotebookRunner
         return new(documentElements);
     }
 
-    private TextElement CreateBufferedStandardOutAndErrElement(
+    private TextElement? CreateBufferedStandardOutAndErrElement(
         StringBuilder? stdOut,
         StringBuilder? stdErr)
     {
+        if (stdOut is null && stdErr is null)
+        {
+            return null;
+        }
+
         var sb = new StringBuilder();
 
         if (stdOut is { })
@@ -147,7 +163,7 @@ public class NotebookRunner
             sb.Append(stdErr);
         }
 
-        return new TextElement(sb.ToString());
+        return new TextElement(sb.ToString(), "stdout");
     }
 
     private DisplayElement CreateDisplayOutputElement(DisplayEvent displayedValueProduced) =>
@@ -167,7 +183,7 @@ public class NotebookRunner
             failed.Message,
             failed.Exception switch
             {
-                { } ex => (ex.StackTrace ?? "").Split(new[] { "\r\n", "\n" }, StringSplitOptions.TrimEntries),
+                { } ex => (ex.StackTrace ?? "").SplitIntoLines(),
                 _ => Array.Empty<string>()
             });
 }

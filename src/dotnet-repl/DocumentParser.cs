@@ -17,7 +17,7 @@ public static class DocumentParser
     {
         await using var stream = file.OpenRead();
 
-        List<KernelName> kernelNames = new();
+        KernelNameCollection kernelNames = new();
 
         var kernelChoosers = kernel.Directives.OfType<ChooseKernelDirective>();
 
