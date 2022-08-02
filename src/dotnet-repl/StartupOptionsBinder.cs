@@ -11,19 +11,25 @@ internal class StartupOptionsBinder : BinderBase<StartupOptions>
     private readonly Option<FileInfo> _notebookOption;
     private readonly Option<DirectoryInfo> _logPathOption;
     private readonly Option<bool> _exitAfterRun;
+    private readonly Option<OutputFormat> _outputFormat;
+    private readonly Option<FileInfo> _outputPath;
 
     public StartupOptionsBinder(
         Option<string> defaultKernelOption,
         Option<DirectoryInfo> workingDirOption,
         Option<FileInfo> notebookOption,
         Option<DirectoryInfo> logPathOption,
-        Option<bool> exitAfterRun)
+        Option<bool> exitAfterRun,
+        Option<OutputFormat> outputFormat,
+        Option<FileInfo> outputPath)
     {
         _defaultKernelOption = defaultKernelOption;
         _workingDirOption = workingDirOption;
         _notebookOption = notebookOption;
         _logPathOption = logPathOption;
         _exitAfterRun = exitAfterRun;
+        _outputFormat = outputFormat;
+        _outputPath = outputPath;
     }
 
     protected override StartupOptions GetBoundValue(BindingContext bindingContext)
@@ -33,6 +39,8 @@ internal class StartupOptionsBinder : BinderBase<StartupOptions>
             bindingContext.ParseResult.GetValueForOption(_workingDirOption),
             bindingContext.ParseResult.GetValueForOption(_notebookOption),
             bindingContext.ParseResult.GetValueForOption(_logPathOption),
-            bindingContext.ParseResult.GetValueForOption(_exitAfterRun));
+            bindingContext.ParseResult.GetValueForOption(_exitAfterRun),
+            bindingContext.ParseResult.GetValueForOption(_outputFormat),
+            bindingContext.ParseResult.GetValueForOption(_outputPath));
     }
 }

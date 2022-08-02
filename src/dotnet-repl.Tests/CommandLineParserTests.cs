@@ -21,4 +21,11 @@ public class CommandLineParserTests
         // TODO-JOSEQU (Help_is_snazzy) write test
         Assert.True(false, "Test Help_is_snazzy is not written yet.");
     }
+
+
+    [Fact]
+    public void Parser_configuration_is_valid()
+    {
+        CommandLineParser.Create().Configuration.ThrowIfInvalid();
+    }
 }

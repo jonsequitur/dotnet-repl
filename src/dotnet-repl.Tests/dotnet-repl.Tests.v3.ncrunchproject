@@ -1,5 +1,10 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <DefaultTestTimeout>10000</DefaultTestTimeout>
+    <IgnoredTests>
+      <NamedTestSelector>
+        <TestName>dotnet_repl.Tests.Automation.NotebookAutomationTests.Notebook_runner_produces_expected_output</TestName>
+      </NamedTestSelector>
+    </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

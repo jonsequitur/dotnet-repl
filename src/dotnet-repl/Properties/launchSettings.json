@@ -2,7 +2,7 @@
   "profiles": {
     "dotnet-repl": {
       "commandName": "Project",
-      "commandLineArgs": "--log-path c:\\temp --notebook C:\\dev\\dotnet-repl\\src\\dotnet-repl.Tests\\test.ipynb"
+      "commandLineArgs": "--notebook C:\\dev\\dotnet-repl\\src\\dotnet-repl.Tests\\Automation\\succeed.ipynb --output-path c:\\temp\\succeeded.ipynb --exit-after-run --log-path c:\\temp "
     }
   }
 }

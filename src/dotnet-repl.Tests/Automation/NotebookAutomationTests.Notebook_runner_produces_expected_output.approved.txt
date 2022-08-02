@@ -1,0 +1,187 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "dotnet_interactive": {
+     "language": "Console.Out.WriteLine(\"output\");"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "output\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "csharp"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "dotnet_interactive": {
+     "language": "Console.Error.WriteLine(\"error\");"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "error\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "csharp"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "dotnet_interactive": {
+     "language": "throw new Exception(\"oops!\");"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "System.Exception: oops!\r\n   at Submission#3.<<Initialize>>d__0.MoveNext()\r\n--- End of stack trace from previous location ---\r\n   at Microsoft.CodeAnalysis.Scripting.ScriptExecutionState.RunSubmissionsAsync[TResult](ImmutableArray`1 precedingExecutors, Func`2 currentExecutor, StrongBox`1 exceptionHolderOpt, Func`2 catchExceptionOpt, CancellationToken cancellationToken)",
+     "evalue": "Error",
+     "output_type": "error",
+     "traceback": [
+      "   at Submission#3.<<Initialize>>d__0.MoveNext()",
+      "--- End of stack trace from previous location ---",
+      "   at Microsoft.CodeAnalysis.Scripting.ScriptExecutionState.RunSubmissionsAsync[TResult](ImmutableArray`1 precedingExecutors, Func`2 currentExecutor, StrongBox`1 exceptionHolderOpt, Func`2 catchExceptionOpt, CancellationToken cancellationToken)"
+     ]
+    }
+   ],
+   "source": [
+    "csharp"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "dotnet_interactive": {
+     "language": "\"A return value\""
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "A return value"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "csharp"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "dotnet_interactive": {
+     "language": "\"An HTML display value\".Display(\"text/html\");"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div class=\"dni-plaintext\">An HTML display value</div>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "csharp"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "dotnet_interactive": {
+     "language": "\"A plaintext display value\".Display(\"text/plain\");"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "A plaintext display value"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "csharp"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "dotnet_interactive": {
+     "language": "\"A plaintext display value (in a multi-output cell)\".Display(\"text/plain\");\n\"An HTML display value (in a multi-output cell)\".Display(\"text/html\");"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "A plaintext display value (in a multi-output cell)"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div class=\"dni-plaintext\">An HTML display value (in a multi-output cell)</div>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "csharp"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".NET (C#)",
+   "language": "C#",
+   "name": ".net-csharp"
+  },
+  "language_info": {
+   "file_extension": ".cs",
+   "mimetype": "text/x-csharp",
+   "name": "C#",
+   "pygments_lexer": "csharp",
+   "version": "8.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

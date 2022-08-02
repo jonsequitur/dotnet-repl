@@ -16,7 +16,7 @@ public class OutputTests : ReplInteractionTests
         _output = output;
     }
 
-    [Fact(Skip = "later")]
+    [Fact]
     public async Task Standard_out_is_batched()
     {
         var events = Repl.ReadyForInput.Count();

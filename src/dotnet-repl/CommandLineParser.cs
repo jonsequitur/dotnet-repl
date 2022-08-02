@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
@@ -6,10 +7,12 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Automation;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Pocket;
 using Spectre.Console;
+using TRexLib;
 
 namespace dotnet_repl;
 
@@ -34,21 +37,31 @@ public static class CommandLineParser
 
     public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
             "--notebook",
-            description: "After starting the REPL, run all of the cells in the specified notebook file")
+            description: "Run all of the cells in the specified notebook file")
         {
             ArgumentHelpName = "PATH"
         }
         .ExistingOnly();
 
-    public static Option<bool> ExitAfterRun = new(
+    public static Option<bool> ExitAfterRunOption = new(
         "--exit-after-run",
-        "Exit the REPL when the specified notebook or script has run");
+        $"Exit after the file specified by {NotebookOption.Aliases.First()} has run");
 
     public static Option<DirectoryInfo> WorkingDirOption = new Option<DirectoryInfo>(
             "--working-dir",
             () => new DirectoryInfo(Environment.CurrentDirectory),
             "Working directory to which to change after launching the kernel")
         .ExistingOnly();
+
+    public static Option<FileInfo> OutputPathOption = new(
+        "--output-path",
+        description:
+        "Run the file specified by --notebook and writes the output to the file specified by --output-path");
+
+    public static Option<OutputFormat> OutputFormatOption = new(
+        "--output-format",
+        description: $"The output format to be used when running a notebook with the {NotebookOption.Aliases.First()} and {ExitAfterRunOption.Aliases.First()} options",
+        getDefaultValue: () => OutputFormat.ipynb);
 
     public static Parser Create(
         IAnsiConsole? ansiConsole = null,
@@ -61,7 +74,9 @@ public static class CommandLineParser
             DefaultKernelOption,
             NotebookOption,
             WorkingDirOption,
-            ExitAfterRun
+            ExitAfterRunOption,
+            OutputFormatOption,
+            OutputPathOption
         };
 
         startRepl ??= StartAsync;
@@ -77,7 +92,9 @@ public static class CommandLineParser
                 WorkingDirOption,
                 NotebookOption,
                 LogPathOption,
-                ExitAfterRun),
+                ExitAfterRunOption,
+                OutputFormatOption,
+                OutputPathOption),
             Bind.FromServiceProvider<InvocationContext>());
 
         return new CommandLineBuilder(rootCommand)
@@ -91,7 +108,7 @@ public static class CommandLineParser
         IAnsiConsole ansiConsole,
         InvocationContext context)
     {
-        using var disposables = new CompositeDisposable();
+        var disposables = new CompositeDisposable();
 
         var isTerminal = ansiConsole.Profile.Out.IsTerminal;
 
@@ -100,7 +117,7 @@ public static class CommandLineParser
             var theme = KernelSpecificTheme.GetTheme(options.DefaultKernelName);
             ansiConsole.RenderSplash(theme ?? new CSharpTheme());
         }
-
+        
         var kernel = KernelBuilder.CreateKernel(options);
 
         InteractiveDocument? notebook = default;
@@ -118,29 +135,9 @@ public static class CommandLineParser
             }
         }
 
-        if (options.ExitAfterRun && !isTerminal)
-        {
-            if (notebook is null)
-            {
-                // TODO: (StartAsync) move this validation to the parser configuration
-                ansiConsole.WriteLine($"Option {ExitAfterRun.Aliases.First()} option cannot be used without also specifying the {NotebookOption.Aliases.First()} option.");
-                return disposables;
-            }
+        var isAutomationMode = options.ExitAfterRun || !isTerminal || options.OutputPath is { };
 
-            var resultDocument = await new NotebookRunner(kernel)
-                                     .RunNotebookAsync(
-                                         notebook,
-                                         context.GetCancellationToken());
-
-            await using var writer = new StringWriter();
-            Notebook.Write(resultDocument, "\n", writer);
-            ansiConsole.Write(writer.ToString());
-
-            context.ExitCode = resultDocument.Elements.SelectMany(e => e.Outputs).OfType<ErrorElement>().Any()
-                                   ? 1
-                                   : 0;
-        }
-        else
+        if (!isAutomationMode)
         {
             using var repl = new Repl(kernel, disposables.Dispose, ansiConsole);
 
@@ -155,7 +152,81 @@ public static class CommandLineParser
                 notebook,
                 options.ExitAfterRun);
         }
+        else
+        {
+            if (notebook is null)
+            {
+                // TODO: (StartAsync) move this validation to the parser configuration
+                ansiConsole.WriteLine($"Option {ExitAfterRunOption.Aliases.First()} option cannot be used without also specifying the {NotebookOption.Aliases.First()} option.");
+                return disposables;
+            }
+
+            var resultNotebook = await new NotebookRunner(kernel)
+                                     .RunNotebookAsync(
+                                         notebook,
+                                         context.GetCancellationToken());
+
+            switch (options.OutputFormat)
+            {
+                case OutputFormat.ipynb:
+                    var outputNotebook = resultNotebook.Serialize();
+                    if (options.OutputPath is null)
+                    {
+                        ansiConsole.Write(outputNotebook);
+                    }
+                    else
+                    {
+                        await File.WriteAllTextAsync(options.OutputPath.FullName, outputNotebook);
+                    }
+                    break;
+
+                case OutputFormat.trx:
+
+                    // FIX: (StartAsync) 
+                    var testResults = new List<TestResult>();
+
+                    for (var i = 0; i < resultNotebook.Elements.Count; i++)
+                    {
+                        var element = resultNotebook.Elements[i];
+
+                        var testResult = new TestResult(
+                            fullyQualifiedTestName: $"Cell {i + 1}",
+                            outcome: element.Outputs.OfType<ErrorElement>().Any()
+                                         ? TestOutcome.Failed
+                                         : TestOutcome.Passed,
+                            output: element.Outputs.FirstOrDefault() switch
+                            {
+                                DisplayElement displayElement => displayElement.Data.FirstOrDefault().Value.ToString(),
+                                ErrorElement errorElement1 => errorElement1.ErrorValue,
+                                ReturnValueElement returnValueElement => returnValueElement.Data.FirstOrDefault().Value.ToString(),
+                                TextElement textElement => textElement.Text,
+                                _ => null
+                            },
+                            stacktrace: element.Outputs.FirstOrDefault() switch
+                            {
+                                ErrorElement errorElement => string.Join("\n", errorElement.StackTrace),
+                                _ => null
+                            });
+
+                        testResults.Add(testResult);
+                    }
+
+
+
+                    break;
+            }
+
+            context.ExitCode = resultNotebook.Elements.SelectMany(e => e.Outputs).OfType<ErrorElement>().Any()
+                                   ? 1
+                                   : 0;
+        }
 
         return disposables;
     }
+}
+
+public enum OutputFormat
+{
+    ipynb,
+    trx
 }

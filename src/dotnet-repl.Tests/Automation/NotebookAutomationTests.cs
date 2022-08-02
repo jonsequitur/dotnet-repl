@@ -2,18 +2,22 @@ using System;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using dotnet_repl.Tests.Utility;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Pocket;
 using Spectre.Console;
 using Xunit;
+using Assent;
+using Automation;
+using Microsoft.DotNet.Interactive.Documents;
 
 namespace dotnet_repl.Tests.Automation;
 
 public class NotebookAutomationTests : IDisposable
 {
-    private readonly IAnsiConsole _ansiConsole;
     private readonly CompositeDisposable _disposables = new();
     private readonly StringWriter _writer;
     private readonly string _directory = Path.GetDirectoryName(PathUtility.PathToCurrentSourceFile());
@@ -22,14 +26,14 @@ public class NotebookAutomationTests : IDisposable
 
     public NotebookAutomationTests()
     {
-        _ansiConsole = AnsiConsole.Create(new AnsiConsoleSettings
+        var ansiConsole = AnsiConsole.Create(new AnsiConsoleSettings
         {
             Ansi = AnsiSupport.Yes,
             Interactive = InteractionSupport.Yes,
             Out = new AnsiConsoleOutput(_writer = new StringWriter())
         });
 
-        _parser = CommandLineParser.Create(_ansiConsole, registerForDisposal: d => _disposables.Add(d));
+        _parser = CommandLineParser.Create(ansiConsole, registerForDisposal: d => _disposables.Add(d));
 
         _disposables.Add(_writer);
     }
@@ -56,5 +60,25 @@ public class NotebookAutomationTests : IDisposable
         console.Error.ToString().Should().BeEmpty();
         result.Should().Be(1);
         output.Should().Contain("Oops!");
+    }
+
+    [Fact]
+    public async Task Notebook_runner_produces_expected_output()
+    {
+        using var kernel = KernelBuilder.CreateKernel();
+
+        var runner = new NotebookRunner(kernel);
+
+        var notebookFile = Path.Combine(_directory, "VS Code outputs.ipynb");
+
+        var expectedContent = await File.ReadAllTextAsync(notebookFile);
+
+        var inputDoc = Notebook.Parse(expectedContent, new(kernel.ChildKernels.Select(k => new KernelName(k.Name)).ToArray()));
+
+        var resultDoc = await runner.RunNotebookAsync(inputDoc);
+
+        var resultContent = resultDoc.Serialize();
+
+        this.Assent(resultContent);
     }
 }
