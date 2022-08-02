@@ -5,7 +5,7 @@
    "execution_count": null,
    "metadata": {
     "dotnet_interactive": {
-     "language": "Console.Out.WriteLine(\"output\");"
+     "language": "csharp"
     }
    },
    "outputs": [
@@ -18,7 +18,7 @@
     }
    ],
    "source": [
-    "csharp"
+    "Console.Out.WriteLine(\"output\");"
    ]
   },
   {
@@ -26,7 +26,7 @@
    "execution_count": null,
    "metadata": {
     "dotnet_interactive": {
-     "language": "Console.Error.WriteLine(\"error\");"
+     "language": "csharp"
     }
    },
    "outputs": [
@@ -39,7 +39,7 @@
     }
    ],
    "source": [
-    "csharp"
+    "Console.Error.WriteLine(\"error\");"
    ]
   },
   {
@@ -47,7 +47,7 @@
    "execution_count": null,
    "metadata": {
     "dotnet_interactive": {
-     "language": "throw new Exception(\"oops!\");"
+     "language": "csharp"
     }
    },
    "outputs": [
@@ -63,7 +63,7 @@
     }
    ],
    "source": [
-    "csharp"
+    "throw new Exception(\"oops!\");"
    ]
   },
   {
@@ -71,7 +71,7 @@
    "execution_count": null,
    "metadata": {
     "dotnet_interactive": {
-     "language": "\"A return value\""
+     "language": "csharp"
     }
    },
    "outputs": [
@@ -86,7 +86,7 @@
     }
    ],
    "source": [
-    "csharp"
+    "\"A return value\""
    ]
   },
   {
@@ -94,7 +94,7 @@
    "execution_count": null,
    "metadata": {
     "dotnet_interactive": {
-     "language": "\"An HTML display value\".Display(\"text/html\");"
+     "language": "csharp"
     }
    },
    "outputs": [
@@ -109,7 +109,7 @@
     }
    ],
    "source": [
-    "csharp"
+    "\"An HTML display value\".Display(\"text/html\");"
    ]
   },
   {
@@ -117,7 +117,7 @@
    "execution_count": null,
    "metadata": {
     "dotnet_interactive": {
-     "language": "\"A plaintext display value\".Display(\"text/plain\");"
+     "language": "csharp"
     }
    },
    "outputs": [
@@ -132,7 +132,7 @@
     }
    ],
    "source": [
-    "csharp"
+    "\"A plaintext display value\".Display(\"text/plain\");"
    ]
   },
   {
@@ -140,7 +140,7 @@
    "execution_count": null,
    "metadata": {
     "dotnet_interactive": {
-     "language": "\"A plaintext display value (in a multi-output cell)\".Display(\"text/plain\");\n\"An HTML display value (in a multi-output cell)\".Display(\"text/html\");"
+     "language": "csharp"
     }
    },
    "outputs": [
@@ -164,7 +164,8 @@
     }
    ],
    "source": [
-    "csharp"
+    "\"A plaintext display value (in a multi-output cell)\".Display(\"text/plain\");\n",
+    "\"An HTML display value (in a multi-output cell)\".Display(\"text/html\");"
    ]
   }
  ],
