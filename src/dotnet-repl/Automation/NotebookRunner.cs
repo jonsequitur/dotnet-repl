@@ -36,6 +36,7 @@ public class NotebookRunner
 
             using var connect = events.Connect();
 
+            var startTime = DateTimeOffset.Now;
             var result = _kernel.SendAsync(command, cancellationToken);
 
             var tcs = new TaskCompletionSource();
@@ -120,16 +121,15 @@ public class NotebookRunner
                         tcs.SetResult();
 
                         break;
-
-                    default:
-
-                        break;
                 }
             });
 
             await tcs.Task;
 
             var resultElement = new InteractiveDocumentElement(element.Contents, element.Language, outputs.ToArray());
+            resultElement.Metadata ??= new Dictionary<string, object>();
+            resultElement.Metadata.Add("dotnet_repl_cellExecutionStartTime", startTime);
+            resultElement.Metadata.Add("dotnet_repl_cellExecutionEndTime", DateTimeOffset.Now);
 
             documentElements.Add(resultElement);
         }
