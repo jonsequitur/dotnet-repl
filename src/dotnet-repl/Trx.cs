@@ -49,15 +49,19 @@ internal static class Trx
                 startTime: startTime,
                 endTime: endTime,
                 duration: endTime - startTime,
-                output: element.Outputs.FirstOrDefault() switch
+                errorMessage: element.Outputs.FirstOrDefault() switch
                 {
-                    DisplayElement displayElement => displayElement.Data.FirstOrDefault().Value.ToString(),
                     ErrorElement errorElement1 => errorElement1.ErrorValue,
-                    ReturnValueElement returnValueElement => returnValueElement.Data.FirstOrDefault().Value.ToString(),
-                    TextElement textElement => textElement.Text,
                     _ => null
                 },
-                stacktrace: element.Outputs.FirstOrDefault() switch
+                stdOut: string.Join("\n\n", element.Outputs.Select(o => o switch
+                {
+                    DisplayElement displayElement => displayElement.Data.FirstOrDefault().Value.ToString(),
+                    ReturnValueElement returnValueElement => returnValueElement.Data.FirstOrDefault().Value.ToString(),
+                    TextElement textElement => textElement.Text,
+                    _ => ""
+                })).Trim(),
+                stackTrace: element.Outputs.FirstOrDefault() switch
                 {
                     ErrorElement errorElement => string.Join("\n", errorElement.StackTrace),
                     _ => null

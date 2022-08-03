@@ -64,7 +64,7 @@ public class NotebookAutomationTests : IDisposable
 
         var output = _writer.ToString();
         console.Error.ToString().Should().BeEmpty();
-        result.Should().Be(1);
+        result.Should().Be(2);
         output.Should().Contain("Oops!");
     }
 

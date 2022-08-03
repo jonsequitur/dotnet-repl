@@ -206,7 +206,7 @@ public static class CommandLineParser
             }
 
             context.ExitCode = resultNotebook.Elements.SelectMany(e => e.Outputs).OfType<ErrorElement>().Any()
-                                   ? 1
+                                   ? 2
                                    : 0;
         }
 
