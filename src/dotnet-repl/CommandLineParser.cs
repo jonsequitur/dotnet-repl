@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
@@ -13,7 +12,6 @@ using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Formatting;
 using Pocket;
 using Spectre.Console;
-using TRexLib;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace dotnet_repl;
@@ -158,9 +156,6 @@ public static class CommandLineParser
         }
         else
         {
-            Formatter.ResetToDefault();
-            Formatter.DefaultMimeType = HtmlFormatter.MimeType;
-
             if (notebook is null)
             {
                 // TODO: (StartAsync) move this validation to the parser configuration
@@ -192,7 +187,7 @@ public static class CommandLineParser
 
                 case OutputFormat.trx:
                 {
-                    var output = WriteTrx(resultNotebook);
+                    var output = resultNotebook.ToTrxString();
 
                     if (options.OutputPath is null)
                     {
@@ -208,52 +203,10 @@ public static class CommandLineParser
             }
 
             context.ExitCode = resultNotebook.Elements.SelectMany(e => e.Outputs).OfType<ErrorElement>().Any()
-                                   ? 1
+                                   ? 2
                                    : 0;
         }
 
         return disposables;
-    }
-
-    private static string WriteTrx(InteractiveDocument resultNotebook)
-    {
-        var testResults = new List<TestResult>();
-
-        for (var i = 0; i < resultNotebook.Elements.Count; i++)
-        {
-            var element = resultNotebook.Elements[i];
-
-            var content = element.Contents.Trim().Replace("\r", "").Replace("\n", " ") ?? "";
-
-            var testResult = new TestResult(
-                fullyQualifiedTestName: $"Cell {i + 1,4}: {content.Substring(0, Math.Min(25, content.Length))}",
-                outcome: element.Outputs.OfType<ErrorElement>().Any()
-                             ? TestOutcome.Failed
-                             : TestOutcome.Passed,
-                output: element.Outputs.FirstOrDefault() switch
-                {
-                    DisplayElement displayElement => displayElement.Data.FirstOrDefault().Value.ToString(),
-                    ErrorElement errorElement1 => errorElement1.ErrorValue,
-                    ReturnValueElement returnValueElement => returnValueElement.Data.FirstOrDefault().Value.ToString(),
-                    TextElement textElement => textElement.Text,
-                    _ => null
-                },
-                stacktrace: element.Outputs.FirstOrDefault() switch
-                {
-                    ErrorElement errorElement => string.Join("\n", errorElement.StackTrace),
-                    _ => null
-                });
-
-            testResults.Add(testResult);
-        }
-
-        using var writer = new StringWriter();
-
-        var testOutputWriter = new TestOutputFileWriter(writer);
-
-        testOutputWriter.Write(new TestResultSet(testResults));
-
-        var output = writer.ToString();
-        return output;
     }
 }

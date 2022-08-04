@@ -1,18 +1,19 @@
 using System;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Assent;
+using Automation;
 using dotnet_repl.Tests.Utility;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Pocket;
 using Spectre.Console;
 using Xunit;
-using Assent;
-using Automation;
-using Microsoft.DotNet.Interactive.Documents;
 
 namespace dotnet_repl.Tests.Automation;
 
@@ -23,6 +24,11 @@ public class NotebookAutomationTests : IDisposable
     private readonly string _directory = Path.GetDirectoryName(PathUtility.PathToCurrentSourceFile());
     private readonly Parser _parser;
     private readonly TestConsole console = new();
+
+    private readonly Configuration _assentConfiguration =
+        new Configuration()
+            .UsingExtension("json")
+            .SetInteractive(Debugger.IsAttached);
 
     public NotebookAutomationTests()
     {
@@ -58,7 +64,7 @@ public class NotebookAutomationTests : IDisposable
 
         var output = _writer.ToString();
         console.Error.ToString().Should().BeEmpty();
-        result.Should().Be(1);
+        result.Should().Be(2);
         output.Should().Contain("Oops!");
     }
 
@@ -77,8 +83,29 @@ public class NotebookAutomationTests : IDisposable
 
         var resultDoc = await runner.RunNotebookAsync(inputDoc);
 
+        NormalizeMetadata(resultDoc);
+
         var resultContent = resultDoc.Serialize();
 
-        this.Assent(resultContent);
+        this.Assent(resultContent, _assentConfiguration);
+    }
+
+    private void NormalizeMetadata(InteractiveDocument document)
+    {
+        foreach (var element in document.Elements)
+        {
+            if (element.Metadata is { })
+            {
+                if (element.Metadata.ContainsKey("dotnet_repl_cellExecutionStartTime"))
+                {
+                    element.Metadata["dotnet_repl_cellExecutionStartTime"] = DateTimeOffset.MinValue;
+                }
+
+                if (element.Metadata.ContainsKey("dotnet_repl_cellExecutionEndTime"))
+                {
+                    element.Metadata["dotnet_repl_cellExecutionEndTime"] = DateTimeOffset.MinValue;
+                }
+            }
+        }
     }
 }

@@ -22,8 +22,6 @@ public static class KernelBuilder
 
         using var _ = Logger.Log.OnEnterAndExit("Creating Kernels");
 
-        Repl.UseDefaultSpectreFormatting();
-
         var compositeKernel = new CompositeKernel()
                               .UseAboutMagicCommand()
                               .UseDebugDirective()
