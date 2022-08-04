@@ -156,9 +156,6 @@ public static class CommandLineParser
         }
         else
         {
-            Formatter.ResetToDefault();
-            Formatter.DefaultMimeType = HtmlFormatter.MimeType;
-
             if (notebook is null)
             {
                 // TODO: (StartAsync) move this validation to the parser configuration
