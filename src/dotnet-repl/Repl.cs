@@ -279,7 +279,6 @@ public class Repl : IDisposable
 
     public static void UseDefaultSpectreFormatting()
     {
-        Formatter.ResetToDefault();
         Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
         new DefaultSpectreFormatterSet().Register();
     }

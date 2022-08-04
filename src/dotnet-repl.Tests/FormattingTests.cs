@@ -29,8 +29,10 @@ public class FormattingTests
             .ContainSingle<ReturnValueProduced>()
             .Which
             .FormattedValues
+            .Single()
+            .Value
             .Should()
-            .ContainSingle(f => f.Value =="<null>");
+            .Be("<null>");
     }
 
     [Fact]
