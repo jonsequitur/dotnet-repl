@@ -4,12 +4,22 @@ using dotnet_repl.Tests.Utility;
 using Microsoft.DotNet.Interactive;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
+using Pocket.For.Xunit;
 using Spectre.Console;
+using Xunit;
 using Xunit.Abstractions;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 
 namespace dotnet_repl.Tests;
 
+[CollectionDefinition("Do not parallelize", DisableParallelization = true)]
+public class SerialTestCollectionDefinition 
+{
+
+}
+
+[LogToPocketLogger(@"c:\temp\dotnet-repl.test.log")]
+[Xunit.Collection("Do not parallelize")]
 public abstract class ReplInteractionTests : IDisposable
 {
     private readonly CompositeDisposable _disposables;

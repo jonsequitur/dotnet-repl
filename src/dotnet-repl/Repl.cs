@@ -95,11 +95,11 @@ public class Repl : IDisposable
 
     private LineEditorServiceProvider? LineEditorProvider { get; }
 
-    public void Start()
+    public async Task Start()
     {
-        var ready = ReadyForInput.FirstAsync();
-        Task.Run(() => RunAsync(_ => { }));
-        ready.FirstAsync().Wait();
+        var ready = ReadyForInput.Replay();
+        var _ = Task.Run(() => RunAsync(_ => { }));
+        await ready.FirstAsync();
     }
 
     public async Task RunAsync(
@@ -144,7 +144,7 @@ public class Repl : IDisposable
 
             if (await result.KernelEvents.LastAsync() is CommandFailed failed)
             {
-                setExitCode(1);
+                setExitCode(2);
             }
 
             if (exitAfterRun && queuedSubmissions.Count == 0)
@@ -152,6 +152,8 @@ public class Repl : IDisposable
                 break;
             }
         }
+
+        _readyForInput.OnCompleted();
     }
 
     private void SetTheme()
