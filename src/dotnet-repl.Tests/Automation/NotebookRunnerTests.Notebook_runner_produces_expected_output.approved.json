@@ -58,8 +58,8 @@
    },
    "outputs": [
     {
-     "ename": "System.Exception: oops!\r\n   at Submission#3.<<Initialize>>d__0.MoveNext()\r\n--- End of stack trace from previous location ---\r\n   at Microsoft.CodeAnalysis.Scripting.ScriptExecutionState.RunSubmissionsAsync[TResult](ImmutableArray`1 precedingExecutors, Func`2 currentExecutor, StrongBox`1 exceptionHolderOpt, Func`2 catchExceptionOpt, CancellationToken cancellationToken)",
-     "evalue": "Error",
+     "ename": "Error",
+     "evalue": "System.Exception: oops!\r\n   at Submission#3.<<Initialize>>d__0.MoveNext()\r\n--- End of stack trace from previous location ---\r\n   at Microsoft.CodeAnalysis.Scripting.ScriptExecutionState.RunSubmissionsAsync[TResult](ImmutableArray`1 precedingExecutors, Func`2 currentExecutor, StrongBox`1 exceptionHolderOpt, Func`2 catchExceptionOpt, CancellationToken cancellationToken)",
      "output_type": "error",
      "traceback": [
       "   at Submission#3.<<Initialize>>d__0.MoveNext()",

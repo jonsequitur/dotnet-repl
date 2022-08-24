@@ -7,9 +7,9 @@ using TRexLib;
 
 namespace dotnet_repl;
 
-internal static class Trx
+public static class DocumentConverter
 {
-    internal static string ToTrxString(this InteractiveDocument resultNotebook)
+    public static List<TestResult> ToTestOutputDocument(InteractiveDocument resultNotebook)
     {
         var testResults = new List<TestResult>();
 
@@ -70,9 +70,16 @@ internal static class Trx
             testResults.Add(testResult);
         }
 
+        return testResults;
+    }
+
+    public static string ToTestOutputDocumentXml(this InteractiveDocument resultNotebook)
+    {
+        var testResults = ToTestOutputDocument(resultNotebook);
+
         using var writer = new StringWriter();
 
-        var testOutputWriter = new TestOutputFileWriter(writer);
+        var testOutputWriter = new TestOutputDocumentWriter(writer);
 
         testOutputWriter.Write(new TestResultSet(testResults));
 
