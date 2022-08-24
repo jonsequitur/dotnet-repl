@@ -35,6 +35,7 @@ public abstract class KernelSpecificTheme : Theme
         "csharp" => new CSharpTheme(),
         "fsharp" => new FSharpTheme(),
         "pwsh" => new PowerShellTheme(),
+        "javascript" => new JavaScriptTheme(),
         "sql" => new SqlTheme(),
         _ => null
     };
@@ -61,6 +62,15 @@ public class PowerShellTheme : KernelSpecificTheme
     public override string KernelDisplayName => "PowerShell";
 
     public override string PromptText => "PS";
+}
+
+public class JavaScriptTheme : KernelSpecificTheme
+{
+    public override Style AccentStyle => new(Color.Yellow);
+
+    public override string KernelDisplayName => "JavaScript";
+
+    public override string PromptText => "JS";
 }
 
 public class SqlTheme : KernelSpecificTheme

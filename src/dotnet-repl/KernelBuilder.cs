@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Browser;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -74,8 +76,9 @@ public static class KernelBuilder
             new KeyValueStoreKernel()
                 .UseWho());
 
+        var playwrightKernel = Task.Run(() => new PlaywrightKernelConnector().CreateKernelAsync("javascript")).Result;
+        compositeKernel.Add(playwrightKernel, new[] { "js" });
         compositeKernel.Add(new MarkdownKernel());
-
         compositeKernel.Add(new SqlDiscoverabilityKernel());
         compositeKernel.Add(new KqlDiscoverabilityKernel());
 
