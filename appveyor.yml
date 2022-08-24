@@ -11,7 +11,7 @@ build_script:
 
 after_build:
   - cmd: >-
-      dotnet pack .\src\dotnet-repl\dotnet-repl.csproj -c:release --no-build -p:Version=%APPVEYOR_BUILD_VERSION%
+      dotnet pack .\src\dotnet-repl\dotnet-repl.csproj -c:release -p:Version=%APPVEYOR_BUILD_VERSION%
 
 test_script:
   - cmd: >-
