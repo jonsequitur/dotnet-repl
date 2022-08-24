@@ -9,10 +9,8 @@ using System.Threading.Tasks;
 using Automation;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
-using Microsoft.DotNet.Interactive.Formatting;
 using Pocket;
 using Spectre.Console;
-using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace dotnet_repl;
 
@@ -187,7 +185,7 @@ public static class CommandLineParser
 
                 case OutputFormat.trx:
                 {
-                    var output = resultNotebook.ToTrxString();
+                    var output = resultNotebook.ToTestOutputDocumentXml();
 
                     if (options.OutputPath is null)
                     {

@@ -174,14 +174,13 @@ public class NotebookRunner
                 v => (object)v.Value));
 
     private ErrorElement CreateErrorOutputElement(ErrorProduced errorProduced) =>
-        new("Error",
-            errorProduced.Message,
-            Array.Empty<string>());
+        new(errorName: "Error",
+            errorValue: errorProduced.Message);
 
     private ErrorElement CreateErrorOutputElement(CommandFailed failed) =>
-        new("Error",
-            failed.Message,
-            failed.Exception switch
+        new(errorName: "Error",
+            errorValue: failed.Message,
+            stackTrace: failed.Exception switch
             {
                 { } ex => (ex.StackTrace ?? "").SplitIntoLines(),
                 _ => Array.Empty<string>()

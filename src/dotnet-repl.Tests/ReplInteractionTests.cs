@@ -12,14 +12,8 @@ using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 
 namespace dotnet_repl.Tests;
 
-[CollectionDefinition("Do not parallelize", DisableParallelization = true)]
-public class SerialTestCollectionDefinition 
-{
-
-}
-
 [LogToPocketLogger(@"c:\temp\dotnet-repl.test.log")]
-[Xunit.Collection("Do not parallelize")]
+[Collection("Do not parallelize")]
 public abstract class ReplInteractionTests : IDisposable
 {
     private readonly CompositeDisposable _disposables;
@@ -47,7 +41,7 @@ public abstract class ReplInteractionTests : IDisposable
             AnsiConsole,
             In);
 
-        Repl.Start();
+        var  _ = Repl.StartAsync();
 
         _disposables = new CompositeDisposable
         {

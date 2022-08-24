@@ -95,7 +95,7 @@ public class Repl : IDisposable
 
     private LineEditorServiceProvider? LineEditorProvider { get; }
 
-    public async Task Start()
+    public async Task StartAsync()
     {
         var ready = ReadyForInput.Replay();
         var _ = Task.Run(() => RunAsync(_ => { }));

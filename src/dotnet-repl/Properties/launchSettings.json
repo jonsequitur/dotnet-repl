@@ -1,8 +1,15 @@
 {
   "profiles": {
-    "dotnet-repl": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "run and exit, .trx": {
       "commandName": "Project",
       "commandLineArgs": "--notebook \"C:\\dev\\interactive\\samples\\Notebooks\\csharp\\Samples\\DataFrame-Getting Started.ipynb\" --output-format trx --output-path c:\\temp\\automation\\DataFrame-output.trx --exit-after-run"
+    },
+    "REPL": {
+      "commandName": "Project"
     }
   }
 }
