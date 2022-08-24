@@ -93,29 +93,6 @@ public class NotebookRunnerTests : IDisposable
         this.Assent(resultContent, _assentConfiguration);
     }
 
-    [Fact]
-    public async Task ASCII_escape_sequences_do_not_cause_XML_parse_problems()
-    {
-        using var kernel = new CSharpKernel();
-        
-        var runner = new NotebookRunner(kernel);
-
-        var inputDoc = new InteractiveDocument
-        {
-            new InteractiveDocumentElement("123.Display(\"unknown/MIMEtype\");", "csharp")
-        };
-        var outputDoc = await runner.RunNotebookAsync(inputDoc);
-
-        var xml = outputDoc.ToTestOutputDocumentXml();
-
-        TestOutputDocumentParser.Parse(xml);
-
-
-
-        // TODO (ASCII_escape_sequences_do_not_cause_XML_parse_problems) write test
-        throw new NotImplementedException();
-    }
-
     private void NormalizeMetadata(InteractiveDocument document)
     {
         foreach (var element in document.Elements)
