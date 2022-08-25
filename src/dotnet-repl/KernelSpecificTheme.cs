@@ -37,6 +37,7 @@ public abstract class KernelSpecificTheme : Theme
         "pwsh" => new PowerShellTheme(),
         "javascript" => new JavaScriptTheme(),
         "sql" => new SqlTheme(),
+        "html" => new HtmlTheme(),
         _ => null
     };
 }
@@ -71,6 +72,15 @@ public class JavaScriptTheme : KernelSpecificTheme
     public override string KernelDisplayName => "JavaScript";
 
     public override string PromptText => "JS";
+}
+
+public class HtmlTheme : KernelSpecificTheme
+{
+    public override Style AccentStyle => new(Color.Red3);
+
+    public override string KernelDisplayName => "HTML";
+
+    public override string PromptText => "HTML";
 }
 
 public class SqlTheme : KernelSpecificTheme

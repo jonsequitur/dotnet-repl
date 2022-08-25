@@ -78,6 +78,8 @@ public static class KernelBuilder
 
         var playwrightKernel = Task.Run(() => new PlaywrightKernelConnector().CreateKernelAsync("javascript")).Result;
         compositeKernel.Add(playwrightKernel, new[] { "js" });
+        playwrightKernel.KernelInfo.SupportedKernelCommands.Add(new KernelCommandInfo("SubmitCode"));
+        compositeKernel.Add(new HtmlKernel(playwrightKernel));
         compositeKernel.Add(new MarkdownKernel());
         compositeKernel.Add(new SqlDiscoverabilityKernel());
         compositeKernel.Add(new KqlDiscoverabilityKernel());
