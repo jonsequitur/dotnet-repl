@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
@@ -83,6 +84,37 @@ internal class DefaultSpectreFormatterSet
 
             return true;
         }),
+
+        new SpectreFormatter<KernelValues>((values, context, console) =>
+        {
+            if (values.Detailed)
+            {
+                var table = new Table();
+
+                table.AddColumn("Name");
+                table.AddColumn("Type");
+                table.AddColumn("Value");
+
+                foreach (var value in values)
+                {
+                    table.AddRow(
+                        value.Name,
+                        value.Type.ToDisplayString("text/plain"),
+                        value.Value.ToDisplayString("text/plain"));
+                }
+
+                console.Write(table);
+            }
+            else
+            {
+                foreach (var value in values)
+                {
+                    console.WriteLine(value.Name);
+                }
+            }
+
+            return true;
+        })
     };
 
     public void Register()

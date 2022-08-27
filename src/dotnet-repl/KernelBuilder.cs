@@ -76,10 +76,17 @@ public static class KernelBuilder
             new KeyValueStoreKernel()
                 .UseWho());
 
-        var playwrightKernel = Task.Run(() => new PlaywrightKernelConnector().CreateKernelAsync("javascript")).Result;
-        compositeKernel.Add(playwrightKernel, new[] { "js" });
-        playwrightKernel.KernelInfo.SupportedKernelCommands.Add(new KernelCommandInfo("SubmitCode"));
-        compositeKernel.Add(new HtmlKernel(playwrightKernel));
+        var playwrightConnector = new PlaywrightKernelConnector();
+
+        var (htmlKernel, jsKernel) = Task.Run(async () =>
+        {
+            var htmlKernel = await playwrightConnector.CreateKernelAsync("html");
+            var jsKernel = await playwrightConnector.CreateKernelAsync("javascript");
+            return (htmlKernel, jsKernel);
+        }).Result;
+
+        compositeKernel.Add(jsKernel, new[] { "js" });
+        compositeKernel.Add(htmlKernel);
         compositeKernel.Add(new MarkdownKernel());
         compositeKernel.Add(new SqlDiscoverabilityKernel());
         compositeKernel.Add(new KqlDiscoverabilityKernel());
