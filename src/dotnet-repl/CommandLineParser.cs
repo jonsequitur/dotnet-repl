@@ -133,9 +133,7 @@ public static class CommandLineParser
             }
         }
 
-        var isAutomationMode = options.ExitAfterRun || !isTerminal || options.OutputPath is { };
-
-        if (!isAutomationMode)
+        if (!options.IsAutomationMode)
         {
             Repl.UseDefaultSpectreFormatting();
 
