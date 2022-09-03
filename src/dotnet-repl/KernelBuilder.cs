@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
@@ -90,6 +91,16 @@ public static class KernelBuilder
         compositeKernel.Add(new MarkdownKernel());
         compositeKernel.Add(new SqlDiscoverabilityKernel());
         compositeKernel.Add(new KqlDiscoverabilityKernel());
+        
+        var inputKernel = new InputKernel();
+        // inputKernel.RegisterCommandHandler<RequestInput>(async (input, context) =>
+        // {
+        //     Console.WriteLine("hi!");
+        // });
+        compositeKernel.Add(inputKernel);
+        compositeKernel.SetDefaultTargetKernelNameForCommand(
+            typeof(RequestInput), 
+            inputKernel.Name);
 
         compositeKernel.DefaultKernelName = options.DefaultKernelName;
 
