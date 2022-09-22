@@ -6,7 +6,7 @@
     },
     "run and exit, .trx": {
       "commandName": "Project",
-      "commandLineArgs": "--notebook \"C:\\dev\\interactive\\samples\\Notebooks\\csharp\\Samples\\DataFrame-Getting Started.ipynb\" --output-format trx --output-path c:\\temp\\automation\\DataFrame-output.trx --exit-after-run"
+      "commandLineArgs": "--notebook \"C:\\temp\\automation\\parameterized.dib\" --output-format ipynb --output-path c:\\temp\\automation\\parameterized.dib.vsoutput.ipynb --exit-after-run --input y=\"oh hey there!\""
     },
     "REPL": {
       "commandName": "Project"

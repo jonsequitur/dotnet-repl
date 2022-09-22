@@ -107,7 +107,7 @@ public class Repl : IDisposable
         InteractiveDocument? notebook = null,
         bool exitAfterRun = false)
     {
-        var queuedSubmissions = new Queue<string>(notebook?.Elements.Select(c => $"#!{c.Language}\n{c.Contents}") ?? Array.Empty<string>());
+        var queuedSubmissions = new Queue<string>(notebook?.Elements.Select(c => $"#!{c.KernelName}\n{c.Contents}") ?? Array.Empty<string>());
 
         if (!queuedSubmissions.Any())
         {
@@ -135,21 +135,24 @@ public class Repl : IDisposable
                 }
             }
 
-            if (_disposalTokenSource.IsCancellationRequested)
+            if (_disposalTokenSource.IsCancellationRequested || input is null)
             {
                 setExitCode(129);
-            }
-
-            var result = await RunKernelCommand(new SubmitCode(input));
-
-            if (await result.KernelEvents.LastAsync() is CommandFailed failed)
-            {
-                setExitCode(2);
-            }
-
-            if (exitAfterRun && queuedSubmissions.Count == 0)
-            {
                 break;
+            }
+            else
+            {
+                var result = await RunKernelCommand(new SubmitCode(input));
+
+                if (await result.KernelEvents.LastAsync() is CommandFailed failed)
+                {
+                    setExitCode(2);
+                }
+
+                if (exitAfterRun && queuedSubmissions.Count == 0)
+                {
+                    break;
+                }
             }
         }
 
