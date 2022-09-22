@@ -1,12 +1,13 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Browser;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 
 namespace dotnet_repl;
@@ -23,7 +24,7 @@ public static class KernelBuilder
     {
         options ??= new();
 
-        using var _ = Logger.Log.OnEnterAndExit("Creating Kernels");
+        using var _ = Logger.Log.OnEnterAndExit("Creating kernels");
 
         var compositeKernel = new CompositeKernel()
                               .UseAboutMagicCommand()
@@ -43,7 +44,7 @@ public static class KernelBuilder
 
                 if (name is { } &&
                     !_nonStickyKernelNames.Contains(name) &&
-                    rootKernel.FindKernel(name) is { } kernel)
+                    rootKernel.FindKernelByName(name) is { } kernel)
                 {
                     rootKernel.DefaultKernelName = kernel.Name;
                 }
@@ -86,27 +87,33 @@ public static class KernelBuilder
             return (htmlKernel, jsKernel);
         }).Result;
 
+        ((ProxyKernel)jsKernel).UseValueSharing(new JavaScriptValueDeclarer());
+
         compositeKernel.Add(jsKernel, new[] { "js" });
         compositeKernel.Add(htmlKernel);
         compositeKernel.Add(new MarkdownKernel());
         compositeKernel.Add(new SqlDiscoverabilityKernel());
         compositeKernel.Add(new KqlDiscoverabilityKernel());
-        
+
         var inputKernel = new InputKernel();
-        // inputKernel.RegisterCommandHandler<RequestInput>(async (input, context) =>
-        // {
-        //     Console.WriteLine("hi!");
-        // });
+
+        inputKernel.RegisterCommandHandler<RequestInput>(async (input, context) =>
+        {
+            // FIX: (CreateKernel) this should not be necessary
+
+            await ((IKernelCommandHandler<RequestInput>)inputKernel).HandleAsync(input, context);
+        });
+
         compositeKernel.Add(inputKernel);
         compositeKernel.SetDefaultTargetKernelNameForCommand(
-            typeof(RequestInput), 
+            typeof(RequestInput),
             inputKernel.Name);
 
         compositeKernel.DefaultKernelName = options.DefaultKernelName;
 
         if (compositeKernel.DefaultKernelName == "fsharp")
         {
-            var fsharpKernel = compositeKernel.FindKernel("fsharp");
+            var fsharpKernel = compositeKernel.FindKernelByName("fsharp");
 
             fsharpKernel.DeferCommand(new SubmitCode("Formatter.Register(fun(x: obj)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));
             fsharpKernel.DeferCommand(new SubmitCode("Formatter.Register(fun(x: System.Collections.IEnumerable)(writer: TextWriter)->fprintfn writer \"%120A\" x)"));

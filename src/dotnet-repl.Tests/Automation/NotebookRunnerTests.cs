@@ -1,21 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Assent;
 using Automation;
 using dotnet_repl.Tests.Utility;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
-using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Events;
 using Pocket;
 using Spectre.Console;
-using TRexLib;
 using Xunit;
 
 namespace dotnet_repl.Tests.Automation;
@@ -82,15 +80,54 @@ public class NotebookRunnerTests : IDisposable
 
         var expectedContent = await File.ReadAllTextAsync(notebookFile);
 
-        var inputDoc = Notebook.Parse(expectedContent, new(kernel.ChildKernels.Select(k => new KernelName(k.Name)).ToArray()));
+        var inputDoc = Notebook.Parse(expectedContent, kernel.CreateKernelInfos());
 
         var resultDoc = await runner.RunNotebookAsync(inputDoc);
 
         NormalizeMetadata(resultDoc);
 
-        var resultContent = resultDoc.Serialize();
+        var resultContent = resultDoc.SerializeToJupyter();
 
         this.Assent(resultContent, _assentConfiguration);
+    }
+
+    [Fact]
+    public async Task Parameters_can_be_passed_to_input_fields_declared_in_the_notebook()
+    {
+        var dibContent = @"
+#!value --name abc --from-value @input:""abc""
+
+#!csharp
+#!share --from value abc
+abc.Display();
+";
+        var inputs = new Dictionary<string, string>
+        {
+            ["abc"] = "hello!"
+        };
+
+        using var kernel = KernelBuilder.CreateKernel(new StartupOptions
+        {
+            ExitAfterRun = true,
+            Inputs = inputs
+        });
+
+        var inputDoc = CodeSubmission.Parse(dibContent, kernel.CreateKernelInfos());
+
+        var runner = new NotebookRunner(kernel);
+
+        var events = kernel.KernelEvents.ToSubscribedList();
+
+        await runner.RunNotebookAsync(inputDoc, inputs);
+
+        events.Should().NotContainErrors();
+
+        events.Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .Value
+              .Should()
+              .Be("hello!");
     }
 
     private void NormalizeMetadata(InteractiveDocument document)

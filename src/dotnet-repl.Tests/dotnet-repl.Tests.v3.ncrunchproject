@@ -5,6 +5,9 @@
       <NamedTestSelector>
         <TestName>dotnet_repl.Tests.Automation.NotebookAutomationTests.Notebook_runner_produces_expected_output</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>dotnet_repl.Tests.Automation.NotebookRunnerTests.Notebook_runner_produces_expected_output</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

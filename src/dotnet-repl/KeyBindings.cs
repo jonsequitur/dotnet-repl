@@ -29,6 +29,11 @@ internal static class KeyBindings
         editor.KeyBindings.Add(
             ConsoleKey.C,
             ConsoleModifiers.Control,
+            () => new Clear());
+
+        editor.KeyBindings.Add(
+            ConsoleKey.D,
+            ConsoleModifiers.Control,
             () => new Quit(repl.QuitAction));
 
         editor.KeyBindings.Add<Clear>(

@@ -15,28 +15,50 @@ namespace Automation;
 
 public class NotebookRunner
 {
-    private readonly Kernel _kernel;
+    private readonly CompositeKernel _kernel;
 
-    public NotebookRunner(Kernel kernel)
+    public NotebookRunner(CompositeKernel kernel)
     {
         _kernel = kernel;
     }
 
     public async Task<InteractiveDocument> RunNotebookAsync(
         InteractiveDocument notebook,
+        IDictionary<string, string>? parameters = null,
         CancellationToken cancellationToken = default)
     {
         var documentElements = new List<InteractiveDocumentElement>();
 
+        if (parameters is not null)
+        {
+            var inputKernel = _kernel.ChildKernels.OfType<InputKernel>().FirstOrDefault();
+
+            if (inputKernel is not null)
+            {
+                inputKernel.GetInputValueAsync = key =>
+                {
+                    if (parameters.TryGetValue(key, out var value))
+                    {
+                        return Task.FromResult<string?>(value);
+                    }
+                    else
+                    {
+                        return Task.FromResult<string?>(null);
+                    }
+                };
+            }
+        }
+
         foreach (var element in notebook.Elements)
         {
-            var command = new SubmitCode(element.Contents, element.Language);
+            var command = new SubmitCode(element.Contents, element.KernelName);
 
             var events = _kernel.KernelEvents.Replay();
 
             using var connect = events.Connect();
 
             var startTime = DateTimeOffset.Now;
+
             var result = _kernel.SendAsync(command, cancellationToken);
 
             var tcs = new TaskCompletionSource();
@@ -126,7 +148,7 @@ public class NotebookRunner
 
             await tcs.Task;
 
-            var resultElement = new InteractiveDocumentElement(element.Contents, element.Language, outputs.ToArray());
+            var resultElement = new InteractiveDocumentElement(element.Contents, element.KernelName, outputs.ToArray());
             resultElement.Metadata ??= new Dictionary<string, object>();
             resultElement.Metadata.Add("dotnet_repl_cellExecutionStartTime", startTime);
             resultElement.Metadata.Add("dotnet_repl_cellExecutionEndTime", DateTimeOffset.Now);

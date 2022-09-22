@@ -15,6 +15,12 @@ internal class SpectreHelpBuilder : HelpBuilder
 
     private IEnumerable<HelpSectionDelegate> GetLayout(HelpContext context)
     {
+        if (context.ParseResult.Errors.Any())
+        {
+            // don't show help on error
+            yield break;
+        }
+
         var console = AnsiConsole.Create(new AnsiConsoleSettings
         {
             Ansi = AnsiSupport.Yes,

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
@@ -31,6 +32,8 @@ public static class CommandLineParser
             "csharp",
             "fsharp",
             "pwsh",
+            "javascript",
+            "html",
             "sql");
 
     public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
@@ -51,10 +54,31 @@ public static class CommandLineParser
             "Working directory to which to change after launching the kernel")
         .ExistingOnly();
 
-    public static Option<FileInfo> OutputPathOption = new(
-        "--output-path",
+    public static Option<IDictionary<string, string>> InputsOption = new(
+        "--input",
         description:
-        "Run the file specified by --notebook and writes the output to the file specified by --output-path");
+        "Specifies in a value for @input tokens in magic commands in the notebook, using the format --input <key>=<value>",
+        parseArgument: result =>
+        {
+            var dict = new Dictionary<string, string>();
+
+            foreach (var token in result.Tokens.Select(t => t.Value))
+            {
+                var keyAndValue = token.Split("=");
+                dict[keyAndValue[0]] = keyAndValue[1];
+            }
+
+            return dict;
+        })
+    {
+        Arity = ArgumentArity.ZeroOrMore
+    };
+
+    public static Option<FileInfo> OutputPathOption = new Option<FileInfo>(
+            "--output-path",
+            description:
+            "Run the file specified by --notebook and writes the output to the file specified by --output-path")
+        .LegalFilePathsOnly();
 
     public static Option<OutputFormat> OutputFormatOption = new(
         "--output-format",
@@ -74,7 +98,10 @@ public static class CommandLineParser
             WorkingDirOption,
             ExitAfterRunOption,
             OutputFormatOption,
-            OutputPathOption
+            OutputPathOption,
+            InputsOption,
+            ConvertCommand(),
+            DescribeCommand(),
         };
 
         startRepl ??= StartAsync;
@@ -92,16 +119,86 @@ public static class CommandLineParser
                 LogPathOption,
                 ExitAfterRunOption,
                 OutputFormatOption,
-                OutputPathOption),
+                OutputPathOption,
+                InputsOption),
             Bind.FromServiceProvider<InvocationContext>());
 
         return new CommandLineBuilder(rootCommand)
                .UseDefaults()
                .UseHelpBuilder(_ => new SpectreHelpBuilder(LocalizationResources.Instance))
                .Build();
+
+        Command ConvertCommand()
+        {
+            // FIX: (ConvertCommand) 
+
+            var notebookOption = new Option<FileInfo>("--notebook", "The notebook file to convert")
+                .ExistingOnly();
+
+            var outputPathOption = new Option<FileInfo>("--output-path")
+                .LegalFilePathsOnly();
+
+            var outputFormatOption = new Option<OutputFormat>(
+                "--output-format",
+                description: $"The output format to be used when running a notebook with the {NotebookOption.Aliases.First()} and {ExitAfterRunOption.Aliases.First()} options",
+                getDefaultValue: () => OutputFormat.ipynb);
+
+            var command = new Command("convert")
+            {
+                notebookOption,
+                outputPathOption,
+                outputFormatOption
+            };
+
+            return command;
+        }
+
+        Command DescribeCommand()
+        {
+            // FIX: (DescribeCommand) 
+
+            var notebookArgument = new Argument<FileInfo>("notebook")
+                .ExistingOnly();
+
+            var command = new Command("describe")
+            {
+                notebookArgument
+            };
+
+            command.SetHandler(async context =>
+            {
+                var doc = await DocumentParser.LoadInteractiveDocumentAsync(
+                              context.ParseResult.GetValueForArgument(notebookArgument),
+                              KernelBuilder.CreateKernel());
+
+                var console = ansiConsole ?? AnsiConsole.Console;
+
+                var inputFields = doc.GetInputFields();
+
+                if (inputFields.Any())
+                {
+                    console.WriteLine("Parameters", Theme.Default.AnnouncementTextStyle);
+
+                    var table = new Table();
+                    table.BorderStyle = Theme.Default.AnnouncementBorderStyle;
+                    table.AddColumn(new TableColumn("Name"));
+                    table.AddColumn(new TableColumn("Type"));
+                    table.AddColumn(new TableColumn("Example"));
+
+                    foreach (var inputField in inputFields)
+                    {
+                        table.AddRow(inputField.Prompt, inputField.TypeHint, $"--input {inputField.Prompt}=\"parameter value\"");
+                    }
+
+                    console.Write(table);
+                }
+            });
+
+            return command;
+        }
     }
 
-    public static async Task<IDisposable> StartAsync(
+    private static async Task<IDisposable> StartAsync(
         StartupOptions options,
         IAnsiConsole ansiConsole,
         InvocationContext context)
@@ -122,10 +219,10 @@ public static class CommandLineParser
 
         if (options.Notebook is { } file)
         {
-            notebook = await DocumentParser.ReadFileAsInteractiveDocument(file, kernel);
+            notebook = await DocumentParser.LoadInteractiveDocumentAsync(file, kernel);
         }
 
-        if (notebook is { } && notebook.Elements.Any())
+        if (notebook is { Elements.Count: > 0 })
         {
             if (isTerminal)
             {
@@ -162,13 +259,14 @@ public static class CommandLineParser
             var resultNotebook = await new NotebookRunner(kernel)
                                      .RunNotebookAsync(
                                          notebook,
-                                         context.GetCancellationToken());
+                                         options.Inputs,
+                                         cancellationToken: context.GetCancellationToken());
 
             switch (options.OutputFormat)
             {
                 case OutputFormat.ipynb:
                 {
-                    var outputNotebook = resultNotebook.Serialize();
+                    var outputNotebook = resultNotebook.SerializeToJupyter();
                     if (options.OutputPath is null)
                     {
                         ansiConsole.Write(outputNotebook);

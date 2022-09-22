@@ -1,6 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
+using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
@@ -9,27 +7,38 @@ using Spectre.Console;
 
 namespace dotnet_repl;
 
-public class InputKernel : Kernel, IKernelCommandHandler<RequestInput>
+public class InputKernel :
+    Kernel,
+    IKernelCommandHandler<RequestInput>
 {
     public InputKernel() : base("ask", null, null)
     {
     }
 
-    public Task HandleAsync(RequestInput command, KernelInvocationContext context)
+    public Func<string, Task<string?>>? GetInputValueAsync { get; set; }
+
+    public async Task HandleAsync(RequestInput command, KernelInvocationContext context)
     {
-        switch (command.InputTypeHint)
+        if (GetInputValueAsync is not null &&
+            await GetInputValueAsync(command.ValueName) is { } value &&
+            !string.IsNullOrWhiteSpace(value))
         {
-            default:
-                var value = AnsiConsole.Ask<string>($"Please provide a value for {command.Prompt}");
-
-                if (value is { })
-                {
-                    context.Publish(new InputProduced(value, command));
-                }
-
-                break;
+            context.Publish(new InputProduced(value, command));
         }
+        else
+        {
+            switch (command.InputTypeHint)
+            {
+                default:
+                    value = AnsiConsole.Ask<string>($"Please provide a value for {command.ValueName}");
 
-        return Task.CompletedTask;
+                    if (value is { })
+                    {
+                        context.Publish(new InputProduced(value, command));
+                    }
+
+                    break;
+            }
+        }
     }
 }
