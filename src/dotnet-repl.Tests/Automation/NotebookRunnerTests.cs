@@ -91,8 +91,10 @@ public class NotebookRunnerTests : IDisposable
         this.Assent(resultContent, _assentConfiguration);
     }
 
-    [Fact]
-    public async Task Parameters_can_be_passed_to_input_fields_declared_in_the_notebook()
+    [Theory]
+    [InlineData("abc")]
+    [InlineData("ABC")] 
+    public async Task Parameters_can_be_passed_to_input_fields_declared_in_the_notebook(string passedParamName)
     {
         var dibContent = @"
 #!value --name abc --from-value @input:""abc""
@@ -103,7 +105,7 @@ abc.Display();
 ";
         var inputs = new Dictionary<string, string>
         {
-            ["abc"] = "hello!"
+            [passedParamName] = "hello!"
         };
 
         using var kernel = KernelBuilder.CreateKernel(new StartupOptions
