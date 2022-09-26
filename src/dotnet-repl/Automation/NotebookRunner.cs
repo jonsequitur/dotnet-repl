@@ -31,6 +31,9 @@ public class NotebookRunner
 
         if (parameters is not null)
         {
+            // incoming parameters are treated case insensitively
+            parameters = new Dictionary<string, string>(parameters, StringComparer.InvariantCultureIgnoreCase);
+
             var inputKernel = _kernel.ChildKernels.OfType<InputKernel>().FirstOrDefault();
 
             if (inputKernel is not null)

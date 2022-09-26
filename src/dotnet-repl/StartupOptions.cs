@@ -38,6 +38,7 @@ public class StartupOptions
     public OutputFormat OutputFormat { get; }
 
     public FileInfo? OutputPath { get; }
+
     public IDictionary<string, string>? Inputs { get; set; }
 
     public bool IsAutomationMode => ExitAfterRun || OutputPath is { };
