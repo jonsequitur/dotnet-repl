@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
@@ -187,7 +187,7 @@ public static class CommandLineParser
 
                     foreach (var inputField in inputFields)
                     {
-                        table.AddRow(inputField.Prompt, inputField.TypeHint, $"--input {inputField.Prompt}=\"parameter value\"");
+                        table.AddRow(inputField.ValueName, inputField.TypeHint, $"--input {inputField.ValueName}=\"parameter value\"");
                     }
 
                     console.Write(table);
