@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
@@ -267,11 +267,7 @@ public static class CommandLineParser
                 case OutputFormat.ipynb:
                 {
                     var outputNotebook = resultNotebook.SerializeToJupyter();
-                    if (options.OutputPath is null)
-                    {
-                        ansiConsole.Write(outputNotebook);
-                    }
-                    else
+                    if (options.OutputPath is not null)
                     {
                         await File.WriteAllTextAsync(options.OutputPath.FullName, outputNotebook);
                     }
