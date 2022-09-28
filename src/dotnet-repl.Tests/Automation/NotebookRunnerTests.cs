@@ -52,10 +52,8 @@ public class NotebookRunnerTests : IDisposable
     {
         var result = await _parser.InvokeAsync($"--notebook \"{_directory}/succeed.ipynb\" --exit-after-run", console);
 
-        var output = _writer.ToString();
         console.Error.ToString().Should().BeEmpty();
         result.Should().Be(0);
-        output.Should().Contain("Success!");
     }
 
     [Fact]
@@ -63,10 +61,8 @@ public class NotebookRunnerTests : IDisposable
     {
         var result = await _parser.InvokeAsync($"--notebook \"{_directory}/fail.ipynb\" --exit-after-run", console);
 
-        var output = _writer.ToString();
         console.Error.ToString().Should().BeEmpty();
         result.Should().Be(2);
-        output.Should().Contain("Oops!");
     }
 
     [Fact]

@@ -187,7 +187,7 @@ public static class CommandLineParser
 
                     foreach (var inputField in inputFields)
                     {
-                        table.AddRow(inputField.Prompt, inputField.TypeHint, $"--input {inputField.Prompt}=\"parameter value\"");
+                        table.AddRow(inputField.ValueName, inputField.TypeHint, $"--input {inputField.ValueName}=\"parameter value\"");
                     }
 
                     console.Write(table);
@@ -267,11 +267,7 @@ public static class CommandLineParser
                 case OutputFormat.ipynb:
                 {
                     var outputNotebook = resultNotebook.SerializeToJupyter();
-                    if (options.OutputPath is null)
-                    {
-                        ansiConsole.Write(outputNotebook);
-                    }
-                    else
+                    if (options.OutputPath is not null)
                     {
                         await File.WriteAllTextAsync(options.OutputPath.FullName, outputNotebook);
                     }

@@ -21,7 +21,7 @@ public static class DocumentParser
     }
 
     public static async Task<InteractiveDocument> LoadInteractiveDocumentAsync(
-        FileInfo file, 
+        FileInfo file,
         KernelInfoCollection kernelInfos)
     {
         var fileContents = await File.ReadAllTextAsync(file.FullName);
@@ -30,6 +30,13 @@ public static class DocumentParser
         {
             ".ipynb" => Notebook.Parse(fileContents, kernelInfos),
             ".dib" => CodeSubmission.Parse(fileContents, kernelInfos),
+
+            ".cs" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "csharp") },
+            ".csx" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "csharp") },
+            ".fs" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "fsharp") },
+            ".fsx" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "fsharp") },
+            ".ps1" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "pwsh") },
+            
             _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
         };
     }
