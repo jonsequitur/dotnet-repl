@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using Recipes;
 using Spectre.Console;
@@ -41,7 +43,7 @@ internal static class KernelExtensions
         return kernel;
     }
 
-    public static TKernel UseDebugDirective<TKernel>(this TKernel kernel)
+    public static TKernel UseDebugMagicCommand<TKernel>(this TKernel kernel)
         where TKernel : Kernel
     {
         var debug = new Command("#!debug");
@@ -99,6 +101,35 @@ internal static class KernelExtensions
         kernel.AddDirective(help);
 
         return kernel;
+    }
+
+    public static T UseImportMagicCommand<T>(this T kernel)
+        where T : Kernel
+    {
+        var command = new Command(
+            "#!import",
+            "Run all of the code in the specified notebook, source code, or script file.");
+        var fileArgument = new Argument<FileInfo>("file").ExistingOnly();
+        command.AddArgument(fileArgument);
+        command.SetHandler(
+            async context =>
+            {
+                var file = context.ParseResult.GetValueForArgument(fileArgument);
+
+                var document = await DocumentParser.LoadInteractiveDocumentAsync(
+                                   file,
+                                   (kernel.RootKernel as CompositeKernel)?.CreateKernelInfos());
+
+                foreach (var element in document.Elements)
+                {
+                    await kernel.RootKernel.SendAsync(new SubmitCode(element.Contents, element.KernelName));
+                }
+            });
+
+        kernel.AddDirective(command);
+
+        return kernel;
+        
     }
 
     public static T UseTableFormattingForEnumerables<T>(this T kernel)

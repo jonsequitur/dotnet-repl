@@ -50,7 +50,7 @@ public class NotebookRunnerTests : IDisposable
     [Fact]
     public async Task When_an_ipynb_is_run_and_no_error_is_produced_then_the_exit_code_is_0()
     {
-        var result = await _parser.InvokeAsync($"--notebook \"{_directory}/succeed.ipynb\" --exit-after-run", console);
+        var result = await _parser.InvokeAsync($"--run \"{_directory}/succeed.ipynb\" --exit-after-run", console);
 
         console.Error.ToString().Should().BeEmpty();
         result.Should().Be(0);
@@ -59,7 +59,7 @@ public class NotebookRunnerTests : IDisposable
     [Fact]
     public async Task When_an_ipynb_is_run_and_an_error_is_produced_from_a_cell_then_the_exit_code_is_2()
     {
-        var result = await _parser.InvokeAsync($"--notebook \"{_directory}/fail.ipynb\" --exit-after-run", console);
+        var result = await _parser.InvokeAsync($"--run \"{_directory}/fail.ipynb\" --exit-after-run", console);
 
         console.Error.ToString().Should().BeEmpty();
         result.Should().Be(2);

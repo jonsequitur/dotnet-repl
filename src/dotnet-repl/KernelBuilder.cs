@@ -28,8 +28,9 @@ public static class KernelBuilder
 
         var compositeKernel = new CompositeKernel()
                               .UseAboutMagicCommand()
-                              .UseDebugDirective()
+                              .UseDebugMagicCommand()
                               .UseHelpMagicCommand()
+                              .UseImportMagicCommand()
                               .UseQuitCommand();
 
         compositeKernel.AddMiddleware(async (command, context, next) =>

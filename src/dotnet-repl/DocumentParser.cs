@@ -36,6 +36,8 @@ public static class DocumentParser
             ".fs" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "fsharp") },
             ".fsx" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "fsharp") },
             ".ps1" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "pwsh") },
+            ".html" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "html") },
+            ".js" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "javascript") },
             
             _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
         };
