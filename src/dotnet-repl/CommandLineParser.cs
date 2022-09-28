@@ -33,12 +33,11 @@ public static class CommandLineParser
             "fsharp",
             "pwsh",
             "javascript",
-            "html",
-            "sql");
+            "html");
 
-    public static Option<FileInfo> NotebookOption = new Option<FileInfo>(
-            "--notebook",
-            description: "Run all of the cells in the specified notebook file")
+    public static Option<FileInfo> RunOption = new Option<FileInfo>(
+            "--run",
+            description: "Run all of the code in the specified notebook, source code, or script file. To exit when done, set the --exit-after-run option.")
         {
             ArgumentHelpName = "PATH"
         }
@@ -46,7 +45,7 @@ public static class CommandLineParser
 
     public static Option<bool> ExitAfterRunOption = new(
         "--exit-after-run",
-        $"Exit after the file specified by {NotebookOption.Aliases.First()} has run");
+        $"Exit after the file specified by {RunOption.Aliases.First()} has run");
 
     public static Option<DirectoryInfo> WorkingDirOption = new Option<DirectoryInfo>(
             "--working-dir",
@@ -82,7 +81,7 @@ public static class CommandLineParser
 
     public static Option<OutputFormat> OutputFormatOption = new(
         "--output-format",
-        description: $"The output format to be used when running a notebook with the {NotebookOption.Aliases.First()} and {ExitAfterRunOption.Aliases.First()} options",
+        description: $"The output format to be used when running a notebook with the {RunOption.Aliases.First()} and {ExitAfterRunOption.Aliases.First()} options",
         getDefaultValue: () => OutputFormat.ipynb);
 
     public static Parser Create(
@@ -94,7 +93,7 @@ public static class CommandLineParser
         {
             LogPathOption,
             DefaultKernelOption,
-            NotebookOption,
+            RunOption,
             WorkingDirOption,
             ExitAfterRunOption,
             OutputFormatOption,
@@ -115,7 +114,7 @@ public static class CommandLineParser
             new StartupOptionsBinder(
                 DefaultKernelOption,
                 WorkingDirOption,
-                NotebookOption,
+                RunOption,
                 LogPathOption,
                 ExitAfterRunOption,
                 OutputFormatOption,
@@ -140,7 +139,7 @@ public static class CommandLineParser
 
             var outputFormatOption = new Option<OutputFormat>(
                 "--output-format",
-                description: $"The output format to be used when running a notebook with the {NotebookOption.Aliases.First()} and {ExitAfterRunOption.Aliases.First()} options",
+                description: $"The output format to be used when running a notebook with the {RunOption.Aliases.First()} and {ExitAfterRunOption.Aliases.First()} options",
                 getDefaultValue: () => OutputFormat.ipynb);
 
             var command = new Command("convert")
@@ -252,7 +251,7 @@ public static class CommandLineParser
             if (notebook is null)
             {
                 // TODO: (StartAsync) move this validation to the parser configuration
-                ansiConsole.WriteLine($"Option {ExitAfterRunOption.Aliases.First()} option cannot be used without also specifying the {NotebookOption.Aliases.First()} option.");
+                ansiConsole.WriteLine($"Option {ExitAfterRunOption.Aliases.First()} option cannot be used without also specifying the {RunOption.Aliases.First()} option.");
                 return disposables;
             }
 

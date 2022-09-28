@@ -6,10 +6,14 @@
     },
     "run and exit, .trx": {
       "commandName": "Project",
-      "commandLineArgs": "--notebook \"C:\\temp\\automation\\parameterized.dib\" --output-format ipynb --output-path c:\\temp\\automation\\parameterized.dib.vsoutput.ipynb --exit-after-run --input y=\"oh hey there!\""
+      "commandLineArgs": "--run \"C:\\temp\\automation\\parameterized.dib\" --output-format ipynb --output-path c:\\temp\\automation\\parameterized.dib.vsoutput.ipynb --exit-after-run --input y=\"oh hey there!\""
     },
     "REPL": {
       "commandName": "Project"
+    },
+    "REPL with --run": {
+      "commandName": "Project",
+      "commandLineArgs": "--run c:\\temp\\automation\\github.html"
     }
   }
 }

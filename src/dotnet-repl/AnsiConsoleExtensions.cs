@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Text;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Events;
 using Spectre.Console;
 using Spectre.Console.Rendering;
@@ -138,7 +139,7 @@ internal static class AnsiConsoleExtensions
 
     private static Markup GetMarkup(DisplayEvent @event)
     {
-        var formattedValue = @event.FormattedValues.First();
+        var formattedValue = @event.FormattedValues.FirstOrDefault() ?? new FormattedValue("text/plain", "");
 
         var markup = formattedValue.MimeType switch
         {
