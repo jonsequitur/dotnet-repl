@@ -14,6 +14,10 @@
     "REPL with --run": {
       "commandName": "Project",
       "commandLineArgs": "--run c:\\temp\\automation\\github.html"
+    },
+    "run and exit, params": {
+      "commandName": "Project",
+      "commandLineArgs": " --run c:\\temp\\automation\\script.dib --input greeting=\"Hey!\""
     }
   }
 }

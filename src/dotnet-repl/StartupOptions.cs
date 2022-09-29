@@ -8,7 +8,7 @@ public class StartupOptions
     public StartupOptions(
         string defaultKernel = "csharp",
         DirectoryInfo? workingDir = null,
-        FileInfo? notebook = null,
+        FileInfo? fileToRun = null,
         DirectoryInfo? logPath = null,
         bool exitAfterRun = false,
         OutputFormat outputFormat = OutputFormat.ipynb,
@@ -17,7 +17,7 @@ public class StartupOptions
     {
         DefaultKernelName = defaultKernel;
         WorkingDir = workingDir ?? new DirectoryInfo(Directory.GetCurrentDirectory());
-        Notebook = notebook;
+        FileToRun = fileToRun;
         LogPath = logPath;
         ExitAfterRun = exitAfterRun;
         OutputFormat = outputFormat;
@@ -31,7 +31,7 @@ public class StartupOptions
 
     public DirectoryInfo WorkingDir { get; }
 
-    public FileInfo? Notebook { get; set; }
+    public FileInfo? FileToRun { get; set; }
 
     public bool ExitAfterRun { get; set; }
 
