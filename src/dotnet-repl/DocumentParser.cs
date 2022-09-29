@@ -30,7 +30,6 @@ public static class DocumentParser
         {
             ".ipynb" => Notebook.Parse(fileContents, kernelInfos),
             ".dib" => CodeSubmission.Parse(fileContents, kernelInfos),
-
             ".cs" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "csharp") },
             ".csx" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "csharp") },
             ".fs" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "fsharp") },
@@ -38,7 +37,6 @@ public static class DocumentParser
             ".ps1" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "pwsh") },
             ".html" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "html") },
             ".js" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "javascript") },
-            
             _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
         };
     }

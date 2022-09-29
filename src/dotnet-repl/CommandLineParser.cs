@@ -56,14 +56,21 @@ public static class CommandLineParser
     public static Option<IDictionary<string, string>> InputsOption = new(
         "--input",
         description:
-        "Specifies in a value for @input tokens in magic commands in the notebook, using the format --input <key>=<value>",
+        "Specifies in a value for @input tokens in magic commands in the notebook, using the format --input <key>=<value>. Values containing spaces should be wrapped in quotes.",
         parseArgument: result =>
         {
             var dict = new Dictionary<string, string>();
 
             foreach (var token in result.Tokens.Select(t => t.Value))
             {
-                var keyAndValue = token.Split("=");
+                var keyAndValue = token.Split("=", 2);
+
+                if (keyAndValue.Length != 2)
+                {
+                    result.ErrorMessage = "The --input option requires an argument in the format <key>=<value>";
+                    return null;
+                }
+
                 dict[keyAndValue[0]] = keyAndValue[1];
             }
 
@@ -76,7 +83,7 @@ public static class CommandLineParser
     public static Option<FileInfo> OutputPathOption = new Option<FileInfo>(
             "--output-path",
             description:
-            "Run the file specified by --notebook and writes the output to the file specified by --output-path")
+            $"Run the file specified by {RunOption.Aliases.First()} and writes the output to the file specified by --output-path")
         .LegalFilePathsOnly();
 
     public static Option<OutputFormat> OutputFormatOption = new(
@@ -99,7 +106,6 @@ public static class CommandLineParser
             OutputFormatOption,
             OutputPathOption,
             InputsOption,
-            ConvertCommand(),
             DescribeCommand(),
         };
 
@@ -127,35 +133,8 @@ public static class CommandLineParser
                .UseHelpBuilder(_ => new SpectreHelpBuilder(LocalizationResources.Instance))
                .Build();
 
-        Command ConvertCommand()
-        {
-            // FIX: (ConvertCommand) 
-
-            var notebookOption = new Option<FileInfo>("--notebook", "The notebook file to convert")
-                .ExistingOnly();
-
-            var outputPathOption = new Option<FileInfo>("--output-path")
-                .LegalFilePathsOnly();
-
-            var outputFormatOption = new Option<OutputFormat>(
-                "--output-format",
-                description: $"The output format to be used when running a notebook with the {RunOption.Aliases.First()} and {ExitAfterRunOption.Aliases.First()} options",
-                getDefaultValue: () => OutputFormat.ipynb);
-
-            var command = new Command("convert")
-            {
-                notebookOption,
-                outputPathOption,
-                outputFormatOption
-            };
-
-            return command;
-        }
-
         Command DescribeCommand()
         {
-            // FIX: (DescribeCommand) 
-
             var notebookArgument = new Argument<FileInfo>("notebook")
                 .ExistingOnly();
 
@@ -216,7 +195,7 @@ public static class CommandLineParser
 
         InteractiveDocument? notebook = default;
 
-        if (options.Notebook is { } file)
+        if (options.FileToRun is { } file)
         {
             notebook = await DocumentParser.LoadInteractiveDocumentAsync(file, kernel);
         }
@@ -225,7 +204,14 @@ public static class CommandLineParser
         {
             if (isTerminal)
             {
-                ansiConsole.Announce($"📓 Running notebook: {options.Notebook}");
+                if (options.FileToRun?.Extension is ".ipynb" or ".dib")
+                {
+                    ansiConsole.Announce($"📓 Running notebook: {options.FileToRun}");
+                }
+                else
+                {
+                    ansiConsole.Announce($"📄 Running file: {options.FileToRun}");
+                }
             }
         }
 
