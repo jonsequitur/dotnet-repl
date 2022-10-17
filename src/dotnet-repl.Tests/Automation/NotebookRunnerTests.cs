@@ -66,6 +66,25 @@ public class NotebookRunnerTests : IDisposable
     }
 
     [Fact]
+    public async Task Output_ipynb_metadata_reflects_default_kernel()
+    {
+        using var kernel = KernelBuilder.CreateKernel();
+
+        kernel.DefaultKernelName = "fsharp";
+
+        var document = new InteractiveDocument
+        {
+            new("123", "csharp")
+        };
+
+        var runner = new NotebookRunner(kernel);
+
+        var outputDoc = await runner.RunNotebookAsync(document);
+
+        outputDoc.GetDefaultKernelName().Should().Be("fsharp");
+    }
+
+    [Fact]
     public async Task Notebook_runner_produces_expected_output()
     {
         using var kernel = KernelBuilder.CreateKernel();
@@ -82,7 +101,7 @@ public class NotebookRunnerTests : IDisposable
 
         NormalizeMetadata(resultDoc);
 
-        var resultContent = resultDoc.SerializeToJupyter();
+        var resultContent = resultDoc.ToJupyterJson();
 
         this.Assent(resultContent, _assentConfiguration);
     }

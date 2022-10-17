@@ -9,6 +9,7 @@ using dotnet_repl;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Documents;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Automation;
@@ -27,7 +28,7 @@ public class NotebookRunner
         IDictionary<string, string>? parameters = null,
         CancellationToken cancellationToken = default)
     {
-        var documentElements = new List<InteractiveDocumentElement>();
+        var resultDocument = new InteractiveDocument();
 
         if (parameters is not null)
         {
@@ -156,10 +157,12 @@ public class NotebookRunner
             resultElement.Metadata.Add("dotnet_repl_cellExecutionStartTime", startTime);
             resultElement.Metadata.Add("dotnet_repl_cellExecutionEndTime", DateTimeOffset.Now);
 
-            documentElements.Add(resultElement);
+            resultDocument.Add(resultElement);
         }
 
-        return new(documentElements);
+        resultDocument.WithJupyterMetadata(_kernel.DefaultKernelName ?? notebook.GetDefaultKernelName() ?? "csharp");
+
+        return resultDocument;
     }
 
     private TextElement? CreateBufferedStandardOutAndErrElement(

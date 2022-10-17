@@ -25,7 +25,6 @@ public class CommandLineParserTests
 
         console.Out.ToString().Should().Be("snazzy!");
 
-        // TODO-JOSEQU (Help_is_snazzy) write test
         Assert.True(false, "Test Help_is_snazzy is not written yet.");
     }
 
