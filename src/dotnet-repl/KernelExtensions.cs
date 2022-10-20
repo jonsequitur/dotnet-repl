@@ -102,36 +102,7 @@ internal static class KernelExtensions
 
         return kernel;
     }
-
-    public static T UseImportMagicCommand<T>(this T kernel)
-        where T : Kernel
-    {
-        var command = new Command(
-            "#!import",
-            "Run all of the code in the specified notebook, source code, or script file.");
-        var fileArgument = new Argument<FileInfo>("file").ExistingOnly();
-        command.AddArgument(fileArgument);
-        command.SetHandler(
-            async context =>
-            {
-                var file = context.ParseResult.GetValueForArgument(fileArgument);
-
-                var document = await DocumentParser.LoadInteractiveDocumentAsync(
-                                   file,
-                                   (kernel.RootKernel as CompositeKernel)?.CreateKernelInfos());
-
-                foreach (var element in document.Elements)
-                {
-                    await kernel.RootKernel.SendAsync(new SubmitCode(element.Contents, element.KernelName));
-                }
-            });
-
-        kernel.AddDirective(command);
-
-        return kernel;
-        
-    }
-
+    
     public static T UseTableFormattingForEnumerables<T>(this T kernel)
         where T : Kernel
     {

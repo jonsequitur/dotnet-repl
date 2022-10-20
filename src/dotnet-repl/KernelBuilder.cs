@@ -86,9 +86,7 @@ public static class KernelBuilder
             var jsKernel = await playwrightConnector.CreateKernelAsync("javascript");
             return (htmlKernel, jsKernel);
         }).Result;
-
-        ((ProxyKernel)jsKernel).UseValueSharing();
-
+        
         compositeKernel.Add(jsKernel, new[] { "js" });
         compositeKernel.Add(htmlKernel);
         compositeKernel.Add(new MarkdownKernel());

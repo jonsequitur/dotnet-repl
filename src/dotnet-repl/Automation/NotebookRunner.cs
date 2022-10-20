@@ -160,7 +160,15 @@ public class NotebookRunner
             resultDocument.Add(resultElement);
         }
 
-        resultDocument.WithJupyterMetadata(_kernel.DefaultKernelName ?? notebook.GetDefaultKernelName() ?? "csharp");
+        var defaultKernelName = _kernel.DefaultKernelName;
+
+        var defaultKernel = _kernel.ChildKernels.SingleOrDefault(k => k.Name == defaultKernelName);
+
+        var languageName = defaultKernel.KernelInfo.LanguageName ??
+                           notebook.GetDefaultKernelName() ??
+                           "C#";
+
+        resultDocument.WithJupyterMetadata(languageName);
 
         return resultDocument;
     }

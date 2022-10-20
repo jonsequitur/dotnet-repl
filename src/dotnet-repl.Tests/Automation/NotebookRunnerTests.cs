@@ -21,7 +21,6 @@ namespace dotnet_repl.Tests.Automation;
 public class NotebookRunnerTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
-    private readonly StringWriter _writer;
     private readonly string _directory = Path.GetDirectoryName(PathUtility.PathToCurrentSourceFile());
     private readonly Parser _parser;
     private readonly TestConsole console = new();
@@ -33,16 +32,17 @@ public class NotebookRunnerTests : IDisposable
 
     public NotebookRunnerTests()
     {
+        StringWriter writer;
         var ansiConsole = AnsiConsole.Create(new AnsiConsoleSettings
         {
             Ansi = AnsiSupport.Yes,
             Interactive = InteractionSupport.Yes,
-            Out = new AnsiConsoleOutput(_writer = new StringWriter())
+            Out = new AnsiConsoleOutput(writer = new StringWriter())
         });
 
         _parser = CommandLineParser.Create(ansiConsole, registerForDisposal: d => _disposables.Add(d));
 
-        _disposables.Add(_writer);
+        _disposables.Add(writer);
     }
 
     public void Dispose() => _disposables.Dispose();
@@ -79,11 +79,13 @@ public class NotebookRunnerTests : IDisposable
 
         var runner = new NotebookRunner(kernel);
 
-        var outputDoc = await runner.RunNotebookAsync(document);
+        var outputDoc =     await runner.RunNotebookAsync(document);
+
+        outputDoc = Notebook.Parse(outputDoc.ToJupyterJson());
 
         outputDoc.GetDefaultKernelName().Should().Be("fsharp");
     }
-
+    
     [Fact]
     public async Task Notebook_runner_produces_expected_output()
     {
