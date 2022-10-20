@@ -251,7 +251,7 @@ public static class CommandLineParser
             {
                 case OutputFormat.ipynb:
                 {
-                    var outputNotebook = resultNotebook.SerializeToJupyter();
+                    var outputNotebook = resultNotebook.ToJupyterJson();
                     if (options.OutputPath is not null)
                     {
                         await File.WriteAllTextAsync(options.OutputPath.FullName, outputNotebook);

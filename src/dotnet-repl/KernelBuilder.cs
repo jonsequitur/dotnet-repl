@@ -7,7 +7,6 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
-using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 
 namespace dotnet_repl;
@@ -87,9 +86,7 @@ public static class KernelBuilder
             var jsKernel = await playwrightConnector.CreateKernelAsync("javascript");
             return (htmlKernel, jsKernel);
         }).Result;
-
-        ((ProxyKernel)jsKernel).UseValueSharing(new JavaScriptValueDeclarer());
-
+        
         compositeKernel.Add(jsKernel, new[] { "js" });
         compositeKernel.Add(htmlKernel);
         compositeKernel.Add(new MarkdownKernel());
@@ -97,13 +94,6 @@ public static class KernelBuilder
         compositeKernel.Add(new KqlDiscoverabilityKernel());
 
         var inputKernel = new InputKernel();
-
-        inputKernel.RegisterCommandHandler<RequestInput>(async (input, context) =>
-        {
-            // FIX: (CreateKernel) this should not be necessary
-
-            await ((IKernelCommandHandler<RequestInput>)inputKernel).HandleAsync(input, context);
-        });
 
         compositeKernel.Add(inputKernel);
         compositeKernel.SetDefaultTargetKernelNameForCommand(

@@ -40,7 +40,7 @@ internal class DefaultSpectreFormatterSet
                 var values = value
                              .Schema
                              .Fields
-                             .Select(f => Markup.Escape(row[f.Name].ToDisplayString("text/plain")))
+                             .Select(f => Markup.Escape(row.Where(r => r.Key == f.Name).Select(r => r.Value).FirstOrDefault().ToDisplayString("text/plain")))
                              .ToArray();
 
                 table.AddRow(values);

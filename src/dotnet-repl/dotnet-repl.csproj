@@ -25,16 +25,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.22476.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.22476.1" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.Documents" Version="1.0.0-beta.22476.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.22476.1" />
-    <PackageReference Include="Microsoft.Dotnet.Interactive.Browser" Version="1.0.0-beta.22476.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.22476.1" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.22519.6" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.22519.6" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.Documents" Version="1.0.0-beta.22519.6" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.22519.6" />
+    <PackageReference Include="Microsoft.Dotnet.Interactive.Browser" Version="1.0.0-beta.22519.6" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.22519.6" />
     <PackageReference Include="radline" Version="0.6.0" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageReference Include="system.reactive" Version="5.0.0" />
-    <PackageReference Include="Spectre.Console" Version="0.45.1-preview.0.8" />
+    <PackageReference Include="Spectre.Console" Version="0.45.1-preview.0.28" />
     <PackageReference Include="trexlib" Version="1.0.188" />
     <PackageReference Include="pocket.disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>

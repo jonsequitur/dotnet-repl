@@ -116,7 +116,7 @@ If you also want to capture the notebook output when it runs, you can do so by s
 
 If the REPL is already running, you can import a file into it and run it immediately using the `#!import` magic command. All of the same file types that `--run` supports are supported by `#!import`.
 
-## Pass parameters when running a notebook or script
+## 🏀 Pass parameters when running a notebook or script
 
 If a notebook contains magic commands with `@input` tokens, running them in a notebook editor like [.NET Interactive Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) will create a prompt for user input. Values for these inputs can provided on the command line using the `--input` option.
 
