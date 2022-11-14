@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using Recipes;
 using Spectre.Console;
