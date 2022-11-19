@@ -37,4 +37,18 @@ public class CompletionTests : ReplInteractionTests
 
         buffer.Content.Should().Be("Console.Zzz");
     }
+
+    [Fact]
+    public void It_moves_the_cursor_to_the_insertion_point_if_applicable()
+    {
+        var buffer = new LineBuffer("");
+        buffer.Insert("Console.WriteL");
+        buffer.MoveEnd();
+
+        var context = new LineEditorContext(buffer, ServiceProvider);
+        context.Execute(new CompletionCommand(AutoComplete.Next));
+
+        buffer.Content.Should().Be("Console.WriteLine()");
+        buffer.CursorPosition.Should().Be("Console.WriteLine(".Length);
+    }
 }
