@@ -38,7 +38,7 @@ public class CompletionTests : ReplInteractionTests
         buffer.Content.Should().Be("Console.Zzz");
     }
 
-    [Fact(Skip = "Temporary ")]
+    [Fact]
     public void It_moves_the_cursor_to_the_insertion_point_if_applicable()
     {
         var buffer = new LineBuffer("");

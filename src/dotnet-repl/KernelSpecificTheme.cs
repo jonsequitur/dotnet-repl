@@ -38,6 +38,7 @@ public abstract class KernelSpecificTheme : Theme
         "javascript" => new JavaScriptTheme(),
         "sql" => new SqlTheme(),
         "html" => new HtmlTheme(),
+        "httpRequest" => new HttpRequestTheme(),
         _ => null
     };
 }
@@ -63,6 +64,15 @@ public class PowerShellTheme : KernelSpecificTheme
     public override string KernelDisplayName => "PowerShell";
 
     public override string PromptText => "PS";
+}
+
+public class HttpRequestTheme : KernelSpecificTheme
+{
+    public override Style AccentStyle => new(Color.Aqua);
+
+    public override string KernelDisplayName => "HTTP Request";
+
+    public override string PromptText => "HTTP";
 }
 
 public class JavaScriptTheme : KernelSpecificTheme
