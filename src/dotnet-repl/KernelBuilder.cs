@@ -5,6 +5,7 @@ using Microsoft.DotNet.Interactive.Browser;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.HttpRequest;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Pocket;
 
@@ -81,8 +82,8 @@ public static class KernelBuilder
 
         var (htmlKernel, jsKernel) = Task.Run(async () =>
         {
-            var htmlKernel = await playwrightConnector.CreateKernelAsync("html");
-            var jsKernel = await playwrightConnector.CreateKernelAsync("javascript");
+            var htmlKernel = await playwrightConnector.CreateKernelAsync("html", BrowserKernelLanguage.Html );
+            var jsKernel = await playwrightConnector.CreateKernelAsync("javascript", BrowserKernelLanguage.JavaScript);
             return (htmlKernel, jsKernel);
         }).Result;
         
@@ -98,6 +99,13 @@ public static class KernelBuilder
         compositeKernel.SetDefaultTargetKernelNameForCommand(
             typeof(RequestInput),
             inputKernel.Name);
+
+
+        var httpRequestExtension = new HttpRequestKernelExtension();
+        Task.Run(async () =>
+        {
+            await httpRequestExtension.OnLoadAsync(compositeKernel);
+        }).Wait();
 
         compositeKernel.DefaultKernelName = options.DefaultKernelName;
 
