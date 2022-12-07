@@ -8,6 +8,9 @@
     "dotnet_repl_cellExecutionEndTime": "0001-01-01T00:00:00+00:00",
     "dotnet_interactive": {
      "language": "csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -31,6 +34,9 @@
     "dotnet_repl_cellExecutionEndTime": "0001-01-01T00:00:00+00:00",
     "dotnet_interactive": {
      "language": "csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -54,6 +60,9 @@
     "dotnet_repl_cellExecutionEndTime": "0001-01-01T00:00:00+00:00",
     "dotnet_interactive": {
      "language": "csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -80,6 +89,9 @@
     "dotnet_repl_cellExecutionEndTime": "0001-01-01T00:00:00+00:00",
     "dotnet_interactive": {
      "language": "csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -105,13 +117,47 @@
     "dotnet_repl_cellExecutionEndTime": "0001-01-01T00:00:00+00:00",
     "dotnet_interactive": {
      "language": "csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
     {
      "data": {
       "text/html": [
-       "<div class=\"dni-plaintext\">An HTML display value</div>"
+       "<div class=\"dni-plaintext\"><pre>An HTML display value</pre></div><style>\r\n",
+       ".dni-code-hint {\r\n",
+       "    font-style: italic;\r\n",
+       "    overflow: hidden;\r\n",
+       "    white-space: nowrap;\r\n",
+       "}\r\n",
+       ".dni-treeview {\r\n",
+       "    white-space: nowrap;\r\n",
+       "}\r\n",
+       ".dni-treeview td {\r\n",
+       "    vertical-align: top;\r\n",
+       "    text-align: start;\r\n",
+       "}\r\n",
+       "details.dni-treeview {\r\n",
+       "    padding-left: 1em;\r\n",
+       "}\r\n",
+       "table td {\r\n",
+       "    text-align: start;\r\n",
+       "}\r\n",
+       "table tr { \r\n",
+       "    vertical-align: top; \r\n",
+       "    margin: 0em 0px;\r\n",
+       "}\r\n",
+       "table tr td pre \r\n",
+       "{ \r\n",
+       "    vertical-align: top !important; \r\n",
+       "    margin: 0em 0px !important;\r\n",
+       "} \r\n",
+       "table th {\r\n",
+       "    text-align: start;\r\n",
+       "}\r\n",
+       "</style>"
       ]
      },
      "metadata": {},
@@ -130,6 +176,9 @@
     "dotnet_repl_cellExecutionEndTime": "0001-01-01T00:00:00+00:00",
     "dotnet_interactive": {
      "language": "csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
