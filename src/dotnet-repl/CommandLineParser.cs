@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Automation;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using Microsoft.DotNet.Interactive.HttpRequest;
 using Pocket;
 using Spectre.Console;
 
@@ -192,6 +193,7 @@ public static class CommandLineParser
         }
 
         var kernel = KernelBuilder.CreateKernel(options);
+
 
         InteractiveDocument? notebook = default;
 

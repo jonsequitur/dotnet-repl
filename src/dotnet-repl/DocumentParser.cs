@@ -56,7 +56,7 @@ public static class DocumentParser
                 kernelAliases.Add(alias[2..]);
             }
 
-            kernelInfos.Add(new KernelInfo(kernelChooser.Name[2..], kernelAliases));
+            kernelInfos.Add(new KernelInfo(kernelChooser.Name[2..], aliases: kernelAliases));
         }
 
         return kernelInfos;

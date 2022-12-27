@@ -12,8 +12,9 @@ public class MarkdownKernel :
     Kernel,
     IKernelCommandHandler<SubmitCode>
 {
-    public MarkdownKernel() : base("markdown", "Markdown")
+    public MarkdownKernel() : base("markdown")
     {
+        KernelInfo.LanguageName = "Markdown";
     }
 
     public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
