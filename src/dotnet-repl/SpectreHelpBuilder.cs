@@ -41,7 +41,9 @@ internal class SpectreHelpBuilder : HelpBuilder
         {
             var panel = new Grid();
             panel.AddColumn(new GridColumn());
-            panel.AddRow(new FigletText(".NET REPL").Color(Color.SandyBrown).Alignment(Justify.Center));
+            var figletText = new FigletText(".NET REPL").Color(Color.SandyBrown);
+            figletText.Justification = Justify.Center;
+            panel.AddRow(figletText);
             console.Write(panel);
         };
 

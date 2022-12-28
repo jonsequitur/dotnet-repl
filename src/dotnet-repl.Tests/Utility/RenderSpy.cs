@@ -7,7 +7,7 @@ namespace dotnet_repl.Tests.Utility
     {
         public List<IRenderable> Renderables { get; } = new();
 
-        public IEnumerable<IRenderable> Process(RenderContext context, IEnumerable<IRenderable> renderables)
+        public IEnumerable<IRenderable> Process(RenderOptions options, IEnumerable<IRenderable> renderables)
         {
             Renderables.AddRange(renderables);
             return renderables;
