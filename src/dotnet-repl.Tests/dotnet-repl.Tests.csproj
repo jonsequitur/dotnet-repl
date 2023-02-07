@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Assent" Version="2.1.0" />
-    <PackageReference Include="fluentassertions" Version="6.8.0" />
+    <PackageReference Include="Assent" Version="2.2.0" />
+    <PackageReference Include="fluentassertions" Version="6.9.0" />
     <PackageReference Include="microsoft.extensions.dependencyinjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
     <PackageReference Include="pocketlogger.for.xunit" Version="0.6.1">

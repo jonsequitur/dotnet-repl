@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Automation;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
-using Microsoft.DotNet.Interactive.HttpRequest;
 using Pocket;
 using Spectre.Console;
 
@@ -69,7 +68,7 @@ public static class CommandLineParser
                 if (keyAndValue.Length != 2)
                 {
                     result.ErrorMessage = "The --input option requires an argument in the format <key>=<value>";
-                    return null;
+                    return new Dictionary<string, string>();
                 }
 
                 dict[keyAndValue[0]] = keyAndValue[1];

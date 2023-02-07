@@ -50,7 +50,10 @@ internal class SpectreHelpBuilder : HelpBuilder
     private HelpSectionDelegate CommandUsageSection(IAnsiConsole console) =>
         ctx =>
         {
-            console.Write(new Markup("🔵[sandybrown italic] Start the REPL like this:[/]\n\n"));
+            if (ctx.Command is RootCommand)
+            {
+                console.Write(new Markup("🔵[sandybrown italic] Start the REPL like this:[/]\n\n"));
+            }
 
             var panel = new Panel($"{ctx.Command.Name} [[[Magenta1]options[/]]]")
                         .NoBorder()
@@ -62,6 +65,11 @@ internal class SpectreHelpBuilder : HelpBuilder
     private HelpSectionDelegate OptionsSection(IAnsiConsole console) =>
         ctx =>
         {
+            if (!ctx.Command.Options.Any())
+            {
+                return;
+            }
+
             var table = new Table()
                         .AddColumn("[magenta1 italic]Option[/]")
                         .AddColumn("[magenta1 italic]Description[/]")
@@ -109,8 +117,13 @@ internal class SpectreHelpBuilder : HelpBuilder
 
     private static HelpSectionDelegate ReplHelpSection(IAnsiConsole console)
     {
-        return _ =>
+        return ctx =>
         {
+            if (ctx.Command is not RootCommand)
+            {
+                return;
+            }
+
             console.Write(new Markup("🟢[sandybrown italic] Once it's running, here are some things you can do:[/]\n\n"));
 
             var grid = new Grid();
