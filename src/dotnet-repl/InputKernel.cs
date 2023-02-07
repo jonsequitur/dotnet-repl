@@ -11,7 +11,7 @@ public class InputKernel :
     Kernel,
     IKernelCommandHandler<RequestInput>
 {
-    public InputKernel() : base("ask", null, null)
+    public InputKernel() : base("ask")
     {
     }
 

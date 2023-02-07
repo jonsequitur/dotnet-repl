@@ -18,6 +18,14 @@
     "run and exit, params": {
       "commandName": "Project",
       "commandLineArgs": " --run c:\\temp\\automation\\script.dib --input greeting=\"Hey!\""
+    },
+    "-h": {
+      "commandName": "Project",
+      "commandLineArgs": "-h"
+    },
+    "describe -h": {
+      "commandName": "Project",
+      "commandLineArgs": "describe -h"
     }
   }
 }

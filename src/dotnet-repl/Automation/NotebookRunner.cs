@@ -164,7 +164,7 @@ public class NotebookRunner
 
         var defaultKernel = _kernel.ChildKernels.SingleOrDefault(k => k.Name == defaultKernelName);
 
-        var languageName = defaultKernel.KernelInfo.LanguageName ??
+        var languageName = defaultKernel?.KernelInfo.LanguageName ??
                            notebook.GetDefaultKernelName() ??
                            "C#";
 

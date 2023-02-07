@@ -100,15 +100,9 @@ public static class KernelBuilder
             typeof(RequestInput),
             inputKernel.Name);
 
-
-        var httpRequestExtension = new HttpRequestKernelExtension();
-        Task.Run(async () =>
-        {
-            await httpRequestExtension.OnLoadAsync(compositeKernel);
-        }).Wait();
+        HttpRequestKernelExtension.Load(compositeKernel);
 
         compositeKernel.DefaultKernelName = options.DefaultKernelName;
-
         if (compositeKernel.DefaultKernelName == "fsharp")
         {
             var fsharpKernel = compositeKernel.FindKernelByName("fsharp");
