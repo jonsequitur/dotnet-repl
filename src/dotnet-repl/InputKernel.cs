@@ -19,8 +19,8 @@ public class InputKernel :
 
     public async Task HandleAsync(RequestInput command, KernelInvocationContext context)
     {
-        if (GetInputValueAsync is not null &&
-            await GetInputValueAsync(command.ValueName) is { } value &&
+        if (GetInputValueAsync is {} getInput &&
+            await getInput(command.ValueName) is { } value &&
             !string.IsNullOrWhiteSpace(value))
         {
             context.Publish(new InputProduced(value, command));
@@ -32,7 +32,7 @@ public class InputKernel :
                 default:
                     value = AnsiConsole.Ask<string>($"Please provide a value for {command.ValueName}");
 
-                    if (value is { })
+                    if (value is not null)
                     {
                         context.Publish(new InputProduced(value, command));
                     }

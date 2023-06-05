@@ -4,7 +4,6 @@ using System.Linq;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
-using Microsoft.DotNet.Interactive.ValueSharing;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 

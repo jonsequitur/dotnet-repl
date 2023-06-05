@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,17 +23,15 @@ public class FormattingTests
 
         var result = await kernel.SubmitCodeAsync("null");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<ReturnValueProduced>()
-            .Which
-            .FormattedValues
-            .Single()
-            .Value
-            .Should()
-            .Be("<null>");
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>()
+              .Which
+              .FormattedValues
+              .Single()
+              .Value
+              .Should()
+              .Be("<null>");
     }
 
     [Fact]
