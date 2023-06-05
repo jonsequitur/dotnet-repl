@@ -144,7 +144,7 @@ public class Repl : IDisposable
             {
                 var result = await RunKernelCommand(new SubmitCode(input));
 
-                if (await result.KernelEvents.LastAsync() is CommandFailed failed)
+                if (result.Events.Last() is CommandFailed)
                 {
                     setExitCode(2);
                 }
@@ -287,11 +287,5 @@ public class Repl : IDisposable
         Formatter.ResetToDefault();
         Formatter.DefaultMimeType = PlainTextFormatter.MimeType;
         new DefaultSpectreFormatterSet().Register();
-    }
-
-    internal static void UseHtmlFormatting()
-    {
-        Formatter.ResetToDefault();
-        Formatter.DefaultMimeType = HtmlFormatter.MimeType;
     }
 }

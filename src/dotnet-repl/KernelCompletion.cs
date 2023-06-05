@@ -33,10 +33,10 @@ public class KernelCompletion
 
         var result = await _kernel.SendAsync(command);
 
-        var completionsProduced = await result
-                                        .KernelEvents
-                                        .OfType<CompletionsProduced>()
-                                        .FirstOrDefaultAsync();
+        var completionsProduced = result
+                                  .Events
+                                  .OfType<CompletionsProduced>()
+                                  .FirstOrDefault();
 
         if (completionsProduced is null)
         {
