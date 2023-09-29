@@ -111,7 +111,7 @@ public class NotebookRunnerTests : IDisposable
     [Theory]
     [InlineData("abc")]
     [InlineData("ABC")] 
-    public async Task Parameters_can_be_passed_to_input_fields_declared_in_the_notebook(string passedParamName)
+    public async Task Parameters_can_be_passed_to_input_fields_declared_in_the_notebook_using_value(string passedParamName)
     {
         var dibContent = @"
 #!value --name abc --from-value @input:""abc""
@@ -123,6 +123,43 @@ abc.Display();
         var inputs = new Dictionary<string, string>
         {
             [passedParamName] = "hello!"
+        };
+
+        using var kernel = KernelBuilder.CreateKernel(new StartupOptions
+        {
+            ExitAfterRun = true,
+            Inputs = inputs
+        });
+
+        var inputDoc = CodeSubmission.Parse(dibContent, kernel.CreateKernelInfos());
+
+        var runner = new NotebookRunner(kernel);
+
+        var events = kernel.KernelEvents.ToSubscribedList();
+
+        await runner.RunNotebookAsync(inputDoc, inputs);
+
+        events.Should().NotContainErrors();
+
+        events.Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .Value
+              .Should()
+              .Be("hello!");
+    }
+
+    [Fact]
+    public async Task Parameters_can_be_passed_to_input_fields_declared_in_the_notebook_using_set()
+    {
+        var dibContent = @"
+#!set --name variableName --value @input:""abc""
+
+variableName.Display();
+";
+        var inputs = new Dictionary<string, string>
+        {
+            ["variableName"] = "hello!"
         };
 
         using var kernel = KernelBuilder.CreateKernel(new StartupOptions
