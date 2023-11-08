@@ -5,7 +5,7 @@ using Microsoft.DotNet.Interactive.Browser;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.HttpRequest;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Pocket;
 
@@ -100,7 +100,7 @@ public static class KernelBuilder
             typeof(RequestInput),
             inputKernel.Name);
 
-        HttpRequestKernelExtension.Load(compositeKernel);
+        HttpKernelExtension.Load(compositeKernel);
 
         compositeKernel.DefaultKernelName = options.DefaultKernelName;
         if (compositeKernel.DefaultKernelName == "fsharp")
