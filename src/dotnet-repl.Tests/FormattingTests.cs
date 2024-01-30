@@ -37,6 +37,6 @@ public class FormattingTests
     [Fact]
     public void List_expansion_is_limited()
     {
-        Enumerable.Range(1, 1000).ToDisplayString().Should().Contain("(more)");
+        Enumerable.Range(1, 1000).ToDisplayString().Should().Contain("(980 more)");
     }
 }
