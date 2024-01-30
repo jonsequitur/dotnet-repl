@@ -6,7 +6,7 @@ $toolLocation = ""
 $toolVersion = ""
 
 dotnet pack (Join-Path $thisDir "dotnet-repl.csproj") /p:Version=1.0.0
-$script:toolLocation = Join-Path $thisDir "bin" "debug"
+$script:toolLocation = Join-Path $thisDir "bin" "Release"
 $script:toolVersion = "1.0.0"
 
 if (Get-Command dotnet-repl -ErrorAction SilentlyContinue) {
