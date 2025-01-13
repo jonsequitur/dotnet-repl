@@ -151,7 +151,7 @@ public static class CommandLineParser
 
                 var console = ansiConsole ?? AnsiConsole.Console;
 
-                var inputFields = doc.GetInputFields();
+                var inputFields = doc.GetInputFields(_ => new DirectiveParseResult());
 
                 if (inputFields.Any())
                 {

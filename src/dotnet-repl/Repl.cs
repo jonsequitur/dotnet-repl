@@ -72,7 +72,7 @@ public class Repl : IDisposable
                 root = parent;
             }
 
-            if (_kernel.Directives.FirstOrDefault(c => $"Directive: {c.Name}" == command.ToString()) is { } directive)
+            if (_kernel.KernelInfo.SupportedDirectives.FirstOrDefault(c => $"Directive: {c.Name}" == command.ToString()) is { } directive)
                 LineEditor = GetLineEditorLanguageLocal(directive.Name[2..]);
         });
 

@@ -110,16 +110,14 @@ public class NotebookRunnerTests : IDisposable
 
     [Theory]
     [InlineData("abc")]
-    [InlineData("ABC")] 
+    [InlineData("ABC")]
     public async Task Parameters_can_be_passed_to_input_fields_declared_in_the_notebook(string passedParamName)
     {
-        var dibContent = @"
-#!value --name abc --from-value @input:""abc""
-
-#!csharp
-#!share --from value abc
-abc.Display();
-";
+        var dibContent = """
+                         #!csharp
+                         #!set --name abc --value @input:"abc"
+                         abc.Display();
+                         """;
         var inputs = new Dictionary<string, string>
         {
             [passedParamName] = "hello!"
@@ -153,7 +151,7 @@ abc.Display();
     {
         foreach (var element in document.Elements)
         {
-            if (element.Metadata is { })
+            if (element.Metadata is not null)
             {
                 if (element.Metadata.ContainsKey("dotnet_repl_cellExecutionStartTime"))
                 {

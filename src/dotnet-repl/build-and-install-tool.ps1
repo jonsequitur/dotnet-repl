@@ -5,7 +5,7 @@ $thisDir = Split-Path -Parent $PSCommandPath
 $toolLocation = ""
 $toolVersion = ""
 
-dotnet pack (Join-Path $thisDir "dotnet-repl.csproj") /p:Version=1.0.0
+dotnet pack -c debug (Join-Path $thisDir "dotnet-repl.csproj") /p:Version=1.0.0
 $script:toolLocation = Join-Path $thisDir "bin" "debug"
 $script:toolVersion = "1.0.0"
 
