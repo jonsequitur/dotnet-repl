@@ -90,9 +90,7 @@ public static class KernelBuilder
         compositeKernel.Add(jsKernel, new[] { "js" });
         compositeKernel.Add(htmlKernel);
         compositeKernel.Add(new MarkdownKernel());
-        compositeKernel.Add(new SqlDiscoverabilityKernel());
-        compositeKernel.Add(new KqlDiscoverabilityKernel());
-
+      
         var inputKernel = new InputKernel();
 
         compositeKernel.Add(inputKernel);
