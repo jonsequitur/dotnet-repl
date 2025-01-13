@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Documents;
 using KernelInfo = Microsoft.DotNet.Interactive.Documents.KernelInfo;
 
@@ -22,18 +22,13 @@ public static class DocumentParser
     {
         KernelInfoCollection kernelInfos = new();
 
-        var kernelChoosers = kernel.Directives.OfType<ChooseKernelDirective>();
+        var kernelSpecifiers = kernel.KernelInfo
+                                     .SupportedDirectives
+                                     .OfType<KernelSpecifierDirective>();
 
-        foreach (var kernelChooser in kernelChoosers)
+        foreach (var kernelChooser in kernelSpecifiers)
         {
-            List<string> kernelAliases = new();
-
-            foreach (var alias in kernelChooser.Aliases.Where(a => a != kernelChooser.Name))
-            {
-                kernelAliases.Add(alias[2..]);
-            }
-
-            kernelInfos.Add(new KernelInfo(kernelChooser.Name[2..], aliases: kernelAliases));
+            kernelInfos.Add(new KernelInfo(kernelChooser.Name[2..]));
         }
 
         return kernelInfos;

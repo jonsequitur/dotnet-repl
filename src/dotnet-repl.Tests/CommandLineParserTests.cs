@@ -25,7 +25,7 @@ public class CommandLineParserTests
 
         console.Out.ToString().Should().Be("snazzy!");
 
-        Assert.True(false, "Test Help_is_snazzy is not written yet.");
+        Assert.Fail("Test Help_is_snazzy is not written yet.");
     }
 
     [Fact]

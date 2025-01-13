@@ -20,7 +20,7 @@ internal static class RenderableExtensions
                                  ? "root"
                                  : k.Name;
 
-            foreach (var magic in k.Directives.Where(d => !d.IsHidden))
+            foreach (var magic in k.KernelInfo.SupportedDirectives.Where(d => !d.Hidden))
             {
                 magics.AddRow(kernelName, magic.Name, magic.Description ?? "");
             }

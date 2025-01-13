@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <RollForward>LatestMajor</RollForward>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -14,7 +14,7 @@
     <PackageTags>dotnet interactive REPL csharp fsharp Jupyter</PackageTags>
     <PackAsTool>true</PackAsTool>
     <Authors>jonsequitur</Authors>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Description>A polyglot command line REPL for C#, F#, SQL, and other languages.</Description>
     <RepositoryUrl>https://github.com/jonsequitur/dotnet-repl</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -26,27 +26,28 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.23558.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.23558.1" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.Documents" Version="1.0.0-beta.23558.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.23558.1" />
-    <PackageReference Include="Microsoft.Dotnet.Interactive.Browser" Version="1.0.0-beta.23558.1" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.Http" Version="1.0.0-beta.23558.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.packagemanagement" Version="1.0.0-beta.23558.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.23558.1" />
-    <PackageReference Include="radline" Version="0.6.0" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.24568.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.24568.1" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.Documents" Version="1.0.0-beta.24568.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.24568.1" />
+    <PackageReference Include="Microsoft.Dotnet.Interactive.Browser" Version="1.0.0-beta.24568.1" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.Http" Version="1.0.0-beta.24568.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.packagemanagement" Version="1.0.0-beta.24568.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.24568.1" />
+    <PackageReference Include="radline" Version="0.7.0" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
-    <PackageReference Include="Spectre.Console" Version="0.47.1-preview.0.4" />
+    <PackageReference Include="Spectre.Console" Version="0.48.1-preview.0.36" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="trexlib" Version="1.0.188" />
-    <PackageReference Include="pocket.disposable" Version="1.1.0">
+    <PackageReference Include="pocket.disposable" Version="1.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger" Version="0.8.1">
+    <PackageReference Include="PocketLogger" Version="0.9.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.Subscribe" Version="0.8.0">
+    <PackageReference Include="PocketLogger.Subscribe" Version="0.9.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
