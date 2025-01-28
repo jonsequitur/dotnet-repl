@@ -22,7 +22,7 @@ internal static class RenderableExtensions
 
             foreach (var magic in k.KernelInfo.SupportedDirectives.Where(d => !d.Hidden))
             {
-                magics.AddRow(kernelName, magic.Name, magic.Description ?? "");
+                magics.AddRow(kernelName, magic.Name, Markup.Escape(magic.Description ?? ""));
             }
         });
 
