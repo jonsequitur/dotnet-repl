@@ -277,17 +277,9 @@
    "mimetype": "text/x-csharp",
    "name": "C#",
    "pygments_lexer": "csharp",
-   "version": "10.0"
+   "version": "13.0"
   },
   "polyglot_notebook": {
-   "defaultKernelName": "csharp",
-   "items": [
-    {
-     "name": "csharp"
-    }
-   ]
-  },
-  "dotnet_interactive": {
    "defaultKernelName": "csharp",
    "items": [
     {
