@@ -19,7 +19,7 @@ public class MarkdownKernel :
 
     public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
-        var @event = new DisplayedValueProduced(command.Code, command, new[] { new FormattedValue("text/plain", command.Code) });
+        var @event = new DisplayedValueProduced(command.Code, command, [new FormattedValue("text/plain", command.Code)]);
         
         context.Publish(@event);
         

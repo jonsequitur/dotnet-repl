@@ -79,13 +79,13 @@ public class NotebookRunnerTests : IDisposable
 
         var runner = new NotebookRunner(kernel);
 
-        var outputDoc =     await runner.RunNotebookAsync(document);
+        var outputDoc = await runner.RunNotebookAsync(document);
 
         outputDoc = Notebook.Parse(outputDoc.ToJupyterJson());
 
         outputDoc.GetDefaultKernelName().Should().Be("fsharp");
     }
-    
+
     [Fact]
     public async Task Notebook_runner_produces_expected_output()
     {

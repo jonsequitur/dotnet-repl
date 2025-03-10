@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="TestResults\**" />
+    <EmbeddedResource Remove="TestResults\**" />
+    <None Remove="TestResults\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Assent" Version="2.3.2" />
     <PackageReference Include="fluentassertions" Version="6.11.0" />
     <PackageReference Include="microsoft.extensions.dependencyinjection" Version="9.0.0" />

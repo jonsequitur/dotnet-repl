@@ -8,5 +8,5 @@ namespace Automation;
 internal static class StringExtensions
 {
     public static string[] SplitIntoLines(this string s) =>
-        s.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+        s.Split(["\r\n", "\n"], StringSplitOptions.None);
 }
