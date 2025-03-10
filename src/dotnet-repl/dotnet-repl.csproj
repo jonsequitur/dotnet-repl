@@ -5,6 +5,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <RollForward>LatestMajor</RollForward>
     <Nullable>enable</Nullable>
+    <DotNetInteractiveVersion>1.0.0-beta.25160.1</DotNetInteractiveVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -26,14 +27,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.25059.3" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.25059.3" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.Documents" Version="1.0.0-beta.25059.3" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.25059.3" />
-    <PackageReference Include="Microsoft.Dotnet.Interactive.Browser" Version="1.0.0-beta.25059.3" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.Http" Version="1.0.0-beta.25059.3" />
-    <PackageReference Include="microsoft.dotnet.interactive.packagemanagement" Version="1.0.0-beta.25059.3" />
-    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="1.0.0-beta.25059.3" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="$(DotNetInteractiveVersion)" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="$(DotNetInteractiveVersion)" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.Documents" Version="$(DotNetInteractiveVersion)" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="$(DotNetInteractiveVersion)" />
+    <PackageReference Include="Microsoft.Dotnet.Interactive.Browser" Version="$(DotNetInteractiveVersion)" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.Http" Version="$(DotNetInteractiveVersion)" />
+    <PackageReference Include="microsoft.dotnet.interactive.packagemanagement" Version="$(DotNetInteractiveVersion)" />
+    <PackageReference Include="microsoft.dotnet.interactive.powershell" Version="$(DotNetInteractiveVersion)" />
     <PackageReference Include="radline" Version="0.7.0" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageReference Include="Spectre.Console" Version="0.48.1-preview.0.36" />
