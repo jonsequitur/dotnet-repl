@@ -111,20 +111,21 @@ internal class PackageDirectoryExtensionLoader
 
             foreach (var extensionType in extensionTypes)
             {
-                var extension = (IKernelExtension)Activator.CreateInstance(extensionType);
-
-                try
+                if (Activator.CreateInstance(extensionType) is IKernelExtension extension)
                 {
-                    await extension.OnLoadAsync(kernel);
-                    context.Publish(new KernelExtensionLoaded(extension, context.Command));
-                }
-                catch (Exception e)
-                {
-                    context.Publish(new ErrorProduced(
-                                        $"Failed to load kernel extension \"{extensionType.Name}\" from assembly {assembly.Location}",
-                                        context.Command));
+                    try
+                    {
+                        await extension.OnLoadAsync(kernel);
+                        context.Publish(new KernelExtensionLoaded(extension, context.Command));
+                    }
+                    catch (Exception e)
+                    {
+                        context.Publish(new ErrorProduced(
+                                            $"Failed to load kernel extension \"{extensionType.Name}\" from assembly {assembly.Location}",
+                                            context.Command));
 
-                    context.Fail(context.Command, new KernelExtensionLoadException(e));
+                        context.Fail(context.Command, new KernelExtensionLoadException(e));
+                    }
                 }
             }
         }
