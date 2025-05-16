@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Builder;
-using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
+using System.CommandLine.Help;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Automation;
 using Microsoft.DotNet.Interactive.Documents;
@@ -17,47 +16,48 @@ namespace dotnet_repl;
 
 public static class CommandLineParser
 {
-    public static Option<DirectoryInfo> LogPathOption { get; } = new(
-        "--log-path",
-        "Enable file logging to the specified directory")
+    public static Option<DirectoryInfo> LogPathOption = new("--log-path")
     {
-        ArgumentHelpName = "PATH"
+        Description = "Enable file logging to the specified directory",
+        HelpName = "PATH"
     };
 
-    public static Option<string> DefaultKernelOption = new Option<string>(
-            "--default-kernel",
-            description: "The default language for the kernel",
-            getDefaultValue: () => Environment.GetEnvironmentVariable("DOTNET_REPL_DEFAULT_KERNEL") ?? "csharp")
-        .FromAmong(
+    public static Option<string> DefaultKernelOption = new Option<string>("--default-kernel")
+        {
+            Description = "The default language for the kernel",
+            DefaultValueFactory = _ => Environment.GetEnvironmentVariable("DOTNET_REPL_DEFAULT_KERNEL") ?? "csharp"
+        }
+        .AcceptOnlyFromAmong(
             "csharp",
             "fsharp",
             "pwsh",
             "javascript",
-            "html");
+            "http");
 
-    public static Option<FileInfo> RunOption = new Option<FileInfo>(
-            "--run",
-            description: "Run all of the code in the specified notebook, source code, or script file. To exit when done, set the --exit-after-run option.")
+    public static Option<FileInfo> RunOption = new Option<FileInfo>("--run")
         {
-            ArgumentHelpName = "PATH"
+            Description = "Run all of the code in the specified notebook, source code, or script file. To exit when done, set the --exit-after-run option.",
+            HelpName = "PATH"
         }
-        .ExistingOnly();
+        .AcceptExistingOnly();
 
-    public static Option<bool> ExitAfterRunOption = new(
-        "--exit-after-run",
-        $"Exit after the file specified by {RunOption.Aliases.First()} has run");
+    public static Option<bool> ExitAfterRunOption = new("--exit-after-run")
+    {
+        Description = $"Exit after the file specified by {RunOption.Name} has run"
+    };
 
-    public static Option<DirectoryInfo> WorkingDirOption = new Option<DirectoryInfo>(
-            "--working-dir",
-            () => new DirectoryInfo(Environment.CurrentDirectory),
-            "Working directory to which to change after launching the kernel")
-        .ExistingOnly();
+    public static Option<DirectoryInfo> WorkingDirOption = new Option<DirectoryInfo>("--working-dir")
+        {
+            DefaultValueFactory = _ => new DirectoryInfo(Environment.CurrentDirectory),
+            Description = "Working directory to which to change after launching the kernel"
+        }
+        .AcceptExistingOnly();
 
-    public static Option<IDictionary<string, string>> InputsOption = new(
-        "--input",
-        description:
-        "Specifies in a value for @input tokens in magic commands in the notebook, using the format --input <key>=<value>. Values containing spaces should be wrapped in quotes.",
-        parseArgument: result =>
+    public static Option<IDictionary<string, string>> InputsOption = new("--input")
+    {
+        Description =
+            "Specifies in a value for @input tokens in magic commands in the notebook, using the format --input <key>=<value>. Values containing spaces should be wrapped in quotes.",
+        CustomParser = result =>
         {
             var dict = new Dictionary<string, string>();
 
@@ -65,9 +65,9 @@ public static class CommandLineParser
             {
                 var keyAndValue = token.Split("=", 2);
 
-                if (keyAndValue.Length != 2)
+                if (keyAndValue.Length is not 2)
                 {
-                    result.ErrorMessage = "The --input option requires an argument in the format <key>=<value>";
+                    result.AddError("The --input option requires an argument in the format <key>=<value>");
                     return new Dictionary<string, string>();
                 }
 
@@ -75,32 +75,32 @@ public static class CommandLineParser
             }
 
             return dict;
-        })
-    {
+        },
         Arity = ArgumentArity.ZeroOrMore
     };
 
-    public static Option<FileInfo> OutputPathOption = new Option<FileInfo>(
-            "--output-path",
-            description:
-            $"Run the file specified by {RunOption.Aliases.First()} and writes the output to the file specified by --output-path")
-        .LegalFilePathsOnly();
+    public static Option<FileInfo> OutputPathOption = new Option<FileInfo>("--output-path")
+        {
+            Description = $"Run the file specified by {RunOption.Name} and writes the output to the file specified by --output-path"
+        }
+        .AcceptLegalFilePathsOnly();
 
-    public static Option<OutputFormat> OutputFormatOption = new(
-        "--output-format",
-        description: $"The output format to be used when running a notebook with the {RunOption.Aliases.First()} and {ExitAfterRunOption.Aliases.First()} options",
-        getDefaultValue: () => OutputFormat.ipynb);
+    public static Option<OutputFormat> OutputFormatOption = new("--output-format")
+    {
+        Description = $"The output format to be used when running a notebook with the {RunOption.Name} and {ExitAfterRunOption.Name} options",
+        DefaultValueFactory = _ => OutputFormat.ipynb
+    };
 
-    public static Parser Create(
+    public static RootCommand Create(
         IAnsiConsole? ansiConsole = null,
-        Func<StartupOptions, IAnsiConsole, InvocationContext, Task<IDisposable>>? startRepl = null,
+        Func<StartupOptions, IAnsiConsole, Action<IDisposable>?, CancellationToken, Task<int>>? startRepl = null,
         Action<IDisposable>? registerForDisposal = null)
     {
-        var rootCommand = new RootCommand("dotnet-repl")
+        var rootCommand = new RootCommand
         {
             LogPathOption,
             DefaultKernelOption,
-            RunOption,
+            RunOption,  
             WorkingDirOption,
             ExitAfterRunOption,
             OutputFormatOption,
@@ -109,51 +109,40 @@ public static class CommandLineParser
             DescribeCommand(),
         };
 
+        var helpOption = rootCommand.Options.OfType<HelpOption>().Single();
+        ((HelpAction)helpOption.Action).Builder = new SpectreHelpBuilder();
+
         startRepl ??= StartAsync;
 
-        rootCommand.SetHandler(
-            async (options, context) =>
-            {
-                var disposable = await startRepl(options, ansiConsole ?? AnsiConsole.Console, context);
-                registerForDisposal?.Invoke(disposable);
-            },
-            new StartupOptionsBinder(
-                DefaultKernelOption,
-                WorkingDirOption,
-                RunOption,
-                LogPathOption,
-                ExitAfterRunOption,
-                OutputFormatOption,
-                OutputPathOption,
-                InputsOption),
-            Bind.FromServiceProvider<InvocationContext>());
+        rootCommand.SetAction(async (parseResult, cancellationToken) =>
+        {
+            var options = StartupOptions.FromParseResult(parseResult);
+            return await startRepl(options, ansiConsole ?? AnsiConsole.Console, registerForDisposal, cancellationToken);
+        });
 
-        return new CommandLineBuilder(rootCommand)
-               .UseDefaults()
-               .UseHelpBuilder(_ => new SpectreHelpBuilder(LocalizationResources.Instance))
-               .Build();
+        return rootCommand;
 
         Command DescribeCommand()
         {
             var notebookArgument = new Argument<FileInfo>("notebook")
-                .ExistingOnly();
+                .AcceptExistingOnly();
 
             var command = new Command("describe")
             {
                 notebookArgument
             };
 
-            command.SetHandler(async context =>
+            command.SetAction(async parseResult =>
             {
                 var doc = await DocumentParser.LoadInteractiveDocumentAsync(
-                              context.ParseResult.GetValueForArgument(notebookArgument),
+                              parseResult.GetValue(notebookArgument)!,
                               KernelBuilder.CreateKernel());
 
                 var console = ansiConsole ?? AnsiConsole.Console;
 
-                var inputFields = doc.GetInputFields(_ => new DirectiveParseResult());
+                var inputFields = doc.GetInputFields(_ => new DirectiveParseResult()).ToArray();
 
-                if (inputFields.Any())
+                if (inputFields.Length > 0)
                 {
                     console.WriteLine("Parameters", Theme.Default.AnnouncementTextStyle);
 
@@ -176,10 +165,11 @@ public static class CommandLineParser
         }
     }
 
-    private static async Task<IDisposable> StartAsync(
+    private static async Task<int> StartAsync(
         StartupOptions options,
         IAnsiConsole ansiConsole,
-        InvocationContext context)
+        Action<IDisposable>? registerForDisposal = null,
+        CancellationToken cancellationToken = default)
     {
         var disposables = new CompositeDisposable();
 
@@ -225,11 +215,8 @@ public static class CommandLineParser
             disposables.Add(repl);
 
             disposables.Add(kernel);
-
-            context.GetCancellationToken().Register(() => disposables.Dispose());
-
+            
             await repl.RunAsync(
-                i => context.ExitCode = i,
                 notebook,
                 options.ExitAfterRun);
         }
@@ -238,15 +225,14 @@ public static class CommandLineParser
             if (notebook is null)
             {
                 // TODO: (StartAsync) move this validation to the parser configuration
-                ansiConsole.WriteLine($"Option {ExitAfterRunOption.Aliases.First()} option cannot be used without also specifying the {RunOption.Aliases.First()} option.");
-                return disposables;
+                ansiConsole.WriteLine($"Option {ExitAfterRunOption.Name} option cannot be used without also specifying the {RunOption.Name} option.");
             }
 
             var resultNotebook = await new NotebookRunner(kernel)
                                      .RunNotebookAsync(
-                                         notebook,
+                                         notebook!,
                                          options.Inputs,
-                                         cancellationToken: context.GetCancellationToken());
+                                         cancellationToken: cancellationToken);
 
             switch (options.OutputFormat)
             {
@@ -255,7 +241,7 @@ public static class CommandLineParser
                     var outputNotebook = resultNotebook.ToJupyterJson();
                     if (options.OutputPath is not null)
                     {
-                        await File.WriteAllTextAsync(options.OutputPath.FullName, outputNotebook);
+                        await File.WriteAllTextAsync(options.OutputPath.FullName, outputNotebook, cancellationToken);
                     }
 
                     break;
@@ -271,18 +257,18 @@ public static class CommandLineParser
                     }
                     else
                     {
-                        await File.WriteAllTextAsync(options.OutputPath.FullName, output);
+                        await File.WriteAllTextAsync(options.OutputPath.FullName, output, cancellationToken);
                     }
 
                     break;
                 }
             }
 
-            context.ExitCode = resultNotebook.Elements.SelectMany(e => e.Outputs).OfType<ErrorElement>().Any()
+           return resultNotebook.Elements.SelectMany(e => e.Outputs).OfType<ErrorElement>().Any()
                                    ? 2
                                    : 0;
         }
 
-        return disposables;
+        return 0;
     }
 }

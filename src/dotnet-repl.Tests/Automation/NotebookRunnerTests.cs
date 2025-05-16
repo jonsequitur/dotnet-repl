@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.CommandLine.IO;
-using System.CommandLine.Parsing;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -22,8 +22,7 @@ public class NotebookRunnerTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
     private readonly string _directory = Path.GetDirectoryName(PathUtility.PathToCurrentSourceFile());
-    private readonly Parser _parser;
-    private readonly TestConsole console = new();
+    private readonly RootCommand _rootCommand;
 
     private readonly Configuration _assentConfiguration =
         new Configuration()
@@ -40,7 +39,7 @@ public class NotebookRunnerTests : IDisposable
             Out = new AnsiConsoleOutput(writer = new StringWriter())
         });
 
-        _parser = CommandLineParser.Create(ansiConsole, registerForDisposal: d => _disposables.Add(d));
+        _rootCommand = CommandLineParser.Create(ansiConsole, registerForDisposal: d => _disposables.Add(d));
 
         _disposables.Add(writer);
     }
@@ -50,18 +49,22 @@ public class NotebookRunnerTests : IDisposable
     [Fact]
     public async Task When_an_ipynb_is_run_and_no_error_is_produced_then_the_exit_code_is_0()
     {
-        var result = await _parser.InvokeAsync($"--run \"{_directory}/succeed.ipynb\" --exit-after-run", console);
+        var parseResult =_rootCommand.Parse($"--run \"{_directory}/succeed.ipynb\" --exit-after-run");
+        parseResult.Configuration.Error = new StringWriter();
+        var result = await ((AsynchronousCommandLineAction)_rootCommand.Action).InvokeAsync(parseResult);
 
-        console.Error.ToString().Should().BeEmpty();
+        parseResult.Configuration.Error.ToString().Should().BeEmpty();
         result.Should().Be(0);
     }
 
     [Fact]
     public async Task When_an_ipynb_is_run_and_an_error_is_produced_from_a_cell_then_the_exit_code_is_2()
     {
-        var result = await _parser.InvokeAsync($"--run \"{_directory}/fail.ipynb\" --exit-after-run", console);
+        var parseResult = _rootCommand.Parse($"--run \"{_directory}/fail.ipynb\" --exit-after-run");
+        parseResult.Configuration.Error = new StringWriter();
+        var result = await ((AsynchronousCommandLineAction)_rootCommand.Action).InvokeAsync(parseResult);
 
-        console.Error.ToString().Should().BeEmpty();
+        parseResult.Configuration.Error.ToString().Should().BeEmpty();
         result.Should().Be(2);
     }
 

@@ -98,12 +98,11 @@ public class Repl : IDisposable
     public async Task StartAsync()
     {
         var ready = ReadyForInput.Replay();
-        var _ = Task.Run(() => RunAsync(_ => { }));
+        var _ = Task.Run(() => RunAsync());
         await ready.FirstAsync();
     }
 
-    public async Task RunAsync(
-        Action<int> setExitCode,
+    public async Task<int> RunAsync(
         InteractiveDocument? notebook = null,
         bool exitAfterRun = false)
     {
@@ -137,26 +136,25 @@ public class Repl : IDisposable
 
             if (_disposalTokenSource.IsCancellationRequested || input is null)
             {
-                setExitCode(129);
-                break;
+                return 129;
             }
-            else
+
+            var result = await RunKernelCommand(new SubmitCode(input));
+
+            if (result.Events.Last() is CommandFailed)
             {
-                var result = await RunKernelCommand(new SubmitCode(input));
+                return 2;
+            }
 
-                if (result.Events.Last() is CommandFailed)
-                {
-                    setExitCode(2);
-                }
-
-                if (exitAfterRun && queuedSubmissions.Count == 0)
-                {
-                    break;
-                }
+            if (exitAfterRun && queuedSubmissions.Count == 0)
+            {
+                break;
             }
         }
 
         _readyForInput.OnCompleted();
+
+        return 0;
     }
 
     private void SetTheme()

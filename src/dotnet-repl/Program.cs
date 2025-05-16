@@ -18,16 +18,16 @@ public class Program
     {
         Console.OutputEncoding = Encoding.UTF8;
 
-        var parser = CommandLineParser.Create();
+        var rootCommand = CommandLineParser.Create();
 
-        var result = parser.Parse(args);
+        var result = rootCommand.Parse(args);
 
-        if (result.GetValueForOption(CommandLineParser.LogPathOption) is { } path)
+        if (result.GetValue(CommandLineParser.LogPathOption) is { } path)
         {
             StartToolLogging(path);
         }
 
-        return await parser.InvokeAsync(args);
+        return await rootCommand.InvokeAsync(args);
     }
 
     private static readonly Assembly[] _assembliesEmittingPocketLoggerLogs =
@@ -61,3 +61,4 @@ public class Program
         return disposables;
     }
 }
+
