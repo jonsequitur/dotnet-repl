@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.CommandLine;
 using System.IO;
 
 namespace dotnet_repl;
@@ -31,15 +32,26 @@ public class StartupOptions
 
     public DirectoryInfo WorkingDir { get; }
 
-    public FileInfo? FileToRun { get; set; }
+    public FileInfo? FileToRun { get; }
 
-    public bool ExitAfterRun { get; set; }
+    public bool ExitAfterRun { get; init; }
 
     public OutputFormat OutputFormat { get; }
 
     public FileInfo? OutputPath { get; }
 
-    public IDictionary<string, string>? Inputs { get; set; }
+    public IDictionary<string, string>? Inputs { get; init; }
 
-    public bool IsAutomationMode => ExitAfterRun || OutputPath is { };
+    public bool IsAutomationMode => ExitAfterRun || OutputPath is not null;
+
+    public static StartupOptions FromParseResult(ParseResult parseResult) =>
+        new(
+            parseResult.GetValue(CommandLineParser.DefaultKernelOption)!,
+            parseResult.GetValue(CommandLineParser.WorkingDirOption),
+            parseResult.GetValue(CommandLineParser.RunOption),
+            parseResult.GetValue(CommandLineParser.LogPathOption),
+            parseResult.GetValue(CommandLineParser.ExitAfterRunOption),
+            parseResult.GetValue(CommandLineParser.OutputFormatOption),
+            parseResult.GetValue(CommandLineParser.OutputPathOption),
+            parseResult.GetValue(CommandLineParser.InputsOption));
 }

@@ -1,16 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using Spectre.Console;
+using System;
+using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Completions;
 using System.CommandLine.Help;
 using System.Linq;
-using Spectre.Console;
+using HelpSectionDelegate = System.Func<System.CommandLine.Help.HelpContext,bool>;
 
 namespace dotnet_repl;
 
 internal class SpectreHelpBuilder : HelpBuilder
 {
-    public SpectreHelpBuilder(LocalizationResources localizationResources, int maxWidth = 2147483647) : base(localizationResources, maxWidth)
+    public SpectreHelpBuilder(int maxWidth = 2147483647) : base(maxWidth)
     {
-        CustomizeLayout(GetLayout);
+      Func<HelpContext, IEnumerable<HelpSectionDelegate>> getLayout = GetLayout;
+        CustomizeLayout(getLayout);
     }
 
     private IEnumerable<HelpSectionDelegate> GetLayout(HelpContext context)
@@ -45,6 +49,7 @@ internal class SpectreHelpBuilder : HelpBuilder
             figletText.Justification = Justify.Center;
             panel.AddRow(figletText);
             console.Write(panel);
+            return true;
         };
 
     private HelpSectionDelegate CommandUsageSection(IAnsiConsole console) =>
@@ -60,6 +65,8 @@ internal class SpectreHelpBuilder : HelpBuilder
                         .Expand();
 
             console.Write(panel);
+
+            return true;
         };
 
     private HelpSectionDelegate OptionsSection(IAnsiConsole console) =>
@@ -67,7 +74,7 @@ internal class SpectreHelpBuilder : HelpBuilder
         {
             if (!ctx.Command.Options.Any())
             {
-                return;
+                return false;
             }
 
             var table = new Table()
@@ -78,6 +85,7 @@ internal class SpectreHelpBuilder : HelpBuilder
             foreach (var option in ctx.Command.Options)
             {
                 var aliases = string.Join(", ", option.Aliases
+                                                      .Concat([option.Name])
                                                       .Where(a => !a.StartsWith("/"))
                                                       .OrderBy(a => a.Length));
 
@@ -88,11 +96,13 @@ internal class SpectreHelpBuilder : HelpBuilder
 
             console.Write(table);
 
+            return true;
+
             string OptionArgumentHelpName(Option option)
             {
-                if (option.ArgumentHelpName is not null)
+                if (option.HelpName is not null)
                 {
-                    return InAngleBrackets($"{option.ArgumentHelpName}");
+                    return InAngleBrackets($"{option.HelpName}");
                 }
 
                 if (option.ValueType == typeof(bool))
@@ -100,7 +110,7 @@ internal class SpectreHelpBuilder : HelpBuilder
                     return "";
                 }
 
-                var completions = option.GetCompletions().ToArray();
+                var completions = option.GetCompletions(CompletionContext.Empty).ToArray();
                 if (completions.Length > 0)
                 {
                     return InAngleBrackets($"{string.Join("[gray]|[/]", completions.Select(c => c.Label)).Replace("csharp", "[bold aqua]csharp[/]")}");
@@ -121,7 +131,7 @@ internal class SpectreHelpBuilder : HelpBuilder
         {
             if (ctx.Command is not RootCommand)
             {
-                return;
+                return false;
             }
 
             console.Write(new Markup("🟢[sandybrown italic] Once it's running, here are some things you can do:[/]\n\n"));
@@ -132,6 +142,8 @@ internal class SpectreHelpBuilder : HelpBuilder
             grid.ShowShortcutKeys();
 
             console.Announce(grid);
+
+            return true;
         };
     }
 }

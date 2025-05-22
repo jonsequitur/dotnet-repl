@@ -5,7 +5,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <RollForward>LatestMajor</RollForward>
     <Nullable>enable</Nullable>
-    <DotNetInteractiveVersion>1.0.0-beta.25160.1</DotNetInteractiveVersion>
+    <DotNetInteractiveVersion>1.0.0-beta.25264.2</DotNetInteractiveVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -38,7 +38,7 @@
     <PackageReference Include="radline" Version="0.7.0" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageReference Include="Spectre.Console" Version="0.48.1-preview.0.36" />
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta5.25265.1" />
     <PackageReference Include="trexlib" Version="1.0.188" />
     <PackageReference Include="pocket.disposable" Version="1.2.0">
       <PrivateAssets>all</PrivateAssets>
