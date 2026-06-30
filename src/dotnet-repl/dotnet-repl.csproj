@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="HelpLine.HelpBuilder" />
     <PackageReference Include="microsoft.dotnet.interactive" />
     <PackageReference Include="microsoft.dotnet.interactive.csharp" />
     <PackageReference Include="Microsoft.DotNet.Interactive.Documents" />

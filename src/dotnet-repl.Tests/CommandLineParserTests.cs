@@ -8,7 +8,7 @@ using Xunit;
 
 namespace dotnet_repl.Tests;
 
-public partial class CommandLineParserTests
+public class CommandLineParserTests
 {
     private readonly RootCommand _rootCommand;
 
@@ -26,7 +26,7 @@ public partial class CommandLineParserTests
         var outputLines = parseResult.InvocationConfiguration
                                      .Output
                                      .ToString()
-                                     .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                                     !.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
                                      .Select(l => l.Trim());
 
         string.Join('\n', outputLines)

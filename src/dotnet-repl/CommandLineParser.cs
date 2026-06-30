@@ -111,10 +111,7 @@ public static class CommandLineParser
             DescribeCommand(),
         };
 
-        rootCommand.Options
-                   .OfType<HelpOption>()
-                   .Single()
-                   .Action = new SpectreHelpAction();
+        rootCommand.UseHelpBuilder(new SpectreHelpBuilder());
 
         startRepl ??= StartAsync;
 

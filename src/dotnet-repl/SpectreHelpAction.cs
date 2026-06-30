@@ -6,6 +6,7 @@ public class SpectreHelpAction : SynchronousCommandLineAction
 {
     public override int Invoke(ParseResult parseResult)
     {
+        // FIX: (Invoke) remove
         var output = parseResult.InvocationConfiguration.Output;
 
         new SpectreHelpBuilder().ShowHelp(parseResult.CommandResult.Command, output);

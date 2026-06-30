@@ -1,29 +1,53 @@
-﻿using System.CommandLine;
+﻿using System;
+using System.Collections.Generic;
+using System.CommandLine;
 using System.CommandLine.Completions;
+using System.CommandLine.Help;
 using System.IO;
 using System.Linq;
 using Spectre.Console;
 
 namespace dotnet_repl;
 
-internal class SpectreHelpBuilder
+internal class SpectreHelpBuilder : HelpBuilder
 {
     private readonly int _maxWidth;
 
-    public SpectreHelpBuilder(int maxWidth = int.MaxValue)
+    public SpectreHelpBuilder(int maxWidth = int.MaxValue) : base(maxWidth)
     {
         _maxWidth = maxWidth;
+        
+        // Set up custom layout that uses Spectre sections instead of default HelpBuilder sections
+        CustomizeLayout(GetSpectreLayout);
     }
 
-    public void ShowHelp(Command command, TextWriter output)
+    private IEnumerable<Func<HelpContext, bool>> GetSpectreLayout(HelpContext context)
     {
-        var spectreConsole = AnsiConsole.Create(new AnsiConsoleSettings
+        yield return ctx => RenderSection(ctx, TitleSection);
+        yield return ctx => RenderSection(ctx, CommandUsageSection);
+        yield return ctx => RenderSection(ctx, OptionsSection);
+        yield return ctx => RenderSection(ctx, ReplHelpSection);
+    }
+
+    private bool RenderSection(HelpContext context, Action<IAnsiConsole, Command> section)
+    {
+        var console = CreateSpectreConsole(context.Output);
+        section(console, context.Command);
+        return true;
+    }
+
+    private IAnsiConsole CreateSpectreConsole(TextWriter output) =>
+        AnsiConsole.Create(new AnsiConsoleSettings
         {
             Ansi = AnsiSupport.Yes,
             Out = new AnsiConsoleOutput(output)
         });
 
-        TitleSection(spectreConsole);
+    public void ShowHelp(Command command, TextWriter output)
+    {
+        var spectreConsole = CreateSpectreConsole(output);
+
+        TitleSection(spectreConsole, command);
         CommandUsageSection(spectreConsole, command);
         OptionsSection(spectreConsole, command);
         ReplHelpSection(spectreConsole, command);
@@ -39,6 +63,15 @@ internal class SpectreHelpBuilder
         console.Write(panel);
     }
 
+    private void TitleSection(IAnsiConsole console, Command command)
+    {
+        var panel = new Grid();
+        panel.AddColumn(new GridColumn());
+        var figletText = new FigletText(".NET REPL").Color(Color.SandyBrown);
+        figletText.Justification = Justify.Center;
+        panel.AddRow(figletText);
+        console.Write(panel);
+    }
     private void CommandUsageSection(IAnsiConsole console, Command command)
     {
         if (command is RootCommand)

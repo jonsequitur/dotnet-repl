@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Text;
-using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Spectre.Console;
@@ -127,12 +126,12 @@ internal static class AnsiConsoleExtensions
         StringBuilder? stdOut = null,
         StringBuilder? stdErr = null)
     {
-        if (stdOut is { })
+        if (stdOut is not null)
         {
             ansiConsole.RenderSuccessMessage(stdOut.ToString(), theme, "✒");
         }
 
-        if (stdErr is { })
+        if (stdErr is not null)
         {
             ansiConsole.RenderErrorMessage(stdErr.ToString(), theme, "✒");
         }
